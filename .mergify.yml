@@ -1,0 +1,29 @@
+pull_request_rules:
+  - name: Merge queue
+    conditions:
+      - label=automerge
+      - status-success=ci
+    actions:
+      queue:
+        name: default
+        method: rebase
+
+  - name: Auto-approve minor updates
+    conditions:
+      - author~=^dependabot
+      - check-success=ci
+    actions:
+      review:
+        type: APPROVE
+      queue:
+        name: default
+        method: rebase
+
+  - name: Auto-resolve lock file conflicts
+    conditions:
+      - files~=^(package-lock\.json|poetry\.lock|.*\.snap)$
+    actions:
+      queue:
+        name: default
+        method: rebase
+        merge_method: rebase
