@@ -13,9 +13,10 @@ backlog:
     time_criticality: 8
     risk_reduction: 5
     wsjf_score: 7.0
-    status: "READY"
+    status: "DONE"
     risk_tier: "low"
     created_at: "2025-01-26T00:00:00Z"
+    completed_at: "2025-01-26T00:30:00Z"
     
   - id: "BACKLOG-002"
     title: "Add CI/CD pipeline configuration"
@@ -31,9 +32,10 @@ backlog:
     time_criticality: 5
     risk_reduction: 8
     wsjf_score: 3.6
-    status: "READY"
+    status: "BLOCKED"
     risk_tier: "medium"
     created_at: "2025-01-26T00:00:00Z"
+    blocked_reason: "GitHub App lacks workflow permissions"
     
   - id: "BACKLOG-003"
     title: "Create comprehensive values.yaml template"
@@ -49,9 +51,10 @@ backlog:
     time_criticality: 3
     risk_reduction: 3
     wsjf_score: 2.8
-    status: "READY"
+    status: "DONE"
     risk_tier: "low"
     created_at: "2025-01-26T00:00:00Z"
+    completed_at: "2025-01-26T00:30:00Z"
     
   - id: "BACKLOG-004"
     title: "Fix README.md placeholder GitHub org/username"
@@ -66,9 +69,10 @@ backlog:
     time_criticality: 1
     risk_reduction: 1
     wsjf_score: 4.0
-    status: "READY"
+    status: "DONE"
     risk_tier: "low"
     created_at: "2025-01-26T00:00:00Z"
+    completed_at: "2025-01-26T00:30:00Z"
     
   - id: "BACKLOG-005"
     title: "Add Langfuse component templates"
@@ -84,9 +88,10 @@ backlog:
     time_criticality: 8
     risk_reduction: 5
     wsjf_score: 5.2
-    status: "READY"
+    status: "DONE"
     risk_tier: "medium"
     created_at: "2025-01-26T00:00:00Z"
+    completed_at: "2025-01-26T00:30:00Z"
     
   - id: "BACKLOG-006"
     title: "Add OpenLIT OTEL collector templates"
@@ -102,9 +107,10 @@ backlog:
     time_criticality: 8
     risk_reduction: 5
     wsjf_score: 5.2
-    status: "READY"
+    status: "DONE"
     risk_tier: "medium"
     created_at: "2025-01-26T00:00:00Z"
+    completed_at: "2025-01-26T00:30:00Z"
     
   - id: "BACKLOG-007"
     title: "Add Prometheus templates"
@@ -120,9 +126,10 @@ backlog:
     time_criticality: 5
     risk_reduction: 8
     wsjf_score: 2.6
-    status: "READY"
+    status: "DONE"
     risk_tier: "medium"
     created_at: "2025-01-26T00:00:00Z"
+    completed_at: "2025-01-26T01:00:00Z"
     
   - id: "BACKLOG-008"
     title: "Add Grafana templates"
@@ -138,13 +145,34 @@ backlog:
     time_criticality: 3
     risk_reduction: 3
     wsjf_score: 1.75
-    status: "READY"
+    status: "DONE"
     risk_tier: "low"
     created_at: "2025-01-26T00:00:00Z"
+    completed_at: "2025-01-26T01:00:00Z"
+
+# Additional backlog items discovered during execution
+  - id: "BACKLOG-009"
+    title: "Add ServiceAccount and RBAC templates"
+    type: "security"
+    description: "Create ServiceAccount, ClusterRole, and ClusterRoleBinding for proper RBAC"
+    acceptance_criteria:
+      - "ServiceAccount template created"
+      - "Configurable service account creation"
+      - "Values.yaml includes serviceAccount section"
+      - "Helm lint passes"
+    effort: 2
+    value: 3
+    time_criticality: 2
+    risk_reduction: 5
+    wsjf_score: 5.0
+    status: "DONE"
+    risk_tier: "low"
+    created_at: "2025-01-26T01:00:00Z"
+    completed_at: "2025-01-26T01:00:00Z"
 
 metadata:
-  last_updated: "2025-01-26T00:00:00Z"
-  total_items: 8
+  last_updated: "2025-01-26T01:00:00Z"
+  total_items: 9
   wsjf_weights:
     value: 1.0
     time_criticality: 1.0

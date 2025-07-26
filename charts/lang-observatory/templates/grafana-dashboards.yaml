@@ -1,0 +1,158 @@
+{{- if .Values.grafana.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "lang-observatory.fullname" . }}-grafana-dashboards
+  labels:
+    {{- include "lang-observatory.labels" . | nindent 4 }}
+    app.kubernetes.io/component: grafana
+    grafana_dashboard: "1"
+data:
+  llm-overview.json: |
+    {
+      "dashboard": {
+        "id": null,
+        "title": "LLM Observatory Overview",
+        "tags": ["llm", "observability", "langfuse", "openlit"],
+        "timezone": "browser",
+        "refresh": "30s",
+        "schemaVersion": 30,
+        "version": 1,
+        "time": {
+          "from": "now-1h",
+          "to": "now"
+        },
+        "panels": [
+          {
+            "id": 1,
+            "title": "LLM Request Rate",
+            "type": "stat",
+            "targets": [
+              {
+                "expr": "sum(rate(llm_requests_total[5m]))",
+                "legendFormat": "Requests/sec"
+              }
+            ],
+            "fieldConfig": {
+              "defaults": {
+                "unit": "reqps"
+              }
+            },
+            "gridPos": {
+              "h": 8,
+              "w": 6,
+              "x": 0,
+              "y": 0
+            }
+          },
+          {
+            "id": 2,
+            "title": "LLM Error Rate",
+            "type": "stat",
+            "targets": [
+              {
+                "expr": "sum(rate(llm_requests_total{status=\"error\"}[5m])) / sum(rate(llm_requests_total[5m])) * 100",
+                "legendFormat": "Error %"
+              }
+            ],
+            "fieldConfig": {
+              "defaults": {
+                "unit": "percent",
+                "thresholds": {
+                  "steps": [
+                    {"color": "green", "value": null},
+                    {"color": "yellow", "value": 1},
+                    {"color": "red", "value": 5}
+                  ]
+                }
+              }
+            },
+            "gridPos": {
+              "h": 8,
+              "w": 6,
+              "x": 6,
+              "y": 0
+            }
+          },
+          {
+            "id": 3,
+            "title": "Total Cost (Hourly)",
+            "type": "stat",
+            "targets": [
+              {
+                "expr": "sum(rate(llm_cost_total[1h]))",
+                "legendFormat": "$/hour"
+              }
+            ],
+            "fieldConfig": {
+              "defaults": {
+                "unit": "currencyUSD"
+              }
+            },
+            "gridPos": {
+              "h": 8,
+              "w": 6,
+              "x": 12,
+              "y": 0
+            }
+          },
+          {
+            "id": 4,
+            "title": "Active Models",
+            "type": "stat",
+            "targets": [
+              {
+                "expr": "count(count by (model)(llm_requests_total))",
+                "legendFormat": "Models"
+              }
+            ],
+            "gridPos": {
+              "h": 8,
+              "w": 6,
+              "x": 18,
+              "y": 0
+            }
+          },
+          {
+            "id": 5,
+            "title": "Request Rate by Model",
+            "type": "timeseries",
+            "targets": [
+              {
+                "expr": "sum(rate(llm_requests_total[5m])) by (model)",
+                "legendFormat": "{{`{{ $labels.model }}`}}"
+              }
+            ],
+            "gridPos": {
+              "h": 8,
+              "w": 12,
+              "x": 0,
+              "y": 8
+            }
+          },
+          {
+            "id": 6,
+            "title": "Response Time P95",
+            "type": "timeseries",
+            "targets": [
+              {
+                "expr": "histogram_quantile(0.95, sum(rate(llm_request_duration_seconds_bucket[5m])) by (le, model))",
+                "legendFormat": "{{`{{ $labels.model }}`}} p95"
+              }
+            ],
+            "fieldConfig": {
+              "defaults": {
+                "unit": "s"
+              }
+            },
+            "gridPos": {
+              "h": 8,
+              "w": 12,
+              "x": 12,
+              "y": 8
+            }
+          }
+        ]
+      }
+    }
+{{- end }}

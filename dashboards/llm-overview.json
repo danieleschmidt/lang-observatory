@@ -1,0 +1,206 @@
+{
+  "dashboard": {
+    "id": null,
+    "title": "LLM Observatory Overview",
+    "tags": ["llm", "observability", "langfuse", "openlit"],
+    "timezone": "browser",
+    "refresh": "30s",
+    "schemaVersion": 30,
+    "version": 1,
+    "time": {
+      "from": "now-1h",
+      "to": "now"
+    },
+    "panels": [
+      {
+        "id": 1,
+        "title": "LLM Request Rate",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "sum(rate(llm_requests_total[5m]))",
+            "legendFormat": "Requests/sec"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "reqps"
+          }
+        },
+        "gridPos": {
+          "h": 8,
+          "w": 6,
+          "x": 0,
+          "y": 0
+        }
+      },
+      {
+        "id": 2,
+        "title": "LLM Error Rate",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "sum(rate(llm_requests_total{status=\"error\"}[5m])) / sum(rate(llm_requests_total[5m])) * 100",
+            "legendFormat": "Error %"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percent",
+            "thresholds": {
+              "steps": [
+                {"color": "green", "value": null},
+                {"color": "yellow", "value": 1},
+                {"color": "red", "value": 5}
+              ]
+            }
+          }
+        },
+        "gridPos": {
+          "h": 8,
+          "w": 6,
+          "x": 6,
+          "y": 0
+        }
+      },
+      {
+        "id": 3,
+        "title": "Total Cost (Hourly)",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "sum(rate(llm_cost_total[1h]))",
+            "legendFormat": "$/hour"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "currencyUSD"
+          }
+        },
+        "gridPos": {
+          "h": 8,
+          "w": 6,
+          "x": 12,
+          "y": 0
+        }
+      },
+      {
+        "id": 4,
+        "title": "Active Models",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "count(count by (model)(llm_requests_total))",
+            "legendFormat": "Models"
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 6,
+          "x": 18,
+          "y": 0
+        }
+      },
+      {
+        "id": 5,
+        "title": "Request Rate by Model",
+        "type": "timeseries",
+        "targets": [
+          {
+            "expr": "sum(rate(llm_requests_total[5m])) by (model)",
+            "legendFormat": "{{ model }}"
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 0,
+          "y": 8
+        }
+      },
+      {
+        "id": 6,
+        "title": "Response Time P95",
+        "type": "timeseries",
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.95, sum(rate(llm_request_duration_seconds_bucket[5m])) by (le, model))",
+            "legendFormat": "{{ model }} p95"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "s"
+          }
+        },
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 12,
+          "y": 8
+        }
+      },
+      {
+        "id": 7,
+        "title": "Token Usage",
+        "type": "timeseries",
+        "targets": [
+          {
+            "expr": "sum(rate(llm_tokens_total[5m])) by (type, model)",
+            "legendFormat": "{{ model }} {{ type }}"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "short"
+          }
+        },
+        "gridPos": {
+          "h": 8,
+          "w": 24,
+          "x": 0,
+          "y": 16
+        }
+      },
+      {
+        "id": 8,
+        "title": "Langfuse Traces",
+        "type": "timeseries",
+        "targets": [
+          {
+            "expr": "sum(rate(langfuse_traces_total[5m]))",
+            "legendFormat": "Traces/sec"
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 0,
+          "y": 24
+        }
+      },
+      {
+        "id": 9,
+        "title": "OpenLIT Collector Health",
+        "type": "timeseries",
+        "targets": [
+          {
+            "expr": "up{job=\"openlit-metrics\"}",
+            "legendFormat": "Collector Up"
+          },
+          {
+            "expr": "rate(otelcol_processor_batch_batch_send_size_sum[5m])",
+            "legendFormat": "Batch Send Rate"
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 12,
+          "y": 24
+        }
+      }
+    ]
+  }
+}

@@ -1,0 +1,87 @@
+{{- if and .Values.prometheus.enabled .Values.prometheus.rules.enabled }}
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: {{ include "lang-observatory.fullname" . }}
+  labels:
+    {{- include "lang-observatory.labels" . | nindent 4 }}
+spec:
+  groups:
+    - name: langfuse.rules
+      rules:
+        - alert: LangfuseDown
+          expr: up{job="langfuse-metrics"} == 0
+          for: 5m
+          labels:
+            severity: critical
+          annotations:
+            summary: "Langfuse is down"
+            description: "Langfuse has been down for more than 5 minutes"
+        
+        - alert: LangfuseHighLatency
+          expr: histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[5m])) > 1
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            summary: "Langfuse high latency"
+            description: "Langfuse 95th percentile latency is above 1 second"
+        
+        - alert: LangfuseHighErrorRate
+          expr: rate(http_requests_total{status=~"5.."}[5m]) / rate(http_requests_total[5m]) > 0.1
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            summary: "Langfuse high error rate"
+            description: "Langfuse error rate is above 10%"
+
+    - name: openlit.rules
+      rules:
+        - alert: OpenLITCollectorDown
+          expr: up{job="openlit-metrics"} == 0
+          for: 5m
+          labels:
+            severity: critical
+          annotations:
+            summary: "OpenLIT OTEL Collector is down"
+            description: "OpenLIT OTEL Collector has been down for more than 5 minutes"
+        
+        - alert: OpenLITHighMemoryUsage
+          expr: (process_resident_memory_bytes / (1024 * 1024)) > 400
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            summary: "OpenLIT Collector high memory usage"
+            description: "OpenLIT Collector memory usage is above 400MB"
+
+    - name: llm.rules  
+      rules:
+        - record: llm:request_rate
+          expr: sum(rate(llm_requests_total[5m])) by (model, provider)
+        
+        - record: llm:error_rate
+          expr: sum(rate(llm_requests_total{status="error"}[5m])) by (model, provider) / sum(rate(llm_requests_total[5m])) by (model, provider)
+        
+        - record: llm:cost_per_hour
+          expr: sum(rate(llm_cost_total[1h])) by (model, provider)
+        
+        - alert: LLMHighErrorRate
+          expr: llm:error_rate > 0.05
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            summary: "High LLM error rate for {{`{{ $labels.model }}`}}"
+            description: "LLM {{`{{ $labels.model }}`}} from {{`{{ $labels.provider }}`}} has error rate above 5%"
+        
+        - alert: LLMHighCost
+          expr: llm:cost_per_hour > 10
+          for: 10m
+          labels:
+            severity: warning
+          annotations:
+            summary: "High LLM cost for {{`{{ $labels.model }}`}}"
+            description: "LLM {{`{{ $labels.model }}`}} from {{`{{ $labels.provider }}`}} cost is above $10/hour"
+{{- end }}

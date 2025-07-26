@@ -144,6 +144,10 @@ prometheus:
       enabled: true
       size: 10Gi
   
+  # Prometheus rules for LLM observability
+  rules:
+    enabled: true
+  
   # Additional scrape configs for LLM metrics
   serverFiles:
     prometheus.yml:
@@ -151,9 +155,13 @@ prometheus:
         - job_name: 'langfuse-metrics'
           static_configs:
             - targets: ['{{ include "lang-observatory.fullname" . }}-langfuse:3000']
+          metrics_path: '/api/public/metrics'
+          scrape_interval: 30s
         - job_name: 'openlit-metrics'
           static_configs:
             - targets: ['{{ include "lang-observatory.fullname" . }}-openlit:8889']
+          metrics_path: '/metrics'
+          scrape_interval: 30s
 
 # Grafana configuration
 grafana:
@@ -203,6 +211,18 @@ serviceMonitor:
   namespace: ""
   labels: {}
   annotations: {}
+
+# Service Account
+serviceAccount:
+  # Specifies whether a service account should be created
+  create: true
+  # Automatically mount a ServiceAccount's API credentials
+  automount: true
+  # Annotations to add to the service account
+  annotations: {}
+  # The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name: ""
 
 # Pod Security Context
 podSecurityContext:
