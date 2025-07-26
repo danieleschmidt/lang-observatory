@@ -1,0 +1,79 @@
+{{- if .Values.openlit.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "lang-observatory.fullname" . }}-openlit
+  labels:
+    {{- include "lang-observatory.labels" . | nindent 4 }}
+    app.kubernetes.io/component: openlit
+spec:
+  replicas: {{ .Values.openlit.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "lang-observatory.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: openlit
+  template:
+    metadata:
+      labels:
+        {{- include "lang-observatory.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: openlit
+    spec:
+      {{- with .Values.global.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: openlit
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: {{ include "lang-observatory.image" (dict "registry" .Values.openlit.image.registry "repository" .Values.openlit.image.repository "tag" .Values.openlit.image.tag "global" .Values.global) }}
+          imagePullPolicy: {{ .Values.openlit.image.pullPolicy }}
+          args:
+            - --config=/etc/otel-collector-config/config.yaml
+          ports:
+            - name: otlp-grpc
+              containerPort: 4317
+              protocol: TCP
+            - name: otlp-http
+              containerPort: 4318
+              protocol: TCP
+            - name: metrics
+              containerPort: 8889
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 13133
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 13133
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          resources:
+            {{- toYaml .Values.openlit.resources | nindent 12 }}
+          volumeMounts:
+            - name: config
+              mountPath: /etc/otel-collector-config
+              readOnly: true
+      volumes:
+        - name: config
+          configMap:
+            name: {{ include "lang-observatory.fullname" . }}-openlit-config
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+{{- end }}

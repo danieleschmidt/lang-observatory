@@ -1,0 +1,19 @@
+{{- if .Values.langfuse.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "lang-observatory.fullname" . }}-langfuse
+  labels:
+    {{- include "lang-observatory.labels" . | nindent 4 }}
+    app.kubernetes.io/component: langfuse
+spec:
+  type: {{ .Values.langfuse.service.type }}
+  ports:
+    - port: {{ .Values.langfuse.service.port }}
+      targetPort: {{ .Values.langfuse.service.targetPort }}
+      protocol: TCP
+      name: http
+  selector:
+    {{- include "lang-observatory.selectorLabels" . | nindent 4 }}
+    app.kubernetes.io/component: langfuse
+{{- end }}

@@ -1,0 +1,32 @@
+{
+  "timestamp": "2025-01-26T00:30:00Z",
+  "completed_ids": ["BACKLOG-001", "BACKLOG-002", "BACKLOG-004", "BACKLOG-005"],
+  "coverage_delta": 0,
+  "flaky_tests": [],
+  "ci_summary": {
+    "status": "configured",
+    "last_build": null,
+    "test_results": "pending_first_run"
+  },
+  "open_prs": 0,
+  "risks_or_blocks": [],
+  "backlog_size_by_status": {
+    "NEW": 0,
+    "REFINED": 0,
+    "READY": 4,
+    "DOING": 0,
+    "PR": 0,
+    "DONE": 4,
+    "BLOCKED": 0
+  },
+  "avg_cycle_time": "15min",
+  "wsjf_snapshot": {
+    "highest_priority": {
+      "id": "BACKLOG-006",
+      "title": "Add OpenLIT OTEL collector templates",
+      "wsjf_score": 5.2
+    },
+    "total_backlog_value": 34,
+    "total_backlog_effort": 21
+  }
+}

@@ -1,0 +1,28 @@
+{{- if .Values.openlit.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "lang-observatory.fullname" . }}-openlit-config
+  labels:
+    {{- include "lang-observatory.labels" . | nindent 4 }}
+    app.kubernetes.io/component: openlit
+data:
+  config.yaml: |
+    receivers:
+      {{- toYaml .Values.openlit.config.receivers | nindent 6 }}
+    
+    processors:
+      {{- toYaml .Values.openlit.config.processors | nindent 6 }}
+    
+    exporters:
+      {{- toYaml .Values.openlit.config.exporters | nindent 6 }}
+    
+    extensions:
+      health_check:
+        endpoint: 0.0.0.0:13133
+    
+    service:
+      extensions: [health_check]
+      pipelines:
+        {{- toYaml .Values.openlit.config.service.pipelines | nindent 8 }}
+{{- end }}

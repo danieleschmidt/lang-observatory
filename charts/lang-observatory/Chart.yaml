@@ -1,0 +1,31 @@
+apiVersion: v2
+name: lang-observatory
+description: A turnkey observability stack for large language models
+type: application
+version: 0.1.0
+appVersion: "0.1.0"
+home: https://github.com/terragon-labs/lang-observatory
+sources:
+  - https://github.com/terragon-labs/lang-observatory
+maintainers:
+  - name: Terragon Labs
+    email: opensource@terragonlabs.com
+keywords:
+  - observability
+  - llm
+  - langfuse
+  - openlit
+  - prometheus
+  - grafana
+  - opentelemetry
+dependencies:
+  - name: prometheus
+    version: "25.8.0"
+    repository: "https://prometheus-community.github.io/helm-charts"
+    condition: prometheus.enabled
+  - name: grafana
+    version: "8.4.2"
+    repository: "https://grafana.github.io/helm-charts"
+    condition: grafana.enabled
+annotations:
+  category: Observability

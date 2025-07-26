@@ -1,0 +1,228 @@
+# Default values for lang-observatory
+# This is a YAML-formatted file.
+
+global:
+  # Global image registry
+  imageRegistry: ""
+  # Global image pull secrets
+  imagePullSecrets: []
+
+# Langfuse configuration
+langfuse:
+  enabled: true
+  image:
+    registry: docker.io
+    repository: langfuse/langfuse
+    tag: "2.54.0"
+    pullPolicy: IfNotPresent
+  
+  replicaCount: 1
+  
+  # Database configuration
+  database:
+    # Use external PostgreSQL
+    external: true
+    host: "postgresql"
+    port: 5432
+    name: "langfuse"
+    user: "langfuse"
+    # Password should be provided via secret
+    existingSecret: "langfuse-db"
+    secretKey: "password"
+  
+  # Langfuse application configuration
+  config:
+    # Base URL for Langfuse
+    nextauthUrl: "http://localhost:3000"
+    # Secret for NextAuth (should be provided via secret)
+    nextauthSecret: ""
+    # Salt for encryption
+    salt: ""
+    # Encryption key
+    encryptionKey: ""
+    # Langfuse API keys
+    publicKey: ""
+    secretKey: ""
+  
+  service:
+    type: ClusterIP
+    port: 3000
+    targetPort: 3000
+  
+  ingress:
+    enabled: false
+    className: ""
+    annotations: {}
+    hosts:
+      - host: langfuse.local
+        paths:
+          - path: /
+            pathType: Prefix
+    tls: []
+  
+  resources:
+    limits:
+      cpu: 500m
+      memory: 512Mi
+    requests:
+      cpu: 100m
+      memory: 256Mi
+
+# OpenLIT OTEL Collector configuration
+openlit:
+  enabled: true
+  image:
+    registry: docker.io
+    repository: otel/opentelemetry-collector-contrib
+    tag: "0.91.0"
+    pullPolicy: IfNotPresent
+  
+  replicaCount: 1
+  
+  # OpenTelemetry Collector configuration
+  config:
+    receivers:
+      otlp:
+        protocols:
+          grpc:
+            endpoint: 0.0.0.0:4317
+          http:
+            endpoint: 0.0.0.0:4318
+    
+    processors:
+      batch: {}
+      memory_limiter:
+        limit_mib: 400
+      
+    exporters:
+      prometheus:
+        endpoint: "0.0.0.0:8889"
+        namespace: "langfuse"
+      
+      jaeger:
+        endpoint: jaeger-collector:14250
+        tls:
+          insecure: true
+    
+    service:
+      pipelines:
+        traces:
+          receivers: [otlp]
+          processors: [memory_limiter, batch]
+          exporters: [jaeger]
+        metrics:
+          receivers: [otlp]
+          processors: [memory_limiter, batch]
+          exporters: [prometheus]
+  
+  service:
+    type: ClusterIP
+    ports:
+      - name: otlp-grpc
+        port: 4317
+        targetPort: 4317
+      - name: otlp-http
+        port: 4318
+        targetPort: 4318
+      - name: metrics
+        port: 8889
+        targetPort: 8889
+  
+  resources:
+    limits:
+      cpu: 200m
+      memory: 512Mi
+    requests:
+      cpu: 100m
+      memory: 256Mi
+
+# Prometheus configuration
+prometheus:
+  enabled: true
+  server:
+    persistentVolume:
+      enabled: true
+      size: 10Gi
+  
+  # Additional scrape configs for LLM metrics
+  serverFiles:
+    prometheus.yml:
+      scrape_configs:
+        - job_name: 'langfuse-metrics'
+          static_configs:
+            - targets: ['{{ include "lang-observatory.fullname" . }}-langfuse:3000']
+        - job_name: 'openlit-metrics'
+          static_configs:
+            - targets: ['{{ include "lang-observatory.fullname" . }}-openlit:8889']
+
+# Grafana configuration
+grafana:
+  enabled: true
+  persistence:
+    enabled: true
+    size: 1Gi
+  
+  # Default admin credentials
+  adminUser: admin
+  adminPassword: admin
+  
+  # Datasources
+  datasources:
+    datasources.yaml:
+      apiVersion: 1
+      datasources:
+        - name: Prometheus
+          type: prometheus
+          url: http://{{ .Release.Name }}-prometheus-server:80
+          access: proxy
+          isDefault: true
+  
+  # Default dashboards
+  dashboardProviders:
+    dashboardproviders.yaml:
+      apiVersion: 1
+      providers:
+        - name: 'default'
+          orgId: 1
+          folder: ''
+          type: file
+          disableDeletion: false
+          editable: true
+          options:
+            path: /var/lib/grafana/dashboards/default
+  
+  dashboards:
+    default:
+      llm-overview:
+        url: https://raw.githubusercontent.com/terragon-labs/lang-observatory/main/dashboards/llm-overview.json
+        datasource: Prometheus
+
+# ServiceMonitor for Prometheus Operator
+serviceMonitor:
+  enabled: false
+  namespace: ""
+  labels: {}
+  annotations: {}
+
+# Pod Security Context
+podSecurityContext:
+  fsGroup: 65534
+
+# Security Context
+securityContext:
+  runAsNonRoot: true
+  runAsUser: 65534
+  readOnlyRootFilesystem: true
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop:
+      - ALL
+
+# Node selector
+nodeSelector: {}
+
+# Tolerations
+tolerations: []
+
+# Affinity
+affinity: {}
