@@ -1,9 +1,8 @@
 # lang-observatory
 
-<!-- IMPORTANT: Replace 'your-github-username-or-org' with your actual GitHub details -->
-[![Build Status](https://img.shields.io/github/actions/workflow/status/your-github-username-or-org/lang-observatory/ci.yml?branch=main)](https://github.com/your-github-username-or-org/lang-observatory/actions)
-[![Coverage Status](https://img.shields.io/coveralls/github/your-github-username-or-org/lang-observatory)](https://coveralls.io/github/your-github-username-or-org/lang-observatory)
-[![License](https://img.shields.io/github/license/your-github-username-or-org/lang-observatory)](LICENSE)
+[![Build Status](https://img.shields.io/github/actions/workflow/status/terragon-labs/lang-observatory/ci.yml?branch=main)](https://github.com/terragon-labs/lang-observatory/actions)
+[![Coverage Status](https://img.shields.io/coveralls/github/terragon-labs/lang-observatory)](https://coveralls.io/github/terragon-labs/lang-observatory)
+[![License](https://img.shields.io/github/license/terragon-labs/lang-observatory)](LICENSE)
 [![Version](https://img.shields.io/badge/version-v0.1.0-blue)](https://semver.org)
 
 A turnkey observability stack for large language models, packaged as a Helm chart. It bundles the Langfuse UI, OpenLIT OTEL exporters, and Prometheus/Grafana to create a comprehensive, self-hostable solution for monitoring LLM applications.
@@ -17,9 +16,9 @@ A turnkey observability stack for large language models, packaged as a Helm char
 
 ## ⚡ Quick Start
 
-1.  Add the Helm repository: `helm repo add my-charts https://your-github-username-or-org.github.io/charts`
+1.  Add the Helm repository: `helm repo add terragon-charts https://terragon-labs.github.io/lang-observatory`
 2.  Create a `values.yaml` file (see example below).
-3.  Install the chart: `helm install lang-observatory my-charts/lang-observatory -f values.yaml`.
+3.  Install the chart: `helm install lang-observatory terragon-charts/lang-observatory -f values.yaml`.
 
 ## 🛠️ Configuration Sample `values.yaml`
 

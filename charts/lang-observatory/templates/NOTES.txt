@@ -1,0 +1,50 @@
+1. Get the application URLs by running these commands:
+
+{{- if .Values.langfuse.enabled }}
+{{- if .Values.langfuse.ingress.enabled }}
+  Langfuse:
+{{- range $host := .Values.langfuse.ingress.hosts }}
+  {{- range .paths }}
+  http{{ if $.Values.langfuse.ingress.tls }}s{{ end }}://{{ $host.host }}{{ .path }}
+  {{- end }}
+{{- end }}
+{{- else if contains "NodePort" .Values.langfuse.service.type }}
+  export NODE_PORT=$(kubectl get --namespace {{ .Release.Namespace }} -o jsonpath="{.spec.ports[0].nodePort}" services {{ include "lang-observatory.fullname" . }}-langfuse)
+  export NODE_IP=$(kubectl get nodes --namespace {{ .Release.Namespace }} -o jsonpath="{.items[0].status.addresses[0].address}")
+  echo "Langfuse: http://$NODE_IP:$NODE_PORT"
+{{- else if contains "LoadBalancer" .Values.langfuse.service.type }}
+     NOTE: It may take a few minutes for the LoadBalancer IP to be available.
+           You can watch the status of by running 'kubectl get --namespace {{ .Release.Namespace }} svc -w {{ include "lang-observatory.fullname" . }}-langfuse'
+  export SERVICE_IP=$(kubectl get svc --namespace {{ .Release.Namespace }} {{ include "lang-observatory.fullname" . }}-langfuse --template "{{"{{ range (index .status.loadBalancer.ingress 0) }}{{.}}{{ end }}"}}")
+  echo "Langfuse: http://$SERVICE_IP:{{ .Values.langfuse.service.port }}"
+{{- else if contains "ClusterIP" .Values.langfuse.service.type }}
+  echo "Langfuse: http://127.0.0.1:3000"
+  kubectl --namespace {{ .Release.Namespace }} port-forward svc/{{ include "lang-observatory.fullname" . }}-langfuse 3000:{{ .Values.langfuse.service.port }}
+{{- end }}
+{{- end }}
+
+{{- if .Values.grafana.enabled }}
+  Grafana:
+  echo "Grafana: http://127.0.0.1:3001"
+  kubectl --namespace {{ .Release.Namespace }} port-forward svc/{{ .Release.Name }}-grafana 3001:80
+  
+  Get Grafana admin password:
+  kubectl get secret --namespace {{ .Release.Namespace }} {{ .Release.Name }}-grafana -o jsonpath="{.data.admin-password}" | base64 --decode ; echo
+{{- end }}
+
+{{- if .Values.prometheus.enabled }}
+  Prometheus:
+  echo "Prometheus: http://127.0.0.1:9090"
+  kubectl --namespace {{ .Release.Namespace }} port-forward svc/{{ .Release.Name }}-prometheus-server 9090:80
+{{- end }}
+
+2. OpenTelemetry endpoints:
+{{- if .Values.openlit.enabled }}
+  OTLP gRPC: {{ include "lang-observatory.fullname" . }}-openlit:4317
+  OTLP HTTP: {{ include "lang-observatory.fullname" . }}-openlit:4318
+{{- end }}
+
+3. Configuration:
+  - Update your LLM applications to send traces to the OTLP endpoints above
+  - Configure Langfuse with the provided public/secret keys
+  - Access Grafana dashboards for observability insights
