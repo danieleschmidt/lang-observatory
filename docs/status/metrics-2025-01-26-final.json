@@ -1,6 +1,6 @@
 {
   "timestamp": "2025-01-26T01:00:00Z",
-  "completed_ids": ["BACKLOG-001", "BACKLOG-002", "BACKLOG-003", "BACKLOG-004", "BACKLOG-005", "BACKLOG-006", "BACKLOG-007", "BACKLOG-008", "BACKLOG-009"],
+  "completed_ids": ["BACKLOG-001", "BACKLOG-003", "BACKLOG-004", "BACKLOG-005", "BACKLOG-006", "BACKLOG-007", "BACKLOG-008", "BACKLOG-009"],
   "coverage_delta": 0,
   "flaky_tests": [],
   "ci_summary": {
@@ -30,7 +30,8 @@
     "highest_priority": null,
     "total_backlog_value": 0,
     "total_backlog_effort": 0,
-    "completion_rate": "89%"
+    "completion_rate": "89%",
+    "note": "CI/CD workflow files removed due to GitHub App permission constraints"
   },
   "deliverables_summary": {
     "helm_chart": {
