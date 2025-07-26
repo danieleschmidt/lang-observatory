@@ -170,9 +170,85 @@ backlog:
     created_at: "2025-01-26T01:00:00Z"
     completed_at: "2025-01-26T01:00:00Z"
 
+  - id: "BACKLOG-010"
+    title: "Add Helm chart dependencies and build chart"
+    type: "infrastructure"
+    description: "Configure Chart.yaml dependencies for Prometheus and Grafana, build chart with dependencies"
+    acceptance_criteria:
+      - "helm dependency build executes successfully"
+      - "Chart.lock file generated"
+      - "charts/ directory contains dependency charts"
+      - "helm template renders without errors"
+    effort: 3
+    value: 8
+    time_criticality: 8
+    risk_reduction: 8
+    wsjf_score: 8.0
+    status: "DONE"
+    risk_tier: "medium"
+    created_at: "2025-01-26T01:15:00Z"
+    completed_at: "2025-01-26T01:30:00Z"
+
+  - id: "BACKLOG-011"
+    title: "Add Helm chart tests"
+    type: "testing"
+    description: "Create Helm test templates to validate deployment functionality"
+    acceptance_criteria:
+      - "Test pod templates for connectivity tests"
+      - "Service endpoint validation tests"
+      - "helm test command executes successfully"
+      - "Tests validate Langfuse and OpenLIT connectivity"
+    effort: 5
+    value: 5
+    time_criticality: 3
+    risk_reduction: 8
+    wsjf_score: 3.2
+    status: "DONE"
+    risk_tier: "low"
+    created_at: "2025-01-26T01:15:00Z"
+    completed_at: "2025-01-26T01:30:00Z"
+
+  - id: "BACKLOG-012"
+    title: "Add CHANGELOG.md with release history"
+    type: "documentation"
+    description: "Create and maintain CHANGELOG.md following semver conventions"
+    acceptance_criteria:
+      - "CHANGELOG.md exists with v0.1.0 entry"
+      - "Follows keepachangelog.com format"
+      - "Documents all completed features"
+      - "Includes migration notes if needed"
+    effort: 2
+    value: 2
+    time_criticality: 2
+    risk_reduction: 1
+    wsjf_score: 2.5
+    status: "DONE"
+    risk_tier: "low"
+    created_at: "2025-01-26T01:15:00Z"
+    completed_at: "2025-01-26T01:30:00Z"
+
+  - id: "BACKLOG-013"
+    title: "Add LICENSE file"
+    type: "legal"
+    description: "Add appropriate open source license file"
+    acceptance_criteria:
+      - "LICENSE file exists"
+      - "Apache-2.0 or MIT license content"
+      - "Copyright attribution to Terragon Labs"
+      - "README.md license badge matches file"
+    effort: 1
+    value: 2
+    time_criticality: 1
+    risk_reduction: 3
+    wsjf_score: 6.0
+    status: "DONE"
+    risk_tier: "low"
+    created_at: "2025-01-26T01:15:00Z"
+    completed_at: "2025-01-26T01:30:00Z"
+
 metadata:
-  last_updated: "2025-01-26T01:00:00Z"
-  total_items: 9
+  last_updated: "2025-01-26T01:15:00Z"
+  total_items: 13
   wsjf_weights:
     value: 1.0
     time_criticality: 1.0
