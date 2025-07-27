@@ -11,6 +11,10 @@
     "test:integration": "jest --testPathPattern=tests/integration",
     "test:helm": "helm lint ./charts/lang-observatory && helm template ./charts/lang-observatory --validate",
     "test:e2e": "kubectl apply -f tests/e2e/test-deployment.yaml && helm test lang-observatory",
+    "test:performance": "k6 run tests/performance/load-test.js",
+    "test:playwright": "playwright test",
+    "test:mutation": "stryker run",
+    "test:contract": "pact-broker",
     "lint": "helm lint ./charts/lang-observatory && yamllint charts/",
     "lint:fix": "prettier --write \"**/*.{yaml,yml,json,md}\"",
     "format": "prettier --check \"**/*.{yaml,yml,json,md}\"",
@@ -26,7 +30,20 @@
     "security:kubesec": "kubesec scan charts/lang-observatory/templates/*.yaml",
     "docs:generate": "helm-docs --chart-search-root=charts",
     "release": "semantic-release",
-    "precommit": "npm run lint && npm run test:helm && npm run security:scan"
+    "precommit": "npm run lint && npm run test:helm && npm run security:scan",
+    "prepare": "husky install"
+  },
+  "lint-staged": {
+    "*.{js,ts,jsx,tsx}": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "*.{yaml,yml,json,md}": [
+      "prettier --write"
+    ],
+    "*.{yaml,yml}": [
+      "yamllint"
+    ]
   },
   "repository": {
     "type": "git",
@@ -53,10 +70,21 @@
     "@semantic-release/changelog": "^6.0.3",
     "@semantic-release/git": "^10.0.1",
     "@semantic-release/github": "^9.2.6",
+    "@typescript-eslint/eslint-plugin": "^6.21.0",
+    "@typescript-eslint/parser": "^6.21.0",
+    "eslint": "^8.56.0",
+    "eslint-config-prettier": "^9.1.0",
+    "eslint-plugin-prettier": "^5.1.3",
     "husky": "^8.0.3",
     "jest": "^29.7.0",
+    "lint-staged": "^15.2.0",
     "prettier": "^3.2.5",
-    "semantic-release": "^22.0.12"
+    "semantic-release": "^22.0.12",
+    "typescript": "^5.3.3",
+    "yamllint": "^1.0.4",
+    "jest-junit": "^16.0.0",
+    "supertest": "^6.3.4",
+    "@playwright/test": "^1.40.1"
   },
   "engines": {
     "node": ">=18.0.0",

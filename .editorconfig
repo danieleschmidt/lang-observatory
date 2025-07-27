@@ -1,28 +1,65 @@
+# EditorConfig is awesome: https://EditorConfig.org
+
+# top-most EditorConfig file
 root = true
 
+# Unix-style newlines with a newline ending every file
 [*]
-charset = utf-8
 end_of_line = lf
 insert_final_newline = true
 trim_trailing_whitespace = true
+charset = utf-8
+
+# 2 space indentation for YAML, JSON, and web files
+[*.{yaml,yml,json,js,ts,jsx,tsx,css,scss,html,md}]
 indent_style = space
 indent_size = 2
 
-[*.{yaml,yml}]
-indent_size = 2
+# 4 space indentation for Python
+[*.py]
+indent_style = space
+indent_size = 4
+max_line_length = 88
 
-[*.json]
-indent_size = 2
-
-[*.md]
-trim_trailing_whitespace = false
-
+# Tab indentation for Makefiles
 [Makefile]
 indent_style = tab
 
+# Specific settings for Helm templates
+[charts/**/templates/*.{yaml,yml}]
+indent_style = space
+indent_size = 2
+
+# Specific settings for values files
+[**/values*.yaml]
+indent_style = space
+indent_size = 2
+
+# Docker files
+[Dockerfile*]
+indent_style = space
+indent_size = 2
+
+# Shell scripts
+[*.{sh,bash}]
+indent_style = space
+indent_size = 2
+
+# Go files (if any)
 [*.go]
 indent_style = tab
 indent_size = 4
 
-[*.py]
+# Configuration files
+[*.{ini,cfg,conf}]
+indent_style = space
 indent_size = 4
+
+# Package.json and similar
+[package*.json]
+indent_style = space
+indent_size = 2
+
+# Markdown files - don't trim trailing whitespace
+[*.md]
+trim_trailing_whitespace = false
