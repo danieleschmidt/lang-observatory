@@ -1,0 +1,69 @@
+{
+  "name": "lang-observatory",
+  "version": "0.1.0",
+  "description": "A turnkey observability stack for large language models",
+  "main": "index.js",
+  "scripts": {
+    "dev": "helm template lang-observatory ./charts/lang-observatory --values ./charts/lang-observatory/values.yaml",
+    "build": "helm package ./charts/lang-observatory",
+    "test": "npm run test:unit && npm run test:integration && npm run test:helm",
+    "test:unit": "jest --testPathPattern=tests/unit",
+    "test:integration": "jest --testPathPattern=tests/integration",
+    "test:helm": "helm lint ./charts/lang-observatory && helm template ./charts/lang-observatory --validate",
+    "test:e2e": "kubectl apply -f tests/e2e/test-deployment.yaml && helm test lang-observatory",
+    "lint": "helm lint ./charts/lang-observatory && yamllint charts/",
+    "lint:fix": "prettier --write \"**/*.{yaml,yml,json,md}\"",
+    "format": "prettier --check \"**/*.{yaml,yml,json,md}\"",
+    "clean": "rm -rf charts/lang-observatory/charts/ charts/lang-observatory/Chart.lock *.tgz",
+    "deps": "helm dependency update ./charts/lang-observatory",
+    "install": "helm install lang-observatory ./charts/lang-observatory",
+    "upgrade": "helm upgrade lang-observatory ./charts/lang-observatory",
+    "uninstall": "helm uninstall lang-observatory",
+    "status": "helm status lang-observatory",
+    "validate": "helm template ./charts/lang-observatory | kubectl apply --dry-run=client -f -",
+    "security:scan": "npm run security:trivy && npm run security:kubesec",
+    "security:trivy": "trivy fs --security-checks vuln,config .",
+    "security:kubesec": "kubesec scan charts/lang-observatory/templates/*.yaml",
+    "docs:generate": "helm-docs --chart-search-root=charts",
+    "release": "semantic-release",
+    "precommit": "npm run lint && npm run test:helm && npm run security:scan"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/terragon-labs/lang-observatory.git"
+  },
+  "keywords": [
+    "observability",
+    "llm",
+    "langfuse",
+    "openlit",
+    "prometheus",
+    "grafana",
+    "helm",
+    "kubernetes",
+    "opentelemetry"
+  ],
+  "author": "Terragon Labs <opensource@terragonlabs.com>",
+  "license": "Apache-2.0",
+  "bugs": {
+    "url": "https://github.com/terragon-labs/lang-observatory/issues"
+  },
+  "homepage": "https://github.com/terragon-labs/lang-observatory#readme",
+  "devDependencies": {
+    "@semantic-release/changelog": "^6.0.3",
+    "@semantic-release/git": "^10.0.1",
+    "@semantic-release/github": "^9.2.6",
+    "husky": "^8.0.3",
+    "jest": "^29.7.0",
+    "prettier": "^3.2.5",
+    "semantic-release": "^22.0.12"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
+  },
+  "volta": {
+    "node": "20.11.0",
+    "npm": "10.2.4"
+  }
+}

@@ -1,0 +1,88 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: lang-observatory-alerts
+  namespace: lang-observatory
+  labels:
+    app.kubernetes.io/name: lang-observatory
+    app.kubernetes.io/component: monitoring
+spec:
+  groups:
+    - name: lang-observatory.rules
+      interval: 30s
+      rules:
+        - alert: LangfuseDown
+          expr: up{job="langfuse"} == 0
+          for: 1m
+          labels:
+            severity: critical
+            component: langfuse
+          annotations:
+            summary: "Langfuse service is down"
+            description: "Langfuse has been down for more than 1 minute"
+
+        - alert: OpenLITDown
+          expr: up{job="openlit"} == 0
+          for: 1m
+          labels:
+            severity: critical
+            component: openlit
+          annotations:
+            summary: "OpenLIT service is down"
+            description: "OpenLIT OTEL collector has been down for more than 1 minute"
+
+        - alert: PrometheusDown
+          expr: up{job="prometheus"} == 0
+          for: 1m
+          labels:
+            severity: critical
+            component: prometheus
+          annotations:
+            summary: "Prometheus service is down"
+            description: "Prometheus has been down for more than 1 minute"
+
+        - alert: GrafanaDown
+          expr: up{job="grafana"} == 0
+          for: 1m
+          labels:
+            severity: warning
+            component: grafana
+          annotations:
+            summary: "Grafana service is down"
+            description: "Grafana has been down for more than 1 minute"
+
+        - alert: HighMemoryUsage
+          expr: (container_memory_working_set_bytes / container_spec_memory_limit_bytes) * 100 > 80
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            summary: "High memory usage detected"
+            description: "Container {{ $labels.container }} memory usage is above 80%"
+
+        - alert: HighCPUUsage
+          expr: (rate(container_cpu_usage_seconds_total[5m]) * 100) > 80
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            summary: "High CPU usage detected"
+            description: "Container {{ $labels.container }} CPU usage is above 80%"
+
+        - alert: PodCrashLooping
+          expr: rate(kube_pod_container_status_restarts_total[15m]) > 0
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            summary: "Pod is crash looping"
+            description: "Pod {{ $labels.pod }} in namespace {{ $labels.namespace }} is restarting frequently"
+
+        - alert: DiskSpaceUsage
+          expr: (node_filesystem_avail_bytes / node_filesystem_size_bytes) * 100 < 20
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            summary: "Low disk space"
+            description: "Disk space usage is above 80% on {{ $labels.instance }}"

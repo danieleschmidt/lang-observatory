@@ -1,0 +1,8 @@
+# Trivy ignore file for known acceptable vulnerabilities
+
+# Add CVE IDs here that are accepted risks or false positives
+# Format: CVE-YYYY-NNNNN
+
+# Example entries (remove these and add actual CVEs if needed):
+# CVE-2021-44228  # Log4j vulnerability - not applicable to our stack
+# CVE-2022-12345  # Example CVE - documented as false positive
