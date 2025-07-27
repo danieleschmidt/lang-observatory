@@ -1,14 +1,15 @@
 {
-  "name": "Lang Observatory Dev Container",
+  "name": "Lang Observatory Dev Environment",
   "image": "mcr.microsoft.com/vscode/devcontainers/base:ubuntu",
   "features": {
     "ghcr.io/devcontainers/features/docker-in-docker:2": {},
     "ghcr.io/devcontainers/features/kubectl-helm-minikube:1": {
       "version": "latest",
-      "helm": "latest",
+      "helm": "3.12.0",
       "minikube": "latest"
     },
     "ghcr.io/devcontainers/features/node:1": {
+      "nodeGypDependencies": true,
       "version": "20"
     },
     "ghcr.io/devcontainers/features/python:1": {
@@ -20,24 +21,63 @@
   "customizations": {
     "vscode": {
       "extensions": [
-        "ms-kubernetes-tools.vscode-kubernetes-tools",
+        "ms-vscode.vscode-yaml",
         "redhat.vscode-yaml",
-        "ms-python.python",
-        "esbenp.prettier-vscode",
+        "ms-kubernetes-tools.vscode-kubernetes-tools",
         "ms-vscode.vscode-json",
+        "esbenp.prettier-vscode",
+        "ms-python.python",
+        "ms-python.flake8",
+        "ms-python.black-formatter",
+        "streetsidesoftware.code-spell-checker",
+        "github.copilot",
+        "github.copilot-chat",
         "github.vscode-pull-request-github"
       ],
       "settings": {
-        "terminal.integrated.defaultProfile.linux": "bash",
-        "yaml.schemas": {
-          "kubernetes": "*.yaml"
-        },
         "editor.formatOnSave": true,
-        "editor.defaultFormatter": "esbenp.prettier-vscode"
+        "editor.defaultFormatter": "esbenp.prettier-vscode",
+        "python.defaultInterpreterPath": "/usr/local/bin/python",
+        "python.formatting.provider": "black",
+        "yaml.validate": true,
+        "yaml.completion": true,
+        "yaml.hover": true,
+        "files.associations": {
+          "*.yaml": "yaml",
+          "*.yml": "yaml"
+        },
+        "terminal.integrated.defaultProfile.linux": "bash"
       }
     }
   },
-  "forwardPorts": [3000, 8080, 9090, 3001],
-  "postCreateCommand": "helm repo add prometheus-community https://prometheus-community.github.io/helm-charts && helm repo add grafana https://grafana.github.io/helm-charts && helm repo update",
+  "forwardPorts": [3000, 8080, 9090, 3001, 4317, 4318],
+  "portsAttributes": {
+    "3000": {
+      "label": "Langfuse UI",
+      "onAutoForward": "notify"
+    },
+    "8080": {
+      "label": "Grafana",
+      "onAutoForward": "notify"
+    },
+    "9090": {
+      "label": "Prometheus",
+      "onAutoForward": "notify"
+    },
+    "3001": {
+      "label": "OpenLIT",
+      "onAutoForward": "notify"
+    },
+    "4317": {
+      "label": "OTEL GRPC",
+      "onAutoForward": "silent"
+    },
+    "4318": {
+      "label": "OTEL HTTP",
+      "onAutoForward": "silent"
+    }
+  },
+  "postCreateCommand": "npm install && npm run deps && helm repo add prometheus-community https://prometheus-community.github.io/helm-charts && helm repo add grafana https://grafana.github.io/helm-charts && helm repo update",
+  "postStartCommand": "echo 'Dev environment ready! Run: npm run dev'",
   "remoteUser": "vscode"
 }

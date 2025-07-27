@@ -1,0 +1,213 @@
+version: '3.8'
+
+services:
+  # Development container for VS Code devcontainers
+  devcontainer:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: base
+    volumes:
+      - .:/workspace:cached
+      - node_modules:/workspace/node_modules
+      - /var/run/docker.sock:/var/run/docker.sock
+    working_dir: /workspace
+    command: sleep infinity
+    networks:
+      - dev-network
+
+  # PostgreSQL for development
+  postgres-dev:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_DB: langfuse_dev
+      POSTGRES_USER: langfuse
+      POSTGRES_PASSWORD: dev_password
+      POSTGRES_INITDB_ARGS: "--auth-host=scram-sha-256"
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_dev_data:/var/lib/postgresql/data
+      - ./scripts/init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U langfuse -d langfuse_dev"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - dev-network
+
+  # Redis for caching and sessions
+  redis-dev:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_dev_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    networks:
+      - dev-network
+
+  # Langfuse development instance
+  langfuse-dev:
+    image: langfuse/langfuse:latest
+    environment:
+      DATABASE_URL: postgresql://langfuse:dev_password@postgres-dev:5432/langfuse_dev
+      NEXTAUTH_SECRET: dev_secret_change_in_production
+      NEXTAUTH_URL: http://localhost:3000
+      TELEMETRY_ENABLED: false
+      NODE_ENV: development
+      LOG_LEVEL: debug
+      ENCRYPTION_KEY: 0123456789abcdef0123456789abcdef
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./config/langfuse-dev.env:/app/.env
+    depends_on:
+      postgres-dev:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/api/public/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    networks:
+      - dev-network
+
+  # OpenTelemetry Collector for development
+  otel-collector-dev:
+    image: otel/opentelemetry-collector-contrib:latest
+    command: ["--config=/etc/otel-collector-config.yaml"]
+    volumes:
+      - ./config/otel-collector-dev.yaml:/etc/otel-collector-config.yaml
+    ports:
+      - "4317:4317"   # OTLP gRPC receiver
+      - "4318:4318"   # OTLP HTTP receiver
+      - "8888:8888"   # Prometheus metrics
+      - "8889:8889"   # Prometheus exporter
+    environment:
+      - OTEL_LOG_LEVEL=debug
+    depends_on:
+      - prometheus-dev
+    networks:
+      - dev-network
+
+  # Prometheus for development
+  prometheus-dev:
+    image: prom/prometheus:latest
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--storage.tsdb.retention.time=7d'
+      - '--web.enable-lifecycle'
+      - '--web.enable-admin-api'
+      - '--log.level=debug'
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./config/prometheus-dev.yml:/etc/prometheus/prometheus.yml
+      - ./monitoring/alerts.yaml:/etc/prometheus/alerts.yaml
+      - prometheus_dev_data:/prometheus
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:9090/-/healthy"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    networks:
+      - dev-network
+
+  # Grafana for development
+  grafana-dev:
+    image: grafana/grafana:latest
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin
+      GF_USERS_ALLOW_SIGN_UP: false
+      GF_SERVER_ROOT_URL: http://localhost:8080
+      GF_LOG_LEVEL: debug
+      GF_FEATURE_TOGGLES_ENABLE: publicDashboards
+      GF_INSTALL_PLUGINS: grafana-piechart-panel,grafana-worldmap-panel
+    ports:
+      - "8080:3000"
+    volumes:
+      - grafana_dev_data:/var/lib/grafana
+      - ./config/grafana-dev-datasources.yml:/etc/grafana/provisioning/datasources/datasources.yml
+      - ./config/grafana-dev-dashboards.yml:/etc/grafana/provisioning/dashboards/dashboards.yml
+      - ./dashboards:/var/lib/grafana/dashboards
+    depends_on:
+      prometheus-dev:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    networks:
+      - dev-network
+
+  # Jaeger for distributed tracing (development)
+  jaeger-dev:
+    image: jaegertracing/all-in-one:latest
+    environment:
+      COLLECTOR_OTLP_ENABLED: true
+    ports:
+      - "16686:16686"  # Jaeger UI
+      - "14268:14268"  # Jaeger collector HTTP
+      - "14250:14250"  # Jaeger collector gRPC
+      - "6831:6831/udp"  # Jaeger agent
+    networks:
+      - dev-network
+
+  # MinIO for object storage (development)
+  minio-dev:
+    image: minio/minio:latest
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - minio_dev_data:/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+    networks:
+      - dev-network
+
+  # Load testing service
+  k6-dev:
+    image: grafana/k6:latest
+    volumes:
+      - ./tests/performance:/scripts
+    environment:
+      K6_OUT: prometheus
+      K6_PROMETHEUS_URL: http://prometheus-dev:9090
+    command: ["sleep", "infinity"]
+    networks:
+      - dev-network
+
+volumes:
+  node_modules:
+  postgres_dev_data:
+  redis_dev_data:
+  prometheus_dev_data:
+  grafana_dev_data:
+  minio_dev_data:
+
+networks:
+  dev-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
