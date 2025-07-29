@@ -1,0 +1,51 @@
+# Global ownership - Terragon Labs maintainers
+* @terragon-labs/maintainers
+
+# Helm charts and Kubernetes manifests
+charts/ @terragon-labs/platform-team @terragon-labs/maintainers
+*.yaml @terragon-labs/platform-team
+*.yml @terragon-labs/platform-team
+
+# Security and compliance
+SECURITY.md @terragon-labs/security-team @terragon-labs/maintainers
+security/ @terragon-labs/security-team @terragon-labs/maintainers
+.trivyignore @terragon-labs/security-team
+
+# Documentation
+docs/ @terragon-labs/documentation-team @terragon-labs/maintainers
+*.md @terragon-labs/documentation-team
+README.md @terragon-labs/maintainers
+
+# CI/CD and automation
+.github/ @terragon-labs/devops-team @terragon-labs/maintainers
+scripts/ @terragon-labs/devops-team @terragon-labs/maintainers
+Dockerfile @terragon-labs/devops-team @terragon-labs/maintainers
+docker-compose*.yml @terragon-labs/devops-team @terragon-labs/maintainers
+
+# Testing
+tests/ @terragon-labs/qa-team @terragon-labs/maintainers
+*.test.js @terragon-labs/qa-team
+*.spec.js @terragon-labs/qa-team
+jest.config.js @terragon-labs/qa-team
+playwright.config.js @terragon-labs/qa-team
+stryker.conf.js @terragon-labs/qa-team
+
+# Configuration
+config/ @terragon-labs/platform-team @terragon-labs/maintainers
+monitoring/ @terragon-labs/platform-team @terragon-labs/maintainers
+dashboards/ @terragon-labs/platform-team @terragon-labs/maintainers
+
+# Package management
+package.json @terragon-labs/maintainers
+package-lock.json @terragon-labs/maintainers
+renovate.json @terragon-labs/maintainers
+.github/dependabot.yml @terragon-labs/maintainers
+
+# Development environment
+.devcontainer/ @terragon-labs/devops-team @terragon-labs/maintainers
+.editorconfig @terragon-labs/maintainers
+.gitignore @terragon-labs/maintainers
+
+# Performance and chaos engineering
+tests/performance/ @terragon-labs/platform-team @terragon-labs/qa-team
+tests/chaos/ @terragon-labs/platform-team @terragon-labs/qa-team
