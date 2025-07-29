@@ -1,0 +1,79 @@
+version: 2
+updates:
+  # NPM package dependencies
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "04:00"
+    open-pull-requests-limit: 5
+    target-branch: "main"
+    reviewers:
+      - "terragon-labs/maintainers"
+    assignees:
+      - "terragon-labs/maintainers"
+    commit-message:
+      prefix: "chore(deps)"
+      include: "scope"
+    labels:
+      - "dependencies"
+      - "automated"
+    ignore:
+      # Ignore major version updates for now
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
+
+  # Docker dependencies in Dockerfiles
+  - package-ecosystem: "docker"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "tuesday"
+      time: "04:00"
+    open-pull-requests-limit: 3
+    target-branch: "main"
+    reviewers:
+      - "terragon-labs/maintainers"
+    commit-message:
+      prefix: "chore(docker)"
+    labels:
+      - "dependencies"
+      - "docker"
+      - "automated"
+
+  # GitHub Actions workflow dependencies
+  - package-ecosystem: "github-actions"
+    directory: "/.github/workflows"
+    schedule:
+      interval: "weekly"
+      day: "wednesday"
+      time: "04:00"
+    open-pull-requests-limit: 3
+    target-branch: "main"
+    reviewers:
+      - "terragon-labs/maintainers"
+    commit-message:
+      prefix: "chore(actions)"
+    labels:
+      - "dependencies"
+      - "ci/cd"
+      - "automated"
+
+  # Dev Container dependencies
+  - package-ecosystem: "docker"
+    directory: "/.devcontainer"
+    schedule:
+      interval: "monthly"
+      day: "first-monday"
+      time: "04:00"
+    open-pull-requests-limit: 2
+    target-branch: "main"
+    reviewers:
+      - "terragon-labs/maintainers"
+    commit-message:
+      prefix: "chore(devcontainer)"
+    labels:
+      - "dependencies"
+      - "devcontainer"
+      - "automated"

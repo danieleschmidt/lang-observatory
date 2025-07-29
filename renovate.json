@@ -1,0 +1,83 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:recommended",
+    ":dependencyDashboard",
+    ":semanticCommits",
+    ":separatePatchReleases",
+    "group:monorepos",
+    "group:recommended",
+    "workarounds:all"
+  ],
+  "timezone": "UTC",
+  "schedule": ["before 6am on monday"],
+  "prConcurrentLimit": 3,
+  "branchConcurrentLimit": 5,
+  "prHourlyLimit": 2,
+  "updateNotScheduled": false,
+  "lockFileMaintenance": {
+    "enabled": true,
+    "schedule": ["before 6am on the first day of the month"]
+  },
+  "vulnerabilityAlerts": {
+    "enabled": true,
+    "schedule": ["at any time"]
+  },
+  "packageRules": [
+    {
+      "matchManagers": ["npm"],
+      "matchUpdateTypes": ["major"],
+      "enabled": false,
+      "description": "Disable major npm updates - manual review required"
+    },
+    {
+      "matchManagers": ["helm-requirements"],
+      "matchUpdateTypes": ["major"],
+      "enabled": false,
+      "description": "Disable major Helm chart updates - manual review required"
+    },
+    {
+      "matchPackagePatterns": ["^@types/"],
+      "groupName": "TypeScript definitions",
+      "schedule": ["before 6am on monday"]
+    },
+    {
+      "matchPackagePatterns": ["^eslint", "^@typescript-eslint/", "^prettier"],
+      "groupName": "linting and formatting",
+      "schedule": ["before 6am on monday"]
+    },
+    {
+      "matchPackagePatterns": ["^jest", "^@playwright/", "^supertest"],
+      "groupName": "testing dependencies",
+      "schedule": ["before 6am on monday"]
+    },
+    {
+      "matchManagers": ["github-actions"],
+      "groupName": "GitHub Actions",
+      "schedule": ["before 6am on wednesday"],
+      "automerge": true,
+      "automergeType": "pr"
+    },
+    {
+      "matchDatasources": ["docker"],
+      "groupName": "Docker base images",
+      "schedule": ["before 6am on tuesday"]
+    }
+  ],
+  "labels": ["dependencies", "automated"],
+  "assignees": ["terragon-labs/maintainers"],
+  "reviewers": ["terragon-labs/maintainers"],
+  "commitMessagePrefix": "chore(deps): ",
+  "commitMessageAction": "update",
+  "commitMessageTopic": "{{depName}}",
+  "commitMessageExtra": "to {{newVersion}}",
+  "prTitle": "chore(deps): update {{depName}} to {{newVersion}}",
+  "prBodyTemplate": "This PR updates {{depName}} from {{currentVersion}} to {{newVersion}}.\n\n{{#if hasReleaseNotes}}**Release Notes:**\n{{{releaseNotes}}}{{/if}}\n\n---\n\n🤖 This PR was generated automatically by Renovate Bot.",
+  "enabledManagers": [
+    "npm", 
+    "dockerfile", 
+    "github-actions", 
+    "helm-requirements",
+    "kubernetes"
+  ]
+}
