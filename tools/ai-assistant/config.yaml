@@ -1,0 +1,296 @@
+# AI Assistant Configuration for Lang Observatory
+# Provides intelligent assistance for operations, debugging, and optimization
+
+ai_assistant:
+  name: "Lang Observatory AI Assistant"
+  version: "1.0.0"
+  
+  # AI Model Configuration
+  models:
+    primary:
+      provider: "anthropic"
+      model: "claude-3-sonnet-20240229"
+      max_tokens: 4096
+      temperature: 0.1
+    
+    fallback:
+      provider: "openai"
+      model: "gpt-4"
+      max_tokens: 4096
+      temperature: 0.1
+  
+  # Capabilities and Features
+  capabilities:
+    - name: "troubleshooting"
+      description: "Automated problem diagnosis and resolution"
+      confidence_threshold: 0.8
+      
+    - name: "optimization"
+      description: "Performance and resource optimization recommendations"
+      confidence_threshold: 0.7
+      
+    - name: "monitoring"
+      description: "Intelligent monitoring and alerting assistance"
+      confidence_threshold: 0.9
+      
+    - name: "documentation"
+      description: "Auto-generated documentation and explanations"
+      confidence_threshold: 0.6
+
+  # Knowledge Base Configuration
+  knowledge_base:
+    # System Knowledge
+    system:
+      - path: "docs/"
+        type: "documentation"
+        weight: 1.0
+        
+      - path: "charts/"
+        type: "configuration"
+        weight: 0.8
+        
+      - path: "scripts/"
+        type: "automation"
+        weight: 0.6
+    
+    # External Knowledge Sources
+    external:
+      - name: "langfuse_docs"
+        url: "https://langfuse.com/docs"
+        type: "api_documentation"
+        refresh_interval: "24h"
+        
+      - name: "openlit_docs"
+        url: "https://docs.openlit.io"
+        type: "integration_guide"
+        refresh_interval: "24h"
+        
+      - name: "prometheus_docs"
+        url: "https://prometheus.io/docs"
+        type: "monitoring_guide"
+        refresh_interval: "7d"
+
+  # Integration Points
+  integrations:
+    # Monitoring Stack
+    prometheus:
+      endpoint: "http://prometheus:9090"
+      query_timeout: "30s"
+      metrics_context: true
+      
+    grafana:
+      endpoint: "http://grafana:3000"
+      api_key_secret: "grafana-api-key"
+      dashboard_analysis: true
+      
+    langfuse:
+      endpoint: "http://langfuse:3000"
+      api_key_secret: "langfuse-api-key"
+      trace_analysis: true
+    
+    # Kubernetes Integration
+    kubernetes:
+      in_cluster: true
+      namespace: "lang-observatory"
+      resource_monitoring: true
+      
+    # Log Analysis
+    loki:
+      endpoint: "http://loki:3100"
+      query_timeout: "30s"
+      log_context: true
+
+  # Assistant Behaviors
+  behaviors:
+    # Response Configuration
+    responses:
+      max_suggestions: 5
+      include_confidence: true
+      provide_explanations: true
+      show_alternatives: true
+      
+    # Proactive Assistance
+    proactive:
+      enabled: true
+      monitoring_interval: "5m"
+      alert_threshold: 0.8
+      
+    # Learning and Adaptation
+    learning:
+      enabled: true
+      feedback_collection: true
+      model_updates: "weekly"
+      
+    # Safety and Limits
+    safety:
+      max_actions_per_request: 3
+      require_confirmation: true
+      audit_all_actions: true
+
+  # Use Cases and Scenarios
+  use_cases:
+    # Troubleshooting Scenarios
+    troubleshooting:
+      - name: "high_latency"
+        description: "Diagnose and resolve high API latency"
+        triggers:
+          - "latency > 1000ms"
+          - "p95_response_time > 2s"
+        actions:
+          - "analyze_metrics"
+          - "check_resource_usage"
+          - "suggest_optimizations"
+          
+      - name: "memory_leak"
+        description: "Identify and resolve memory leaks"
+        triggers:
+          - "memory_usage_trend > 10% per hour"
+          - "oom_killed_containers > 0"
+        actions:
+          - "analyze_memory_patterns"
+          - "identify_leak_sources"
+          - "recommend_fixes"
+    
+    # Optimization Scenarios
+    optimization:
+      - name: "resource_optimization"
+        description: "Optimize resource allocation and usage"
+        triggers:
+          - "resource_utilization < 50%"
+          - "cost_increase > 20%"
+        actions:
+          - "analyze_resource_patterns"
+          - "calculate_optimal_sizing"
+          - "generate_recommendations"
+          
+      - name: "query_optimization"
+        description: "Optimize Prometheus queries and dashboards"
+        triggers:
+          - "query_duration > 10s"
+          - "dashboard_load_time > 5s"
+        actions:
+          - "analyze_query_performance"
+          - "suggest_query_improvements"
+          - "optimize_metric_cardinality"
+
+  # Communication Channels
+  channels:
+    # Slack Integration
+    slack:
+      enabled: true
+      webhook_url_secret: "slack-webhook"
+      channels:
+        - "#lang-observatory-alerts"
+        - "#devops-team"
+      message_format: "structured"
+      
+    # Microsoft Teams
+    teams:
+      enabled: false
+      webhook_url_secret: "teams-webhook"
+      channels:
+        - "Lang Observatory Operations"
+      
+    # Email Notifications
+    email:
+      enabled: true
+      smtp_config_secret: "smtp-config"
+      recipients:
+        - "ops-team@terragonlabs.com"
+        - "devops@terragonlabs.com"
+      
+    # Web Interface
+    web:
+      enabled: true
+      port: 8080
+      auth_required: true
+      session_timeout: "4h"
+
+  # Data Privacy and Security
+  privacy:
+    # Data Handling
+    data_retention: "30d"
+    anonymize_sensitive_data: true
+    encrypt_at_rest: true
+    
+    # PII Protection
+    pii_detection: true
+    pii_masking: true
+    pii_fields:
+      - "email"
+      - "user_id"
+      - "api_key"
+      - "password"
+    
+    # Audit and Compliance
+    audit_logging: true
+    compliance_mode: "strict"
+    data_sovereignty: "us-west-2"
+
+  # Performance and Reliability
+  performance:
+    # Response Times
+    target_response_time: "2s"
+    max_response_time: "10s"
+    timeout_handling: "graceful"
+    
+    # Caching
+    cache_enabled: true
+    cache_ttl: "1h"
+    cache_size: "100MB"
+    
+    # Rate Limiting
+    rate_limit: "100/min"
+    burst_limit: "20"
+    
+    # Health Checks
+    health_check_interval: "30s"
+    health_check_timeout: "5s"
+    health_check_retries: 3
+
+  # Observability
+  observability:
+    # Metrics
+    metrics:
+      enabled: true
+      port: 9090
+      path: "/metrics"
+      
+    # Tracing
+    tracing:
+      enabled: true
+      jaeger_endpoint: "http://jaeger:14268"
+      sample_rate: 0.1
+      
+    # Logging
+    logging:
+      level: "info"
+      format: "json"
+      output: "stdout"
+      include_context: true
+
+# Environment-specific overrides
+environments:
+  development:
+    ai_assistant:
+      models:
+        primary:
+          temperature: 0.3
+      behaviors:
+        safety:
+          require_confirmation: false
+      observability:
+        logging:
+          level: "debug"
+          
+  production:
+    ai_assistant:
+      models:
+        primary:
+          temperature: 0.05
+      behaviors:
+        safety:
+          require_confirmation: true
+          audit_all_actions: true
+      performance:
+        rate_limit: "50/min"
