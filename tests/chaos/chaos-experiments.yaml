@@ -1,0 +1,130 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: chaos-experiments
+  namespace: lang-observatory
+data:
+  # Network latency experiment
+  network-latency.yaml: |
+    apiVersion: litmuschaos.io/v1alpha1
+    kind: ChaosExperiment
+    metadata:
+      name: network-latency
+      labels:
+        name: network-latency
+        app.kubernetes.io/part-of: lang-observatory
+        app.kubernetes.io/component: chaos-experiment
+    spec:
+      definition:
+        scope: Namespaced
+        permissions:
+          - apiGroups: [""]
+            resources: ["pods"]
+            verbs: ["create","delete","get","list","patch","update","deletecollection"]
+        image: "litmuschaos/go-runner:latest"
+        imagePullPolicy: Always
+        args:
+        - -c
+        - ./experiments -name network-latency
+        command:
+        - /bin/bash
+        env:
+        - name: TARGET_CONTAINER
+          value: 'langfuse'
+        - name: NETWORK_INTERFACE
+          value: 'eth0'
+        - name: NETWORK_LATENCY
+          value: '200'
+        - name: TOTAL_CHAOS_DURATION
+          value: '60'
+        - name: RAMP_TIME
+          value: '10'
+        - name: PODS_AFFECTED_PERC
+          value: '50'
+        - name: LIB
+          value: 'litmus'
+        - name: LIB_IMAGE
+          value: 'litmuschaos/go-runner:latest'
+        labels:
+          name: network-latency
+          app.kubernetes.io/part-of: lang-observatory
+
+  # Pod failure experiment  
+  pod-failure.yaml: |
+    apiVersion: litmuschaos.io/v1alpha1
+    kind: ChaosExperiment
+    metadata:
+      name: pod-delete
+      labels:
+        name: pod-delete
+        app.kubernetes.io/part-of: lang-observatory
+        app.kubernetes.io/component: chaos-experiment
+    spec:
+      definition:
+        scope: Namespaced
+        permissions:
+          - apiGroups: [""]
+            resources: ["pods"]
+            verbs: ["create","delete","get","list","patch","update","deletecollection"]
+        image: "litmuschaos/go-runner:latest"
+        imagePullPolicy: Always
+        args:
+        - -c
+        - ./experiments -name pod-delete
+        command:
+        - /bin/bash
+        env:
+        - name: TOTAL_CHAOS_DURATION
+          value: '30'
+        - name: CHAOS_INTERVAL
+          value: '10'
+        - name: FORCE
+          value: 'false'
+        - name: PODS_AFFECTED_PERC
+          value: '25'
+        labels:
+          name: pod-delete
+          app.kubernetes.io/part-of: lang-observatory
+
+  # Memory stress experiment
+  memory-stress.yaml: |
+    apiVersion: litmuschaos.io/v1alpha1
+    kind: ChaosExperiment
+    metadata:
+      name: container-kill
+      labels:
+        name: container-kill
+        app.kubernetes.io/part-of: lang-observatory
+        app.kubernetes.io/component: chaos-experiment
+    spec:
+      definition:
+        scope: Namespaced
+        permissions:
+          - apiGroups: [""]
+            resources: ["pods"]
+            verbs: ["create","delete","get","list","patch","update","deletecollection"]
+        image: "litmuschaos/go-runner:latest"
+        imagePullPolicy: Always
+        args:
+        - -c
+        - ./experiments -name container-kill
+        command:
+        - /bin/bash
+        env:
+        - name: TARGET_CONTAINER
+          value: 'grafana'
+        - name: CHAOS_INTERVAL
+          value: '10'
+        - name: SIGNAL
+          value: 'SIGKILL'
+        - name: TOTAL_CHAOS_DURATION
+          value: '20'
+        - name: PODS_AFFECTED_PERC
+          value: '50'
+        - name: TARGET_PODS
+          value: ''
+        - name: LIB
+          value: 'litmus'
+        labels:
+          name: container-kill
+          app.kubernetes.io/part-of: lang-observatory
