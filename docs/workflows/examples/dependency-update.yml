@@ -1,0 +1,462 @@
+name: Dependency Updates
+
+on:
+  schedule:
+    # Run weekly on Mondays at 9 AM UTC
+    - cron: '0 9 * * 1'
+  workflow_dispatch:
+    inputs:
+      update-type:
+        description: 'Type of update to perform'
+        required: true
+        default: 'minor'
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+          - all
+
+env:
+  NODE_VERSION: '20.x'
+  PYTHON_VERSION: '3.11'
+  HELM_VERSION: '3.14.0'
+
+jobs:
+  check-dependencies:
+    name: Check for Dependency Updates
+    runs-on: ubuntu-latest
+    outputs:
+      npm-updates: ${{ steps.npm-check.outputs.updates }}
+      python-updates: ${{ steps.python-check.outputs.updates }}
+      helm-updates: ${{ steps.helm-check.outputs.updates }}
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'pip'
+
+      - name: Setup Helm
+        uses: azure/setup-helm@v3
+        with:
+          version: ${{ env.HELM_VERSION }}
+
+      - name: Install npm dependencies
+        run: npm ci
+
+      - name: Install Python dependencies
+        run: pip install -r requirements-dev.txt
+
+      - name: Check npm updates
+        id: npm-check
+        run: |
+          npm outdated --json > npm-outdated.json || true
+          if [ -s npm-outdated.json ] && [ "$(cat npm-outdated.json)" != "{}" ]; then
+            echo "updates=true" >> $GITHUB_OUTPUT
+            echo "Found npm updates:"
+            cat npm-outdated.json | jq '.'
+          else
+            echo "updates=false" >> $GITHUB_OUTPUT
+            echo "No npm updates found"
+          fi
+
+      - name: Check Python updates
+        id: python-check
+        run: |
+          pip list --outdated --format=json > pip-outdated.json || true
+          if [ -s pip-outdated.json ] && [ "$(cat pip-outdated.json)" != "[]" ]; then
+            echo "updates=true" >> $GITHUB_OUTPUT
+            echo "Found Python updates:"
+            cat pip-outdated.json | jq '.'
+          else
+            echo "updates=false" >> $GITHUB_OUTPUT
+            echo "No Python updates found"
+          fi
+
+      - name: Check Helm chart updates
+        id: helm-check
+        run: |
+          helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+          helm repo add grafana https://grafana.github.io/helm-charts
+          helm repo update
+          
+          # Check for updates in Chart.yaml dependencies
+          current_prometheus=$(grep -A1 "name: prometheus" charts/lang-observatory/Chart.yaml | grep version | awk '{print $2}')
+          current_grafana=$(grep -A1 "name: grafana" charts/lang-observatory/Chart.yaml | grep version | awk '{print $2}')
+          
+          latest_prometheus=$(helm search repo prometheus-community/prometheus --output json | jq -r '.[0].version')
+          latest_grafana=$(helm search repo grafana/grafana --output json | jq -r '.[0].version')
+          
+          if [ "$current_prometheus" != "$latest_prometheus" ] || [ "$current_grafana" != "$latest_grafana" ]; then
+            echo "updates=true" >> $GITHUB_OUTPUT
+            echo "Helm dependency updates available:"
+            echo "Prometheus: $current_prometheus -> $latest_prometheus"
+            echo "Grafana: $current_grafana -> $latest_grafana"
+          else
+            echo "updates=false" >> $GITHUB_OUTPUT
+            echo "No Helm dependency updates found"
+          fi
+
+      - name: Upload dependency check results
+        uses: actions/upload-artifact@v3
+        with:
+          name: dependency-check-results
+          path: |
+            npm-outdated.json
+            pip-outdated.json
+          retention-days: 7
+
+  update-npm-dependencies:
+    name: Update npm Dependencies
+    runs-on: ubuntu-latest
+    needs: check-dependencies
+    if: needs.check-dependencies.outputs.npm-updates == 'true'
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.DEPENDENCY_UPDATE_TOKEN }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Configure git
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "Dependency Update Bot"
+
+      - name: Update dependencies
+        run: |
+          UPDATE_TYPE="${{ github.event.inputs.update-type || 'minor' }}"
+          
+          case $UPDATE_TYPE in
+            patch)
+              npm update --save
+              npm update --save-dev
+              ;;
+            minor)
+              npx npm-check-updates -u --target minor
+              npm install
+              ;;
+            major)
+              npx npm-check-updates -u
+              npm install
+              ;;
+            all)
+              npx npm-check-updates -u
+              npm install
+              ;;
+          esac
+
+      - name: Run tests
+        run: |
+          npm run lint
+          npm run test:unit
+
+      - name: Create pull request
+        uses: peter-evans/create-pull-request@v5
+        with:
+          token: ${{ secrets.DEPENDENCY_UPDATE_TOKEN }}
+          commit-message: "chore: update npm dependencies (${{ github.event.inputs.update-type || 'minor' }})"
+          title: "🔄 Update npm dependencies (${{ github.event.inputs.update-type || 'minor' }})"
+          body: |
+            ## Dependency Updates
+            
+            Automated dependency update for npm packages.
+            
+            **Update type**: ${{ github.event.inputs.update-type || 'minor' }}
+            
+            ### Changes
+            - Updated npm dependencies to latest ${{ github.event.inputs.update-type || 'minor' }} versions
+            - All tests passing ✅
+            - Linting checks passed ✅
+            
+            ### Testing
+            - [ ] Unit tests pass
+            - [ ] Integration tests pass
+            - [ ] Manual testing completed
+            
+            This PR was created automatically by the dependency update workflow.
+          branch: dependency-updates/npm-${{ github.run_number }}
+          labels: |
+            dependencies
+            npm
+            automated
+
+  update-python-dependencies:
+    name: Update Python Dependencies
+    runs-on: ubuntu-latest
+    needs: check-dependencies
+    if: needs.check-dependencies.outputs.python-updates == 'true'
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.DEPENDENCY_UPDATE_TOKEN }}
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Configure git
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "Dependency Update Bot"
+
+      - name: Install pip-tools
+        run: pip install pip-tools
+
+      - name: Update Python dependencies
+        run: |
+          UPDATE_TYPE="${{ github.event.inputs.update-type || 'minor' }}"
+          
+          # Create temporary requirements file with updated versions
+          case $UPDATE_TYPE in
+            patch)
+              pip-compile --upgrade-package "*" requirements-dev.txt --output-file requirements-dev.txt
+              ;;
+            minor|major|all)
+              pip-compile --upgrade requirements-dev.txt --output-file requirements-dev.txt
+              ;;
+          esac
+          
+          pip install -r requirements-dev.txt
+
+      - name: Run Python tests
+        run: |
+          flake8 tests/python/ --max-line-length=88 --extend-ignore=E203,W503
+          pytest tests/python/unit/ -v
+
+      - name: Create pull request
+        uses: peter-evans/create-pull-request@v5
+        with:
+          token: ${{ secrets.DEPENDENCY_UPDATE_TOKEN }}
+          commit-message: "chore: update Python dependencies (${{ github.event.inputs.update-type || 'minor' }})"
+          title: "🐍 Update Python dependencies (${{ github.event.inputs.update-type || 'minor' }})"
+          body: |
+            ## Python Dependency Updates
+            
+            Automated dependency update for Python packages.
+            
+            **Update type**: ${{ github.event.inputs.update-type || 'minor' }}
+            
+            ### Changes
+            - Updated Python dependencies in requirements-dev.txt
+            - All tests passing ✅
+            - Linting checks passed ✅
+            
+            ### Testing
+            - [ ] Unit tests pass
+            - [ ] Integration tests pass
+            - [ ] Security scan passed
+            
+            This PR was created automatically by the dependency update workflow.
+          branch: dependency-updates/python-${{ github.run_number }}
+          labels: |
+            dependencies
+            python
+            automated
+
+  update-helm-dependencies:
+    name: Update Helm Dependencies
+    runs-on: ubuntu-latest
+    needs: check-dependencies
+    if: needs.check-dependencies.outputs.helm-updates == 'true'
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.DEPENDENCY_UPDATE_TOKEN }}
+
+      - name: Setup Helm
+        uses: azure/setup-helm@v3
+        with:
+          version: ${{ env.HELM_VERSION }}
+
+      - name: Configure git
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "Dependency Update Bot"
+
+      - name: Update Helm dependencies
+        run: |
+          cd charts/lang-observatory
+          
+          # Add repositories
+          helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+          helm repo add grafana https://grafana.github.io/helm-charts
+          helm repo update
+          
+          # Get latest versions
+          LATEST_PROMETHEUS=$(helm search repo prometheus-community/prometheus --output json | jq -r '.[0].version')
+          LATEST_GRAFANA=$(helm search repo grafana/grafana --output json | jq -r '.[0].version')
+          
+          # Update Chart.yaml
+          sed -i "s/version: .* # prometheus/version: $LATEST_PROMETHEUS # prometheus/" Chart.yaml
+          sed -i "s/version: .* # grafana/version: $LATEST_GRAFANA # grafana/" Chart.yaml
+          
+          # Update dependencies
+          helm dependency update
+
+      - name: Test Helm chart
+        run: |
+          helm lint ./charts/lang-observatory
+          helm template ./charts/lang-observatory --validate
+
+      - name: Create pull request
+        uses: peter-evans/create-pull-request@v5
+        with:
+          token: ${{ secrets.DEPENDENCY_UPDATE_TOKEN }}
+          commit-message: "chore: update Helm chart dependencies"
+          title: "⚓ Update Helm chart dependencies"
+          body: |
+            ## Helm Dependency Updates
+            
+            Automated update for Helm chart dependencies.
+            
+            ### Changes
+            - Updated Prometheus chart dependency
+            - Updated Grafana chart dependency
+            - Regenerated Chart.lock file
+            
+            ### Testing
+            - [x] Helm lint passed ✅
+            - [x] Template validation passed ✅
+            - [ ] Manual testing completed
+            
+            This PR was created automatically by the dependency update workflow.
+          branch: dependency-updates/helm-${{ github.run_number }}
+          labels: |
+            dependencies
+            helm
+            automated
+
+  security-check:
+    name: Security Check After Updates
+    runs-on: ubuntu-latest
+    needs: [update-npm-dependencies, update-python-dependencies, update-helm-dependencies]
+    if: always() && (needs.update-npm-dependencies.result == 'success' || needs.update-python-dependencies.result == 'success' || needs.update-helm-dependencies.result == 'success')
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install dependencies
+        run: |
+          npm ci
+          pip install -r requirements-dev.txt
+
+      - name: Run security audit
+        run: |
+          echo "Running security checks after dependency updates..."
+          
+          # npm audit
+          npm audit --audit-level high || echo "npm audit issues found - review required"
+          
+          # Python safety check
+          safety check || echo "Python safety issues found - review required"
+          
+          # Basic vulnerability scan
+          curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin
+          trivy fs . --severity HIGH,CRITICAL --no-progress || echo "Trivy scan issues found - review required"
+
+      - name: Create security summary
+        run: |
+          echo "# Security Check Summary" > security-summary.md
+          echo "Performed after dependency updates on $(date)" >> security-summary.md
+          echo "" >> security-summary.md
+          echo "Please review any security issues mentioned above before merging dependency update PRs." >> security-summary.md
+
+      - name: Upload security summary
+        uses: actions/upload-artifact@v3
+        with:
+          name: post-update-security-summary
+          path: security-summary.md
+          retention-days: 30
+
+  notify-completion:
+    name: Notify Completion
+    runs-on: ubuntu-latest
+    needs: [check-dependencies, update-npm-dependencies, update-python-dependencies, update-helm-dependencies, security-check]
+    if: always()
+    
+    steps:
+      - name: Create completion summary
+        run: |
+          echo "# Dependency Update Summary" > summary.md
+          echo "Completed on: $(date)" >> summary.md
+          echo "" >> summary.md
+          
+          if [ "${{ needs.check-dependencies.result }}" == "success" ]; then
+            echo "✅ Dependency check completed" >> summary.md
+          else
+            echo "❌ Dependency check failed" >> summary.md
+          fi
+          
+          if [ "${{ needs.update-npm-dependencies.result }}" == "success" ]; then
+            echo "✅ npm dependencies updated" >> summary.md
+          elif [ "${{ needs.update-npm-dependencies.result }}" == "skipped" ]; then
+            echo "⏭️ npm dependencies up to date" >> summary.md
+          else
+            echo "❌ npm dependency update failed" >> summary.md
+          fi
+          
+          if [ "${{ needs.update-python-dependencies.result }}" == "success" ]; then
+            echo "✅ Python dependencies updated" >> summary.md
+          elif [ "${{ needs.update-python-dependencies.result }}" == "skipped" ]; then
+            echo "⏭️ Python dependencies up to date" >> summary.md
+          else
+            echo "❌ Python dependency update failed" >> summary.md
+          fi
+          
+          if [ "${{ needs.update-helm-dependencies.result }}" == "success" ]; then
+            echo "✅ Helm dependencies updated" >> summary.md
+          elif [ "${{ needs.update-helm-dependencies.result }}" == "skipped" ]; then
+            echo "⏭️ Helm dependencies up to date" >> summary.md
+          else
+            echo "❌ Helm dependency update failed" >> summary.md
+          fi
+          
+          if [ "${{ needs.security-check.result }}" == "success" ]; then
+            echo "✅ Security check completed" >> summary.md
+          elif [ "${{ needs.security-check.result }}" == "skipped" ]; then
+            echo "⏭️ Security check skipped (no updates)" >> summary.md
+          else
+            echo "❌ Security check failed" >> summary.md
+          fi
+
+      - name: Upload summary
+        uses: actions/upload-artifact@v3
+        with:
+          name: dependency-update-summary
+          path: summary.md
+          retention-days: 30
