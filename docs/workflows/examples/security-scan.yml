@@ -1,0 +1,389 @@
+name: Security Scanning
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  schedule:
+    # Run security scan daily at 2 AM UTC
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  vulnerability-scan:
+    name: Vulnerability Scanning
+    runs-on: ubuntu-latest
+    permissions:
+      security-events: write
+      actions: read
+      contents: read
+    
+    strategy:
+      matrix:
+        scan-type: [filesystem, container, kubernetes]
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Trivy
+        run: |
+          sudo apt-get update
+          sudo apt-get install wget apt-transport-https gnupg lsb-release
+          wget -qO - https://aquasecurity.github.io/trivy-repo/deb/public.key | sudo apt-key add -
+          echo "deb https://aquasecurity.github.io/trivy-repo/deb $(lsb_release -sc) main" | sudo tee -a /etc/apt/sources.list.d/trivy.list
+          sudo apt-get update
+          sudo apt-get install trivy
+
+      - name: Run filesystem scan
+        if: matrix.scan-type == 'filesystem'
+        run: |
+          trivy fs . \
+            --format sarif \
+            --output trivy-fs-results.sarif \
+            --severity HIGH,CRITICAL
+
+      - name: Build container for scanning
+        if: matrix.scan-type == 'container'
+        run: |
+          docker build -t ${{ env.IMAGE_NAME }}:security-scan .
+
+      - name: Run container scan
+        if: matrix.scan-type == 'container'
+        run: |
+          trivy image ${{ env.IMAGE_NAME }}:security-scan \
+            --format sarif \
+            --output trivy-container-results.sarif \
+            --severity HIGH,CRITICAL
+
+      - name: Run Kubernetes manifest scan
+        if: matrix.scan-type == 'kubernetes'
+        run: |
+          trivy config charts/lang-observatory/templates/ \
+            --format sarif \
+            --output trivy-k8s-results.sarif \
+            --severity HIGH,CRITICAL
+
+      - name: Upload scan results to GitHub Security tab
+        uses: github/codeql-action/upload-sarif@v2
+        if: always()
+        with:
+          sarif_file: trivy-${{ matrix.scan-type }}-results.sarif
+          category: trivy-${{ matrix.scan-type }}
+
+  dependency-scan:
+    name: Dependency Scanning
+    runs-on: ubuntu-latest
+    permissions:
+      security-events: write
+      actions: read
+      contents: read
+    
+    strategy:
+      matrix:
+        language: [javascript, python]
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        if: matrix.language == 'javascript'
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+          cache: 'npm'
+
+      - name: Setup Python
+        if: matrix.language == 'python'
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install JavaScript dependencies
+        if: matrix.language == 'javascript'
+        run: npm ci
+
+      - name: Install Python dependencies
+        if: matrix.language == 'python'
+        run: pip install -r requirements-dev.txt
+
+      - name: Run npm audit
+        if: matrix.language == 'javascript'
+        run: |
+          npm audit --audit-level high --json > npm-audit-results.json || true
+          if [ -s npm-audit-results.json ]; then
+            echo "High severity vulnerabilities found in npm dependencies!"
+            cat npm-audit-results.json
+          fi
+
+      - name: Run Python safety check
+        if: matrix.language == 'python'
+        run: |
+          safety check --json --output safety-results.json || true
+          if [ -s safety-results.json ]; then
+            echo "Vulnerabilities found in Python dependencies!"
+            cat safety-results.json
+          fi
+
+      - name: Upload dependency scan results
+        uses: actions/upload-artifact@v3
+        with:
+          name: dependency-scan-${{ matrix.language }}
+          path: |
+            npm-audit-results.json
+            safety-results.json
+          retention-days: 30
+
+  secret-scan:
+    name: Secret Scanning
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Run TruffleHog
+        uses: trufflesecurity/trufflehog@main
+        with:
+          path: ./
+          base: main
+          head: HEAD
+          extra_args: --debug --only-verified
+
+      - name: Run GitLeaks
+        uses: zricethezav/gitleaks-action@master
+        with:
+          config-path: .gitleaks.toml
+
+  code-analysis:
+    name: Static Code Analysis
+    runs-on: ubuntu-latest
+    permissions:
+      security-events: write
+      actions: read
+      contents: read
+    
+    strategy:
+      matrix:
+        language: [javascript, python]
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v2
+        with:
+          languages: ${{ matrix.language }}
+          queries: security-extended,security-and-quality
+
+      - name: Setup Node.js
+        if: matrix.language == 'javascript'
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+          cache: 'npm'
+
+      - name: Setup Python
+        if: matrix.language == 'python'
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          if [ "${{ matrix.language }}" == "javascript" ]; then
+            npm ci
+          elif [ "${{ matrix.language }}" == "python" ]; then
+            pip install -r requirements-dev.txt
+          fi
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v2
+        with:
+          category: codeql-${{ matrix.language }}
+
+  kubernetes-security:
+    name: Kubernetes Security Scan
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Helm
+        uses: azure/setup-helm@v3
+        with:
+          version: '3.14.0'
+
+      - name: Template Helm chart
+        run: |
+          helm template lang-observatory ./charts/lang-observatory \
+            --values ./charts/lang-observatory/values.yaml \
+            --output-dir ./rendered
+
+      - name: Run Kubesec scan
+        run: |
+          mkdir -p kubesec-results
+          for file in $(find ./rendered -name "*.yaml" -type f); do
+            filename=$(basename "$file" .yaml)
+            curl -sSX POST --data-binary @"$file" https://v2.kubesec.io/scan > "kubesec-results/${filename}-kubesec.json"
+          done
+
+      - name: Run Polaris scan
+        run: |
+          curl -L https://github.com/FairwindsOps/polaris/releases/latest/download/polaris_linux_amd64.tar.gz | tar -xz
+          ./polaris audit --audit-path ./rendered --format json > polaris-results.json
+
+      - name: Run OPA Conftest
+        run: |
+          curl -L https://github.com/open-policy-agent/conftest/releases/latest/download/conftest_0.46.0_Linux_x86_64.tar.gz | tar -xz
+          ./conftest verify --policy security/policies/ ./rendered/
+
+      - name: Upload Kubernetes security results
+        uses: actions/upload-artifact@v3
+        with:
+          name: kubernetes-security-scan
+          path: |
+            kubesec-results/
+            polaris-results.json
+          retention-days: 30
+
+  compliance-check:
+    name: Compliance Check
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Check license compliance
+        run: |
+          # Check for required license files
+          test -f LICENSE || (echo "LICENSE file is missing" && exit 1)
+          
+          # Check for proper copyright headers
+          grep -r "Copyright" . --include="*.js" --include="*.py" --include="*.yaml" || echo "No copyright headers found"
+
+      - name: Check GDPR compliance
+        run: |
+          # Check for data handling documentation
+          test -f docs/PRIVACY.md || echo "Privacy documentation missing"
+          
+          # Check for data retention policies
+          grep -r "retention" docs/ || echo "No data retention policies found"
+
+      - name: Check SOC2 compliance readiness
+        run: |
+          # Check for security documentation
+          test -f SECURITY.md || (echo "SECURITY.md file is missing" && exit 1)
+          
+          # Check for audit logging configuration
+          grep -r "audit" config/ charts/ || echo "No audit logging configuration found"
+
+      - name: Generate compliance report
+        run: |
+          echo "# Compliance Report" > compliance-report.md
+          echo "Generated on: $(date)" >> compliance-report.md
+          echo "" >> compliance-report.md
+          echo "## License Compliance: ✅" >> compliance-report.md
+          echo "## Security Documentation: ✅" >> compliance-report.md
+          echo "## Privacy Documentation: ⚠️ (Optional)" >> compliance-report.md
+
+      - name: Upload compliance report
+        uses: actions/upload-artifact@v3
+        with:
+          name: compliance-report
+          path: compliance-report.md
+          retention-days: 90
+
+  security-summary:
+    name: Security Summary
+    runs-on: ubuntu-latest
+    needs: [vulnerability-scan, dependency-scan, secret-scan, code-analysis, kubernetes-security, compliance-check]
+    if: always()
+    
+    steps:
+      - name: Download all scan results
+        uses: actions/download-artifact@v3
+
+      - name: Generate security summary
+        run: |
+          echo "# Security Scan Summary" > security-summary.md
+          echo "Generated on: $(date)" >> security-summary.md
+          echo "" >> security-summary.md
+          
+          # Check job results
+          if [ "${{ needs.vulnerability-scan.result }}" == "success" ]; then
+            echo "✅ Vulnerability Scan: PASSED" >> security-summary.md
+          else
+            echo "❌ Vulnerability Scan: FAILED" >> security-summary.md
+          fi
+          
+          if [ "${{ needs.dependency-scan.result }}" == "success" ]; then
+            echo "✅ Dependency Scan: PASSED" >> security-summary.md
+          else
+            echo "❌ Dependency Scan: FAILED" >> security-summary.md
+          fi
+          
+          if [ "${{ needs.secret-scan.result }}" == "success" ]; then
+            echo "✅ Secret Scan: PASSED" >> security-summary.md
+          else
+            echo "❌ Secret Scan: FAILED" >> security-summary.md
+          fi
+          
+          if [ "${{ needs.code-analysis.result }}" == "success" ]; then
+            echo "✅ Code Analysis: PASSED" >> security-summary.md
+          else
+            echo "❌ Code Analysis: FAILED" >> security-summary.md
+          fi
+          
+          if [ "${{ needs.kubernetes-security.result }}" == "success" ]; then
+            echo "✅ Kubernetes Security: PASSED" >> security-summary.md
+          else
+            echo "❌ Kubernetes Security: FAILED" >> security-summary.md
+          fi
+          
+          if [ "${{ needs.compliance-check.result }}" == "success" ]; then
+            echo "✅ Compliance Check: PASSED" >> security-summary.md
+          else
+            echo "❌ Compliance Check: FAILED" >> security-summary.md
+          fi
+
+      - name: Upload security summary
+        uses: actions/upload-artifact@v3
+        with:
+          name: security-summary
+          path: security-summary.md
+          retention-days: 90
+
+      - name: Comment on PR
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const fs = require('fs');
+            const summary = fs.readFileSync('security-summary.md', 'utf8');
+            
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: `## 🔒 Security Scan Results\n\n${summary}`
+            });
+
+      - name: Fail if critical issues found
+        run: |
+          if [ "${{ needs.vulnerability-scan.result }}" == "failure" ] || [ "${{ needs.secret-scan.result }}" == "failure" ]; then
+            echo "❌ Critical security issues found! Please review and fix before proceeding."
+            exit 1
+          fi
