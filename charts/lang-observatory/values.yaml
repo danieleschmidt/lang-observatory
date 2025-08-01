@@ -34,15 +34,17 @@ langfuse:
   config:
     # Base URL for Langfuse
     nextauthUrl: "http://localhost:3000"
-    # Secret for NextAuth (should be provided via secret)
-    nextauthSecret: ""
-    # Salt for encryption
-    salt: ""
-    # Encryption key
-    encryptionKey: ""
-    # Langfuse API keys
-    publicKey: ""
-    secretKey: ""
+    # REQUIRED: Secret for NextAuth - Generate with: openssl rand -hex 32
+    # WARNING: Never commit actual secrets to version control
+    nextauthSecret: ""  # REQUIRED
+    # REQUIRED: Salt for encryption - Generate with: openssl rand -hex 32
+    salt: ""  # REQUIRED
+    # REQUIRED: Encryption key - Generate with: openssl rand -hex 32
+    encryptionKey: ""  # REQUIRED
+    # REQUIRED: Langfuse public API key - Use format: pk-lf-$(openssl rand -hex 16)
+    publicKey: ""  # REQUIRED
+    # REQUIRED: Langfuse secret API key - Use format: sk-lf-$(openssl rand -hex 32)
+    secretKey: ""  # REQUIRED
   
   service:
     type: ClusterIP
