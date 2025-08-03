@@ -75,6 +75,10 @@
     "url": "https://github.com/terragon-labs/lang-observatory/issues"
   },
   "homepage": "https://github.com/terragon-labs/lang-observatory#readme",
+  "dependencies": {
+    "pg": "^8.11.3",
+    "redis": "^4.6.12"
+  },
   "devDependencies": {
     "@semantic-release/changelog": "^6.0.3",
     "@semantic-release/git": "^10.0.1",
