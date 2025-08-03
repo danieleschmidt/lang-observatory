@@ -1,60 +1,103 @@
 {
-  "name": "Lang Observatory Dev Environment",
-  "image": "mcr.microsoft.com/vscode/devcontainers/base:ubuntu",
+  "name": "Lang Observatory Development",
+  "image": "mcr.microsoft.com/devcontainers/javascript-node:20-bullseye",
+  
   "features": {
     "ghcr.io/devcontainers/features/docker-in-docker:2": {},
     "ghcr.io/devcontainers/features/kubectl-helm-minikube:1": {
       "version": "latest",
-      "helm": "3.12.0",
+      "helm": "latest",
       "minikube": "latest"
     },
-    "ghcr.io/devcontainers/features/node:1": {
-      "nodeGypDependencies": true,
-      "version": "20"
-    },
-    "ghcr.io/devcontainers/features/python:1": {
-      "version": "3.11"
-    },
-    "ghcr.io/devcontainers/features/git:1": {},
-    "ghcr.io/devcontainers/features/github-cli:1": {}
+    "ghcr.io/devcontainers/features/github-cli:1": {},
+    "ghcr.io/devcontainers/features/common-utils:2": {
+      "installZsh": true,
+      "configureZshAsDefaultShell": true,
+      "installOhMyZsh": true,
+      "upgradePackages": true,
+      "username": "automatic",
+      "userUid": "automatic",
+      "userGid": "automatic"
+    }
   },
+
   "customizations": {
     "vscode": {
       "extensions": [
-        "ms-vscode.vscode-yaml",
+        "ms-vscode.vscode-json",
         "redhat.vscode-yaml",
         "ms-kubernetes-tools.vscode-kubernetes-tools",
-        "ms-vscode.vscode-json",
+        "ms-azuretools.vscode-docker",
         "esbenp.prettier-vscode",
-        "ms-python.python",
-        "ms-python.flake8",
-        "ms-python.black-formatter",
-        "streetsidesoftware.code-spell-checker",
-        "github.copilot",
-        "github.copilot-chat",
-        "github.vscode-pull-request-github"
+        "dbaeumer.vscode-eslint",
+        "formulahendry.auto-rename-tag",
+        "christian-kohler.path-intellisense",
+        "ms-vscode.vscode-typescript-next",
+        "GitHub.copilot",
+        "GitHub.copilot-chat",
+        "ms-vsliveshare.vsliveshare",
+        "humao.rest-client",
+        "mtxr.sqltools",
+        "mtxr.sqltools-driver-pg",
+        "cweijan.vscode-postgresql-client2"
       ],
       "settings": {
+        "terminal.integrated.defaultProfile.linux": "zsh",
         "editor.formatOnSave": true,
         "editor.defaultFormatter": "esbenp.prettier-vscode",
-        "python.defaultInterpreterPath": "/usr/local/bin/python",
-        "python.formatting.provider": "black",
-        "yaml.validate": true,
-        "yaml.completion": true,
-        "yaml.hover": true,
-        "files.associations": {
-          "*.yaml": "yaml",
-          "*.yml": "yaml"
+        "editor.codeActionsOnSave": {
+          "source.fixAll.eslint": "explicit"
         },
-        "terminal.integrated.defaultProfile.linux": "bash"
+        "files.exclude": {
+          "**/node_modules": true,
+          "**/.git": true,
+          "**/.DS_Store": true,
+          "**/tmp": true,
+          "**/dist": true,
+          "**/build": true
+        },
+        "search.exclude": {
+          "**/node_modules": true,
+          "**/dist": true,
+          "**/build": true,
+          "**/*.min.js": true
+        },
+        "typescript.suggest.autoImports": true,
+        "javascript.suggest.autoImports": true,
+        "emmet.includeLanguages": {
+          "javascript": "javascriptreact",
+          "typescript": "typescriptreact"
+        }
       }
     }
   },
-  "forwardPorts": [3000, 8080, 9090, 3001, 4317, 4318],
+
+  "forwardPorts": [
+    3000,
+    4317,
+    5432,
+    6379,
+    8080,
+    9090,
+    9091
+  ],
+
   "portsAttributes": {
     "3000": {
       "label": "Langfuse UI",
       "onAutoForward": "notify"
+    },
+    "4317": {
+      "label": "OTEL Collector",
+      "onAutoForward": "silent"
+    },
+    "5432": {
+      "label": "PostgreSQL",
+      "onAutoForward": "silent"
+    },
+    "6379": {
+      "label": "Redis",
+      "onAutoForward": "silent"
     },
     "8080": {
       "label": "Grafana",
@@ -64,20 +107,26 @@
       "label": "Prometheus",
       "onAutoForward": "notify"
     },
-    "3001": {
-      "label": "OpenLIT",
-      "onAutoForward": "notify"
-    },
-    "4317": {
-      "label": "OTEL GRPC",
-      "onAutoForward": "silent"
-    },
-    "4318": {
-      "label": "OTEL HTTP",
+    "9091": {
+      "label": "Prometheus Push Gateway",
       "onAutoForward": "silent"
     }
   },
+
   "postCreateCommand": "npm install && npm run deps && helm repo add prometheus-community https://prometheus-community.github.io/helm-charts && helm repo add grafana https://grafana.github.io/helm-charts && helm repo update",
-  "postStartCommand": "echo 'Dev environment ready! Run: npm run dev'",
-  "remoteUser": "vscode"
+  "postStartCommand": "echo 'Lang Observatory dev environment ready! Use: npm run dev'",
+
+  "remoteUser": "node",
+  "workspaceFolder": "/workspaces/lang-observatory",
+
+  "containerEnv": {
+    "NODE_ENV": "development",
+    "DEBUG": "lang-observatory:*",
+    "LANGFUSE_HOST": "http://localhost:3000",
+    "OTEL_EXPORTER_OTLP_ENDPOINT": "http://localhost:4317",
+    "DATABASE_HOST": "localhost",
+    "DATABASE_PORT": "5432",
+    "REDIS_HOST": "localhost",
+    "REDIS_PORT": "6379"
+  }
 }
