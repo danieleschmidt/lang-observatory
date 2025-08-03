@@ -24,7 +24,7 @@
     "test:cost-efficiency": "k6 run tests/performance/scenarios/llm-cost-tracking.js",
     "test:model-regression": "jest tests/patterns/model-performance-regression.test.js",
     "test:slo-monitoring": "k6 run tests/performance/slo-validation.js",
-    "lint": "helm lint ./charts/lang-observatory && yamllint charts/",
+    "lint": "eslint src/ tests/ --ext .js",
     "lint:fix": "prettier --write \"**/*.{yaml,yml,json,md}\"",
     "format": "prettier --check \"**/*.{yaml,yml,json,md}\"",
     "clean": "rm -rf charts/lang-observatory/charts/ charts/lang-observatory/Chart.lock *.tgz",
@@ -76,6 +76,7 @@
   },
   "homepage": "https://github.com/terragon-labs/lang-observatory#readme",
   "dependencies": {
+    "express": "^4.18.2",
     "pg": "^8.11.3",
     "redis": "^4.6.12"
   },
@@ -94,7 +95,6 @@
     "prettier": "^3.2.5",
     "semantic-release": "^22.0.12",
     "typescript": "^5.3.3",
-    "yamllint": "^1.0.4",
     "jest-junit": "^16.0.0",
     "supertest": "^6.3.4",
     "@playwright/test": "^1.40.1"
