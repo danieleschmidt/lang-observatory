@@ -73,11 +73,5 @@
   "commitMessageExtra": "to {{newVersion}}",
   "prTitle": "chore(deps): update {{depName}} to {{newVersion}}",
   "prBodyTemplate": "This PR updates {{depName}} from {{currentVersion}} to {{newVersion}}.\n\n{{#if hasReleaseNotes}}**Release Notes:**\n{{{releaseNotes}}}{{/if}}\n\n---\n\n🤖 This PR was generated automatically by Renovate Bot.",
-  "enabledManagers": [
-    "npm", 
-    "dockerfile", 
-    "github-actions", 
-    "helm-requirements",
-    "kubernetes"
-  ]
+  "enabledManagers": ["npm", "dockerfile", "github-actions", "helm-requirements", "kubernetes"]
 }

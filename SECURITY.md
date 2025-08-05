@@ -8,7 +8,8 @@
 
 ## Reporting a Vulnerability
 
-We take the security of Lang Observatory seriously. If you believe you have found a security vulnerability, please report it to us as described below.
+We take the security of Lang Observatory seriously. If you believe you have
+found a security vulnerability, please report it to us as described below.
 
 ### Reporting Process
 
@@ -29,8 +30,10 @@ Include the following information in your report:
 ### Response Timeline
 
 - **Initial Response**: Within 48 hours
-- **Status Update**: Within 7 days with more detailed information about the issue
-- **Resolution**: Security fixes will be prioritized and released as soon as possible
+- **Status Update**: Within 7 days with more detailed information about the
+  issue
+- **Resolution**: Security fixes will be prioritized and released as soon as
+  possible
 
 ## Security Measures
 
@@ -136,8 +139,10 @@ Lang Observatory follows these security standards and frameworks:
 
 ## Acknowledgments
 
-We appreciate the security research community and will acknowledge researchers who report vulnerabilities to us (with their permission).
+We appreciate the security research community and will acknowledge researchers
+who report vulnerabilities to us (with their permission).
 
 ## Updates
 
-This security policy is regularly reviewed and updated. Last updated: January 2025
+This security policy is regularly reviewed and updated. Last updated: January
+2025

@@ -49,7 +49,7 @@ data:
           name: network-latency
           app.kubernetes.io/part-of: lang-observatory
 
-  # Pod failure experiment  
+  # Pod failure experiment
   pod-failure.yaml: |
     apiVersion: litmuschaos.io/v1alpha1
     kind: ChaosExperiment

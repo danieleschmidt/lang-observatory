@@ -2,12 +2,12 @@ name: Security Scanning
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
   pull_request:
-    branches: [ main ]
+    branches: [main]
   schedule:
     # Run security scan daily at 2 AM UTC
-    - cron: '0 2 * * *'
+    - cron: "0 2 * * *"
   workflow_dispatch:
 
 env:
@@ -22,11 +22,11 @@ jobs:
       security-events: write
       actions: read
       contents: read
-    
+
     strategy:
       matrix:
         scan-type: [filesystem, container, kubernetes]
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -83,11 +83,11 @@ jobs:
       security-events: write
       actions: read
       contents: read
-    
+
     strategy:
       matrix:
         language: [javascript, python]
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -96,15 +96,15 @@ jobs:
         if: matrix.language == 'javascript'
         uses: actions/setup-node@v4
         with:
-          node-version: '20.x'
-          cache: 'npm'
+          node-version: "20.x"
+          cache: "npm"
 
       - name: Setup Python
         if: matrix.language == 'python'
         uses: actions/setup-python@v4
         with:
-          python-version: '3.11'
-          cache: 'pip'
+          python-version: "3.11"
+          cache: "pip"
 
       - name: Install JavaScript dependencies
         if: matrix.language == 'javascript'
@@ -144,7 +144,7 @@ jobs:
   secret-scan:
     name: Secret Scanning
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -171,11 +171,11 @@ jobs:
       security-events: write
       actions: read
       contents: read
-    
+
     strategy:
       matrix:
         language: [javascript, python]
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -190,14 +190,14 @@ jobs:
         if: matrix.language == 'javascript'
         uses: actions/setup-node@v4
         with:
-          node-version: '20.x'
-          cache: 'npm'
+          node-version: "20.x"
+          cache: "npm"
 
       - name: Setup Python
         if: matrix.language == 'python'
         uses: actions/setup-python@v4
         with:
-          python-version: '3.11'
+          python-version: "3.11"
 
       - name: Install dependencies
         run: |
@@ -215,7 +215,7 @@ jobs:
   kubernetes-security:
     name: Kubernetes Security Scan
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -223,7 +223,7 @@ jobs:
       - name: Setup Helm
         uses: azure/setup-helm@v3
         with:
-          version: '3.14.0'
+          version: "3.14.0"
 
       - name: Template Helm chart
         run: |
@@ -261,7 +261,7 @@ jobs:
   compliance-check:
     name: Compliance Check
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -270,7 +270,7 @@ jobs:
         run: |
           # Check for required license files
           test -f LICENSE || (echo "LICENSE file is missing" && exit 1)
-          
+
           # Check for proper copyright headers
           grep -r "Copyright" . --include="*.js" --include="*.py" --include="*.yaml" || echo "No copyright headers found"
 
@@ -278,7 +278,7 @@ jobs:
         run: |
           # Check for data handling documentation
           test -f docs/PRIVACY.md || echo "Privacy documentation missing"
-          
+
           # Check for data retention policies
           grep -r "retention" docs/ || echo "No data retention policies found"
 
@@ -286,7 +286,7 @@ jobs:
         run: |
           # Check for security documentation
           test -f SECURITY.md || (echo "SECURITY.md file is missing" && exit 1)
-          
+
           # Check for audit logging configuration
           grep -r "audit" config/ charts/ || echo "No audit logging configuration found"
 
@@ -311,7 +311,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: [vulnerability-scan, dependency-scan, secret-scan, code-analysis, kubernetes-security, compliance-check]
     if: always()
-    
+
     steps:
       - name: Download all scan results
         uses: actions/download-artifact@v3
@@ -321,38 +321,38 @@ jobs:
           echo "# Security Scan Summary" > security-summary.md
           echo "Generated on: $(date)" >> security-summary.md
           echo "" >> security-summary.md
-          
+
           # Check job results
           if [ "${{ needs.vulnerability-scan.result }}" == "success" ]; then
             echo "✅ Vulnerability Scan: PASSED" >> security-summary.md
           else
             echo "❌ Vulnerability Scan: FAILED" >> security-summary.md
           fi
-          
+
           if [ "${{ needs.dependency-scan.result }}" == "success" ]; then
             echo "✅ Dependency Scan: PASSED" >> security-summary.md
           else
             echo "❌ Dependency Scan: FAILED" >> security-summary.md
           fi
-          
+
           if [ "${{ needs.secret-scan.result }}" == "success" ]; then
             echo "✅ Secret Scan: PASSED" >> security-summary.md
           else
             echo "❌ Secret Scan: FAILED" >> security-summary.md
           fi
-          
+
           if [ "${{ needs.code-analysis.result }}" == "success" ]; then
             echo "✅ Code Analysis: PASSED" >> security-summary.md
           else
             echo "❌ Code Analysis: FAILED" >> security-summary.md
           fi
-          
+
           if [ "${{ needs.kubernetes-security.result }}" == "success" ]; then
             echo "✅ Kubernetes Security: PASSED" >> security-summary.md
           else
             echo "❌ Kubernetes Security: FAILED" >> security-summary.md
           fi
-          
+
           if [ "${{ needs.compliance-check.result }}" == "success" ]; then
             echo "✅ Compliance Check: PASSED" >> security-summary.md
           else
@@ -373,7 +373,7 @@ jobs:
           script: |
             const fs = require('fs');
             const summary = fs.readFileSync('security-summary.md', 'utf8');
-            
+
             github.rest.issues.createComment({
               issue_number: context.issue.number,
               owner: context.repo.owner,

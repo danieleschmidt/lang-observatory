@@ -2,7 +2,9 @@
 
 ## Overview
 
-This guide covers maintenance procedures and automation for Lang Observatory. Regular maintenance ensures optimal performance, security, and reliability of the observability stack.
+This guide covers maintenance procedures and automation for Lang Observatory.
+Regular maintenance ensures optimal performance, security, and reliability of
+the observability stack.
 
 ## Automated Maintenance
 
@@ -39,7 +41,7 @@ AUTO_MERGE=true ./scripts/dependency-update.sh minor
 # Weekly security updates
 0 2 * * 1 /path/to/dependency-update.sh security
 
-# Monthly minor updates  
+# Monthly minor updates
 0 3 1 * * /path/to/dependency-update.sh minor
 
 # Quarterly major update check
@@ -135,12 +137,12 @@ kubectl get events -n lang-observatory --sort-by='.lastTimestamp'
 kubectl exec -it lang-observatory-postgresql-0 -n lang-observatory -- psql -U langfuse
 
 # Database statistics
-SELECT schemaname, tablename, n_tup_ins, n_tup_upd, n_tup_del 
+SELECT schemaname, tablename, n_tup_ins, n_tup_upd, n_tup_del
 FROM pg_stat_user_tables;
 
 # Index usage
-SELECT schemaname, tablename, indexname, idx_scan 
-FROM pg_stat_user_indexes 
+SELECT schemaname, tablename, indexname, idx_scan
+FROM pg_stat_user_indexes
 ORDER BY idx_scan DESC;
 
 # Database size
@@ -170,10 +172,10 @@ kubectl exec -it lang-observatory-postgresql-0 -n lang-observatory -- \
 # Check for bloat
 kubectl exec -it lang-observatory-postgresql-0 -n lang-observatory -- \
   psql -U langfuse -c "
-  SELECT schemaname, tablename, 
+  SELECT schemaname, tablename,
          pg_size_pretty(pg_total_relation_size(schemaname||'.'||tablename)) as size
-  FROM pg_tables 
-  WHERE schemaname = 'public' 
+  FROM pg_tables
+  WHERE schemaname = 'public'
   ORDER BY pg_total_relation_size(schemaname||'.'||tablename) DESC;"
 ```
 
@@ -357,8 +359,8 @@ kubectl exec prometheus-server-0 -n lang-observatory -- \
 # Database table sizes
 kubectl exec lang-observatory-postgresql-0 -n lang-observatory -- \
   psql -U langfuse -c "
-  SELECT tablename, pg_size_pretty(pg_total_relation_size(tablename)) 
-  FROM pg_tables 
+  SELECT tablename, pg_size_pretty(pg_total_relation_size(tablename))
+  FROM pg_tables
   WHERE schemaname = 'public';"
 ```
 
@@ -480,7 +482,7 @@ EOF
   labels:
     severity: critical
   annotations:
-    summary: "Lang Observatory service is down"
+    summary: 'Lang Observatory service is down'
 
 - alert: HighMemoryUsage
   expr: (container_memory_usage_bytes / container_spec_memory_limit_bytes) > 0.9
@@ -488,7 +490,7 @@ EOF
   labels:
     severity: warning
   annotations:
-    summary: "High memory usage detected"
+    summary: 'High memory usage detected'
 ```
 
 ## Troubleshooting
@@ -618,6 +620,7 @@ kubectl logs -l app.kubernetes.io/name=lang-observatory -n lang-observatory > se
 ```
 
 For additional support or emergency assistance, contact:
+
 - **Technical Support**: opensource@terragonlabs.com
 - **Security Issues**: security@terragonlabs.com
 - **Emergency Hotline**: [Contact information for 24/7 support]

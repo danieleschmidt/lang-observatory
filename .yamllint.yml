@@ -13,43 +13,43 @@ rules:
     max: 120
     allow-non-breakable-words: true
     allow-non-breakable-inline-mappings: true
-  
+
   # Be more lenient with indentation for Helm templates
   indentation:
     spaces: 2
     indent-sequences: true
     check-multi-line-strings: false
-  
+
   # Allow empty values for Helm template placeholders
   empty-values:
     forbid-in-block-mappings: false
     forbid-in-flow-mappings: true
-  
+
   # Allow comments without space for Helm comments
   comments:
     min-spaces-from-content: 1
     require-starting-space: false
-  
+
   # Allow truthy values for Helm booleans
   truthy:
-    allowed-values: ['true', 'false', 'on', 'off', 'yes', 'no']
+    allowed-values: ["true", "false", "on", "off", "yes", "no"]
     check-keys: false
-  
+
   # Be lenient with document separators in Helm templates
   document-separators:
     forbid-implicit-start: false
     forbid-explicit-start: false
     forbid-implicit-end: false
     forbid-explicit-end: false
-  
+
   # Allow quoted strings
   quoted-strings:
     quote-type: any
     required: false
-  
+
   # Key ordering not enforced for flexibility
   key-ordering: disable
-  
+
   # Allow octal values (for file permissions)
   octal-values:
     forbid-implicit-octal: false

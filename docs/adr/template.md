@@ -18,7 +18,8 @@ What becomes easier or more difficult to do because of this change?
 
 ### Positive Consequences
 
-- [e.g., improvement of quality attribute satisfaction, follow-up decisions required, ...]
+- [e.g., improvement of quality attribute satisfaction, follow-up decisions
+  required, ...]
 
 ### Negative Consequences
 

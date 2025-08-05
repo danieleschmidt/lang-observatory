@@ -1,12 +1,14 @@
 # 🔒 Security Configuration Guide
 
-This document provides comprehensive security configuration guidelines for the Lang Observatory Helm chart.
+This document provides comprehensive security configuration guidelines for the
+Lang Observatory Helm chart.
 
 ## 🚨 Critical Security Requirements
 
 ### Required Secrets Configuration
 
-All secret values must be provided explicitly. The chart will **fail to deploy** if required secrets are not configured properly.
+All secret values must be provided explicitly. The chart will **fail to deploy**
+if required secrets are not configured properly.
 
 #### Generate Required Secrets
 
@@ -15,7 +17,7 @@ Use the following commands to generate secure secrets:
 ```bash
 # Generate Langfuse secrets
 export NEXTAUTH_SECRET=$(openssl rand -hex 32)
-export LANGFUSE_SALT=$(openssl rand -hex 32)  
+export LANGFUSE_SALT=$(openssl rand -hex 32)
 export ENCRYPTION_KEY=$(openssl rand -hex 32)
 export PUBLIC_KEY="pk-lf-$(openssl rand -hex 16)"
 export SECRET_KEY="sk-lf-$(openssl rand -hex 32)"
@@ -32,14 +34,14 @@ export DB_PASSWORD=$(openssl rand -base64 32)
 # values-secrets.yaml - Keep this file secure and private
 langfuse:
   config:
-    nextauthSecret: "${NEXTAUTH_SECRET}"
-    salt: "${LANGFUSE_SALT}"
-    encryptionKey: "${ENCRYPTION_KEY}"
-    publicKey: "${PUBLIC_KEY}"
-    secretKey: "${SECRET_KEY}"
-  
+    nextauthSecret: '${NEXTAUTH_SECRET}'
+    salt: '${LANGFUSE_SALT}'
+    encryptionKey: '${ENCRYPTION_KEY}'
+    publicKey: '${PUBLIC_KEY}'
+    secretKey: '${SECRET_KEY}'
+
   database:
-    password: "${DB_PASSWORD}"
+    password: '${DB_PASSWORD}'
 ```
 
 ### Secure Deployment Process
@@ -59,6 +61,7 @@ langfuse:
 ### 1. Secret Management
 
 #### External Secret Management (Recommended)
+
 For production deployments, use external secret management:
 
 ```yaml
@@ -66,16 +69,17 @@ For production deployments, use external secret management:
 langfuse:
   config:
     # Reference external secrets instead of inline values
-    existingSecret: "langfuse-config"
+    existingSecret: 'langfuse-config'
     existingSecretKeys:
-      nextauthSecret: "nextauth-secret"
-      salt: "salt"
-      encryptionKey: "encryption-key"  
-      publicKey: "public-key"
-      secretKey: "secret-key"
+      nextauthSecret: 'nextauth-secret'
+      salt: 'salt'
+      encryptionKey: 'encryption-key'
+      publicKey: 'public-key'
+      secretKey: 'secret-key'
 ```
 
 #### Kubernetes Secrets
+
 If using Kubernetes secrets directly:
 
 ```bash
@@ -91,19 +95,21 @@ kubectl create secret generic langfuse-config \
 ### 2. Database Security
 
 #### TLS/SSL Configuration
+
 Always enable TLS for database connections:
 
 ```yaml
 langfuse:
   database:
     ssl: true
-    sslMode: "require"
-    sslCert: "/path/to/client-cert.pem"
-    sslKey: "/path/to/client-key.pem" 
-    sslRootCert: "/path/to/ca-cert.pem"
+    sslMode: 'require'
+    sslCert: '/path/to/client-cert.pem'
+    sslKey: '/path/to/client-key.pem'
+    sslRootCert: '/path/to/ca-cert.pem'
 ```
 
 #### Network Security
+
 Implement network policies to restrict database access:
 
 ```yaml
@@ -117,20 +123,21 @@ spec:
     matchLabels:
       app.kubernetes.io/name: postgresql
   policyTypes:
-  - Ingress
+    - Ingress
   ingress:
-  - from:
-    - podSelector:
-        matchLabels:
-          app.kubernetes.io/component: langfuse
-    ports:
-    - protocol: TCP
-      port: 5432
+    - from:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/component: langfuse
+      ports:
+        - protocol: TCP
+          port: 5432
 ```
 
 ### 3. Pod Security Standards
 
 #### Security Context Configuration
+
 The chart implements comprehensive pod security standards:
 
 ```yaml
@@ -148,6 +155,7 @@ langfuse:
 ```
 
 #### Pod Security Policy
+
 Enable pod security standards in your namespace:
 
 ```yaml
@@ -164,17 +172,18 @@ metadata:
 ### 4. Network Security
 
 #### Ingress Security
+
 Configure secure ingress with TLS:
 
 ```yaml
 langfuse:
   ingress:
     enabled: true
-    className: "nginx"
+    className: 'nginx'
     annotations:
-      cert-manager.io/cluster-issuer: "letsencrypt-prod"
-      nginx.ingress.kubernetes.io/ssl-redirect: "true"
-      nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+      cert-manager.io/cluster-issuer: 'letsencrypt-prod'
+      nginx.ingress.kubernetes.io/ssl-redirect: 'true'
+      nginx.ingress.kubernetes.io/force-ssl-redirect: 'true'
     hosts:
       - host: langfuse.yourdomain.com
         paths:
@@ -187,6 +196,7 @@ langfuse:
 ```
 
 #### Service Mesh Security
+
 If using a service mesh (Istio, Linkerd), enable mTLS:
 
 ```yaml
@@ -242,6 +252,7 @@ kubectl get secrets -l app.kubernetes.io/name=lang-observatory
 ## 📋 Security Checklist
 
 ### Before Deployment
+
 - [ ] All required secrets generated using secure methods
 - [ ] Secrets stored in external secret management system (not in values files)
 - [ ] Database TLS/SSL configured
@@ -250,6 +261,7 @@ kubectl get secrets -l app.kubernetes.io/name=lang-observatory
 - [ ] Ingress TLS configured
 
 ### After Deployment
+
 - [ ] All pods running as non-root
 - [ ] No privileged containers detected
 - [ ] Network policies enforcing proper segmentation
@@ -257,6 +269,7 @@ kubectl get secrets -l app.kubernetes.io/name=lang-observatory
 - [ ] Monitoring and alerting configured for security events
 
 ### Ongoing Security
+
 - [ ] Regular security scans of container images
 - [ ] Dependency vulnerability monitoring
 - [ ] Access reviews and rotation of secrets
@@ -266,6 +279,7 @@ kubectl get secrets -l app.kubernetes.io/name=lang-observatory
 ## 🚨 Incident Response
 
 ### Secret Compromise
+
 If secrets are compromised:
 
 1. **Immediate action**: Rotate all affected secrets
@@ -276,6 +290,7 @@ If secrets are compromised:
 6. **Update monitoring** to detect similar incidents
 
 ### Security Contact
+
 Report security issues to: security@terragonlabs.com
 
 ---

@@ -2,21 +2,28 @@
 
 ## Vision
 
-Lang Observatory aims to be the definitive observability stack for Large Language Model applications, providing comprehensive monitoring, tracing, and analytics capabilities that scale from development to enterprise production environments.
+Lang Observatory aims to be the definitive observability stack for Large
+Language Model applications, providing comprehensive monitoring, tracing, and
+analytics capabilities that scale from development to enterprise production
+environments.
 
 ## Current Status (v0.1.0)
 
 ### ✅ Completed Features
 
-- **Core Helm Chart**: Fully functional Helm chart with Langfuse, OpenLIT, Prometheus, and Grafana
-- **Component Integration**: Seamless integration between all observability components
+- **Core Helm Chart**: Fully functional Helm chart with Langfuse, OpenLIT,
+  Prometheus, and Grafana
+- **Component Integration**: Seamless integration between all observability
+  components
 - **Basic Dashboards**: LLM overview dashboard with key metrics
-- **Container Support**: Docker containerization and docker-compose development environment
+- **Container Support**: Docker containerization and docker-compose development
+  environment
 - **Documentation**: Comprehensive setup and deployment documentation
 
 ### 🏗️ In Progress
 
-- **CI/CD Pipeline**: GitHub Actions workflows for automated testing and deployment
+- **CI/CD Pipeline**: GitHub Actions workflows for automated testing and
+  deployment
 - **Security Hardening**: Pod security policies, network policies, and RBAC
 - **Advanced Monitoring**: Custom alerting rules and monitoring scripts
 
@@ -113,9 +120,12 @@ Lang Observatory aims to be the definitive observability stack for Large Languag
 
 ### 🌟 Strategic Goals
 
-- **Industry Standard**: Become the de-facto observability solution for LLM applications
-- **Ecosystem Leadership**: Drive standards and best practices in LLM observability
-- **Innovation Hub**: Continuous innovation in AI-powered operations and insights
+- **Industry Standard**: Become the de-facto observability solution for LLM
+  applications
+- **Ecosystem Leadership**: Drive standards and best practices in LLM
+  observability
+- **Innovation Hub**: Continuous innovation in AI-powered operations and
+  insights
 - **Community Growth**: Foster a vibrant community of contributors and users
 
 ### 🎯 Advanced Features
@@ -129,10 +139,13 @@ Lang Observatory aims to be the definitive observability stack for Large Languag
 
 ### High Priority
 
-1. **Performance & Scalability**: Ensure the platform can handle enterprise-scale workloads
-2. **Security**: Implement comprehensive security measures for enterprise adoption
+1. **Performance & Scalability**: Ensure the platform can handle
+   enterprise-scale workloads
+2. **Security**: Implement comprehensive security measures for enterprise
+   adoption
 3. **Documentation**: Maintain comprehensive, up-to-date documentation
-4. **Community**: Build and support a growing community of users and contributors
+4. **Community**: Build and support a growing community of users and
+   contributors
 
 ### Medium Priority
 
@@ -216,6 +229,7 @@ This roadmap is a living document that evolves based on:
 **Next Review**: April 2025
 
 For questions about the roadmap or to suggest changes, please:
+
 - Open a GitHub Discussion for general feedback
 - Create a GitHub Issue for specific feature requests
 - Contact the maintainers at opensource@terragonlabs.com

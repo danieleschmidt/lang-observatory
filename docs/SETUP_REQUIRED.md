@@ -5,6 +5,7 @@
 ### GitHub Settings (Admin Access Required)
 
 #### Repository Settings
+
 1. **General Settings**
    - Enable issues, wikis, projects
    - Set repository visibility
@@ -24,18 +25,21 @@
 ### GitHub Actions Workflows
 
 The following workflows need manual creation in `.github/workflows/`:
+
 - `ci.yml` - Continuous integration
-- `security.yml` - Security scanning  
+- `security.yml` - Security scanning
 - `release.yml` - Automated releases
 
 ### External Integrations
 
 #### Required Services
+
 - **Container Registry**: For storing images
 - **Security Scanner**: Trivy configuration
 - **Monitoring**: External monitoring setup
 
-#### Optional Services  
+#### Optional Services
+
 - **Slack/Discord**: For notifications
 - **SonarQube**: Code quality analysis
 - **Snyk**: Additional security scanning

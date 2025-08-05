@@ -2,7 +2,9 @@
 
 ## Overview
 
-This guide helps you set up a complete Lang Observatory development environment on your local machine using Docker Compose, enabling rapid development and testing.
+This guide helps you set up a complete Lang Observatory development environment
+on your local machine using Docker Compose, enabling rapid development and
+testing.
 
 ## Prerequisites
 
@@ -37,14 +39,14 @@ echo "Prometheus: http://localhost:9090"
 
 The development stack includes:
 
-| Service | Port | Purpose | Credentials |
-|---------|------|---------|-------------|
-| Langfuse | 3000 | LLM tracing UI | Email: admin@example.com, Password: password |
-| Grafana | 3001 | Dashboards and visualization | admin/admin |
-| Prometheus | 9090 | Metrics collection | No auth |
-| OpenLIT | 4317 | OpenTelemetry collector | No auth |
-| PostgreSQL | 5432 | Database for Langfuse | langfuse/password |
-| Redis | 6379 | Caching layer | No auth |
+| Service    | Port | Purpose                      | Credentials                                  |
+| ---------- | ---- | ---------------------------- | -------------------------------------------- |
+| Langfuse   | 3000 | LLM tracing UI               | Email: admin@example.com, Password: password |
+| Grafana    | 3001 | Dashboards and visualization | admin/admin                                  |
+| Prometheus | 9090 | Metrics collection           | No auth                                      |
+| OpenLIT    | 4317 | OpenTelemetry collector      | No auth                                      |
+| PostgreSQL | 5432 | Database for Langfuse        | langfuse/password                            |
+| Redis      | 6379 | Caching layer                | No auth                                      |
 
 ### Directory Structure
 
@@ -176,15 +178,15 @@ init(endpoint="http://localhost:4317")
 def simulate_llm_calls():
     """Generate sample LLM traces"""
     models = ["gpt-4", "gpt-3.5-turbo", "claude-3", "llama-2"]
-    
+
     for i in range(100):
         model = random.choice(models)
-        
+
         trace = langfuse.trace(
             name=f"chat_completion_{i}",
             user_id=f"user_{i % 10}"
         )
-        
+
         # Simulate LLM generation
         trace.generation(
             name="llm_call",
@@ -201,7 +203,7 @@ def simulate_llm_calls():
                 "max_tokens": 256
             }
         )
-        
+
         time.sleep(0.1)  # Rate limiting
 
 if __name__ == "__main__":
@@ -228,20 +230,20 @@ const { init } = require('@openlit/nodejs');
 const langfuse = new Langfuse({
   publicKey: 'pk-lf-test',
   secretKey: 'sk-lf-test',
-  baseUrl: 'http://localhost:3000'
+  baseUrl: 'http://localhost:3000',
 });
 
 init({ endpoint: 'http://localhost:4317' });
 
 async function simulateLLMCalls() {
   const models = ['gpt-4', 'gpt-3.5-turbo', 'claude-3'];
-  
+
   for (let i = 0; i < 50; i++) {
     const trace = langfuse.trace({
       name: `node_chat_${i}`,
-      userId: `user_${i % 5}`
+      userId: `user_${i % 5}`,
     });
-    
+
     trace.generation({
       name: 'llm_call',
       model: models[i % models.length],
@@ -249,10 +251,10 @@ async function simulateLLMCalls() {
       output: `Node test response ${i}`,
       usage: {
         inputTokens: Math.floor(Math.random() * 100) + 10,
-        outputTokens: Math.floor(Math.random() * 200) + 20
-      }
+        outputTokens: Math.floor(Math.random() * 200) + 20,
+      },
     });
-    
+
     await new Promise(resolve => setTimeout(resolve, 100));
   }
 }
@@ -265,6 +267,7 @@ simulateLLMCalls();
 ### Common Issues
 
 **Services not starting**
+
 ```bash
 # Check service logs
 docker-compose -f docker-compose.dev.yml logs langfuse
@@ -278,6 +281,7 @@ docker-compose -f docker-compose.dev.yml up -d
 ```
 
 **Database connection issues**
+
 ```bash
 # Connect to PostgreSQL directly
 docker-compose -f docker-compose.dev.yml exec postgres psql -U langfuse -d langfuse
@@ -287,6 +291,7 @@ docker-compose -f docker-compose.dev.yml logs postgres
 ```
 
 **Missing metrics in Grafana**
+
 ```bash
 # Check Prometheus targets
 curl http://localhost:9090/api/v1/targets
@@ -379,7 +384,8 @@ helm template ./charts/lang-observatory --validate
 docker-compose -f docker-compose.dev.yml down -v
 ```
 
-See [CONTRIBUTING.md](../../CONTRIBUTING.md) for detailed contribution guidelines.
+See [CONTRIBUTING.md](../../CONTRIBUTING.md) for detailed contribution
+guidelines.
 
 ## Next Steps
 

@@ -35,10 +35,7 @@
     [
       "@semantic-release/git",
       {
-        "assets": [
-          "CHANGELOG.md",
-          "charts/lang-observatory/Chart.yaml"
-        ],
+        "assets": ["CHANGELOG.md", "charts/lang-observatory/Chart.yaml"],
         "message": "chore(release): ${nextRelease.version} [skip ci]\n\n${nextRelease.notes}"
       }
     ]

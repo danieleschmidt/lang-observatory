@@ -17,7 +17,7 @@ backlog:
     risk_tier: "low"
     created_at: "2025-01-26T00:00:00Z"
     completed_at: "2025-01-26T00:30:00Z"
-    
+
   - id: "BACKLOG-002"
     title: "Add CI/CD pipeline configuration"
     type: "infrastructure"
@@ -36,7 +36,7 @@ backlog:
     risk_tier: "medium"
     created_at: "2025-01-26T00:00:00Z"
     blocked_reason: "GitHub App lacks workflow permissions"
-    
+
   - id: "BACKLOG-003"
     title: "Create comprehensive values.yaml template"
     type: "configuration"
@@ -55,7 +55,7 @@ backlog:
     risk_tier: "low"
     created_at: "2025-01-26T00:00:00Z"
     completed_at: "2025-01-26T00:30:00Z"
-    
+
   - id: "BACKLOG-004"
     title: "Fix README.md placeholder GitHub org/username"
     type: "documentation"
@@ -73,7 +73,7 @@ backlog:
     risk_tier: "low"
     created_at: "2025-01-26T00:00:00Z"
     completed_at: "2025-01-26T00:30:00Z"
-    
+
   - id: "BACKLOG-005"
     title: "Add Langfuse component templates"
     type: "feature"
@@ -92,7 +92,7 @@ backlog:
     risk_tier: "medium"
     created_at: "2025-01-26T00:00:00Z"
     completed_at: "2025-01-26T00:30:00Z"
-    
+
   - id: "BACKLOG-006"
     title: "Add OpenLIT OTEL collector templates"
     type: "feature"
@@ -111,7 +111,7 @@ backlog:
     risk_tier: "medium"
     created_at: "2025-01-26T00:00:00Z"
     completed_at: "2025-01-26T00:30:00Z"
-    
+
   - id: "BACKLOG-007"
     title: "Add Prometheus templates"
     type: "feature"
@@ -130,7 +130,7 @@ backlog:
     risk_tier: "medium"
     created_at: "2025-01-26T00:00:00Z"
     completed_at: "2025-01-26T01:00:00Z"
-    
+
   - id: "BACKLOG-008"
     title: "Add Grafana templates"
     type: "feature"
@@ -150,7 +150,7 @@ backlog:
     created_at: "2025-01-26T00:00:00Z"
     completed_at: "2025-01-26T01:00:00Z"
 
-# Additional backlog items discovered during execution
+  # Additional backlog items discovered during execution
   - id: "BACKLOG-009"
     title: "Add ServiceAccount and RBAC templates"
     type: "security"

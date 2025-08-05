@@ -6,7 +6,10 @@ Accepted
 
 ## Context
 
-As the lang-observatory project grows in complexity, we need a way to document significant architectural decisions, their context, and their consequences. Without proper documentation of decisions, team members (both current and future) lack understanding of why certain choices were made, leading to:
+As the lang-observatory project grows in complexity, we need a way to document
+significant architectural decisions, their context, and their consequences.
+Without proper documentation of decisions, team members (both current and
+future) lack understanding of why certain choices were made, leading to:
 
 - Repeated discussions about already-decided topics
 - Inconsistent architectural patterns
@@ -15,7 +18,8 @@ As the lang-observatory project grows in complexity, we need a way to document s
 
 ## Decision
 
-We will adopt Architecture Decision Records (ADRs) as our standard process for documenting architectural decisions. This includes:
+We will adopt Architecture Decision Records (ADRs) as our standard process for
+documenting architectural decisions. This includes:
 
 1. Creating an ADR for any significant architectural decision
 2. Using a standardized template for consistency
@@ -27,17 +31,24 @@ We will adopt Architecture Decision Records (ADRs) as our standard process for d
 
 ### Positive Consequences
 
-- **Improved transparency**: All team members can understand the reasoning behind architectural decisions
-- **Better onboarding**: New team members can quickly understand the project's architectural history
-- **Reduced repeated discussions**: Decisions are documented with their rationale
-- **Historical context**: Future teams can understand why decisions were made given the constraints at the time
-- **Consistency**: Standardized format makes decisions easy to find and understand
+- **Improved transparency**: All team members can understand the reasoning
+  behind architectural decisions
+- **Better onboarding**: New team members can quickly understand the project's
+  architectural history
+- **Reduced repeated discussions**: Decisions are documented with their
+  rationale
+- **Historical context**: Future teams can understand why decisions were made
+  given the constraints at the time
+- **Consistency**: Standardized format makes decisions easy to find and
+  understand
 
 ### Negative Consequences
 
 - **Additional overhead**: Creating ADRs requires time and effort
-- **Maintenance burden**: ADRs need to be kept up-to-date when decisions are superseded
-- **Process compliance**: Team needs to remember to create ADRs for significant decisions
+- **Maintenance burden**: ADRs need to be kept up-to-date when decisions are
+  superseded
+- **Process compliance**: Team needs to remember to create ADRs for significant
+  decisions
 
 ## Implementation
 
@@ -49,9 +60,12 @@ We will adopt Architecture Decision Records (ADRs) as our standard process for d
 
 ## Alternatives Considered
 
-- **Option 1**: Use wiki pages - Rejected because wikis are separate from code and harder to version control
-- **Option 2**: Use comments in code - Rejected because architectural decisions span multiple files and components
-- **Option 3**: Use GitHub issues - Rejected because issues are for tracking work, not documenting decisions
+- **Option 1**: Use wiki pages - Rejected because wikis are separate from code
+  and harder to version control
+- **Option 2**: Use comments in code - Rejected because architectural decisions
+  span multiple files and components
+- **Option 3**: Use GitHub issues - Rejected because issues are for tracking
+  work, not documenting decisions
 
 ## References
 

@@ -2,7 +2,8 @@
 
 ## Our Pledge
 
-We pledge to make participation in our community a harassment-free experience for everyone.
+We pledge to make participation in our community a harassment-free experience
+for everyone.
 
 ## Our Standards
 
@@ -18,4 +19,5 @@ Community leaders will enforce this code fairly and consistently.
 
 ## Attribution
 
-This Code of Conduct is adapted from the [Contributor Covenant](https://www.contributor-covenant.org), version 2.1.
+This Code of Conduct is adapted from the
+[Contributor Covenant](https://www.contributor-covenant.org), version 2.1.

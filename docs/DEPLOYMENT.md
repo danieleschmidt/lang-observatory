@@ -65,16 +65,16 @@ langfuse:
   enabled: true
   replicaCount: 1
   database:
-    host: "langfuse-postgresql"
-    name: "langfuse"
-    user: "langfuse"
+    host: 'langfuse-postgresql'
+    name: 'langfuse'
+    user: 'langfuse'
     # password: Set via secret
 
 openlit:
   enabled: true
   replicaCount: 1
   config:
-    endpoint: "otel-collector:4317"
+    endpoint: 'otel-collector:4317'
 
 prometheus:
   enabled: true
@@ -88,7 +88,7 @@ grafana:
   persistence:
     enabled: true
     size: 5Gi
-  adminPassword: "your-secure-password"
+  adminPassword: 'your-secure-password'
 ```
 
 ### Install with Custom Configuration
@@ -108,65 +108,65 @@ helm install lang-observatory terragon-charts/lang-observatory \
 # production-values.yaml
 global:
   environment: production
-  
+
 langfuse:
   replicaCount: 3
   resources:
     requests:
-      memory: "512Mi"
-      cpu: "250m"
+      memory: '512Mi'
+      cpu: '250m'
     limits:
-      memory: "1Gi"
-      cpu: "500m"
+      memory: '1Gi'
+      cpu: '500m'
   database:
     external: true
-    host: "production-postgres.example.com"
+    host: 'production-postgres.example.com'
     ssl: true
 
 openlit:
   replicaCount: 2
   resources:
     requests:
-      memory: "256Mi"
-      cpu: "100m"
+      memory: '256Mi'
+      cpu: '100m'
     limits:
-      memory: "512Mi"
-      cpu: "200m"
+      memory: '512Mi'
+      cpu: '200m'
 
 prometheus:
   server:
     replicaCount: 2
-    retention: "30d"
+    retention: '30d'
     persistentVolume:
       size: 100Gi
-      storageClass: "fast-ssd"
+      storageClass: 'fast-ssd'
     resources:
       requests:
-        memory: "2Gi"
-        cpu: "500m"
+        memory: '2Gi'
+        cpu: '500m'
       limits:
-        memory: "4Gi"
-        cpu: "1000m"
+        memory: '4Gi'
+        cpu: '1000m'
 
 grafana:
   replicaCount: 2
   persistence:
-    storageClass: "fast-ssd"
+    storageClass: 'fast-ssd'
     size: 20Gi
   resources:
     requests:
-      memory: "256Mi"
-      cpu: "100m"
+      memory: '256Mi'
+      cpu: '100m'
     limits:
-      memory: "512Mi"
-      cpu: "200m"
+      memory: '512Mi'
+      cpu: '200m'
 
 ingress:
   enabled: true
-  className: "nginx"
+  className: 'nginx'
   annotations:
-    cert-manager.io/cluster-issuer: "letsencrypt-prod"
-    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    cert-manager.io/cluster-issuer: 'letsencrypt-prod'
+    nginx.ingress.kubernetes.io/ssl-redirect: 'true'
   hosts:
     - host: langfuse.example.com
       paths:
@@ -208,7 +208,7 @@ langfuse:
               matchExpressions:
                 - key: app.kubernetes.io/name
                   operator: In
-                  values: ["langfuse"]
+                  values: ['langfuse']
             topologyKey: kubernetes.io/hostname
 
 prometheus:
@@ -221,7 +221,7 @@ prometheus:
               matchExpressions:
                 - key: app.kubernetes.io/name
                   operator: In
-                  values: ["prometheus"]
+                  values: ['prometheus']
             topologyKey: kubernetes.io/hostname
 
 postgresql:
@@ -277,13 +277,13 @@ For production deployments, use an external PostgreSQL instance:
 langfuse:
   database:
     external: true
-    host: "production-postgres.example.com"
+    host: 'production-postgres.example.com'
     port: 5432
-    name: "langfuse"
-    user: "langfuse"
+    name: 'langfuse'
+    user: 'langfuse'
     ssl: true
-    existingSecret: "langfuse-db-secret"
-    secretKey: "password"
+    existingSecret: 'langfuse-db-secret'
+    secretKey: 'password'
 
 postgresql:
   enabled: false
@@ -319,9 +319,9 @@ prometheus:
   server:
     persistentVolume:
       enabled: true
-      accessModes: ["ReadWriteOnce"]
+      accessModes: ['ReadWriteOnce']
       size: 50Gi
-      storageClass: "gp2"  # AWS EBS
+      storageClass: 'gp2' # AWS EBS
       # storageClass: "standard"  # GKE Standard
       # storageClass: "managed-premium"  # AKS Premium
 
@@ -329,27 +329,30 @@ grafana:
   persistence:
     enabled: true
     size: 10Gi
-    storageClass: "gp2"
-    accessModes: ["ReadWriteOnce"]
+    storageClass: 'gp2'
+    accessModes: ['ReadWriteOnce']
 ```
 
 ### Storage Classes by Cloud Provider
 
 #### AWS EKS
+
 ```yaml
-storageClass: "gp2"  # General Purpose SSD
+storageClass: 'gp2' # General Purpose SSD
 # or "gp3" for newer clusters
 ```
 
 #### Google GKE
+
 ```yaml
-storageClass: "standard"  # Standard Persistent Disk
+storageClass: 'standard' # Standard Persistent Disk
 # or "ssd" for SSD Persistent Disk
 ```
 
 #### Azure AKS
+
 ```yaml
-storageClass: "default"  # Standard HDD
+storageClass: 'default' # Standard HDD
 # or "managed-premium" for Premium SSD
 ```
 
@@ -372,10 +375,10 @@ helm install ingress-nginx ingress-nginx/ingress-nginx \
 ```yaml
 ingress:
   enabled: true
-  className: "nginx"
+  className: 'nginx'
   annotations:
     nginx.ingress.kubernetes.io/rewrite-target: /
-    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/ssl-redirect: 'true'
   hosts:
     - host: langfuse.yourdomain.com
       paths:
@@ -394,14 +397,16 @@ ingress:
 For cloud providers, configure load balancer annotations:
 
 #### AWS
+
 ```yaml
 service:
   annotations:
-    service.beta.kubernetes.io/aws-load-balancer-type: "nlb"
-    service.beta.kubernetes.io/aws-load-balancer-cross-zone-load-balancing-enabled: "true"
+    service.beta.kubernetes.io/aws-load-balancer-type: 'nlb'
+    service.beta.kubernetes.io/aws-load-balancer-cross-zone-load-balancing-enabled: 'true'
 ```
 
 #### Google Cloud
+
 ```yaml
 service:
   annotations:
@@ -410,10 +415,11 @@ service:
 ```
 
 #### Azure
+
 ```yaml
 service:
   annotations:
-    service.beta.kubernetes.io/azure-load-balancer-internal: "true"
+    service.beta.kubernetes.io/azure-load-balancer-internal: 'true'
 ```
 
 ## Security Configuration
@@ -473,13 +479,13 @@ metadata:
 spec:
   provider:
     vault:
-      server: "https://vault.example.com"
-      path: "secret"
-      version: "v2"
+      server: 'https://vault.example.com'
+      path: 'secret'
+      version: 'v2'
       auth:
         kubernetes:
-          mountPath: "kubernetes"
-          role: "lang-observatory"
+          mountPath: 'kubernetes'
+          role: 'lang-observatory'
 ```
 
 ## Monitoring and Alerting

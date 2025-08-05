@@ -1,10 +1,12 @@
 # Rerere Cache Audit
 
-This directory contains recorded conflict resolutions from Git's rerere (reuse recorded resolution) mechanism.
+This directory contains recorded conflict resolutions from Git's rerere (reuse
+recorded resolution) mechanism.
 
 ## How it works
 
-When Git encounters the same conflict pattern again, it automatically applies the previously recorded resolution.
+When Git encounters the same conflict pattern again, it automatically applies
+the previously recorded resolution.
 
 ## Audit Process
 
@@ -14,4 +16,5 @@ When Git encounters the same conflict pattern again, it automatically applies th
 
 ## Cache Contents
 
-The cache will be populated as conflicts are resolved and rerere records the solutions.
+The cache will be populated as conflicts are resolved and rerere records the
+solutions.

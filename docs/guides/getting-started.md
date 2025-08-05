@@ -2,7 +2,9 @@
 
 ## Overview
 
-This guide walks you through setting up Lang Observatory for monitoring your LLM applications. By the end, you'll have a fully functional observability stack running in your Kubernetes cluster.
+This guide walks you through setting up Lang Observatory for monitoring your LLM
+applications. By the end, you'll have a fully functional observability stack
+running in your Kubernetes cluster.
 
 ## Prerequisites
 
@@ -31,20 +33,20 @@ Create a `values.yaml` file with your configuration:
 ```yaml
 # Basic configuration
 langfuse:
-  host: "https://langfuse.yourdomain.com"
-  publicKey: "pk-lf-your-public-key"
-  secretKey: "sk-lf-your-secret-key"
+  host: 'https://langfuse.yourdomain.com'
+  publicKey: 'pk-lf-your-public-key'
+  secretKey: 'sk-lf-your-secret-key'
 
 openlit:
-  endpoint: "otel-collector:4317"
-  environment: "production"
+  endpoint: 'otel-collector:4317'
+  environment: 'production'
 
 # Ingress configuration
 ingress:
   enabled: true
-  className: "nginx"
+  className: 'nginx'
   annotations:
-    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    cert-manager.io/cluster-issuer: 'letsencrypt-prod'
   hosts:
     - host: langfuse.yourdomain.com
       paths:
@@ -59,19 +61,19 @@ ingress:
 resources:
   langfuse:
     requests:
-      memory: "512Mi"
-      cpu: "250m"
+      memory: '512Mi'
+      cpu: '250m'
     limits:
-      memory: "1Gi"
-      cpu: "500m"
-  
+      memory: '1Gi'
+      cpu: '500m'
+
   openlit:
     requests:
-      memory: "256Mi"
-      cpu: "100m"
+      memory: '256Mi'
+      cpu: '100m'
     limits:
-      memory: "512Mi"
-      cpu: "200m"
+      memory: '512Mi'
+      cpu: '200m'
 ```
 
 ### Step 3: Install Lang Observatory
@@ -100,17 +102,18 @@ kubectl get ingress -n lang-observatory
 
 ### Custom Database Configuration
 
-By default, Lang Observatory uses in-cluster PostgreSQL. For production, configure an external database:
+By default, Lang Observatory uses in-cluster PostgreSQL. For production,
+configure an external database:
 
 ```yaml
 langfuse:
   database:
     external: true
-    host: "your-postgres-host"
+    host: 'your-postgres-host'
     port: 5432
-    name: "langfuse"
-    user: "langfuse_user"
-    password: "your-secure-password"
+    name: 'langfuse'
+    user: 'langfuse_user'
+    password: 'your-secure-password'
 ```
 
 ### Authentication Setup
@@ -122,11 +125,11 @@ langfuse:
   auth:
     enabled: true
     providers:
-      - name: "oauth"
-        type: "oauth2"
-        clientId: "your-oauth-client-id"
-        clientSecret: "your-oauth-client-secret"
-        issuer: "https://your-auth-provider.com"
+      - name: 'oauth'
+        type: 'oauth2'
+        clientId: 'your-oauth-client-id'
+        clientSecret: 'your-oauth-client-secret'
+        issuer: 'https://your-auth-provider.com'
 ```
 
 ### Monitoring Configuration
@@ -137,16 +140,16 @@ Enable comprehensive monitoring:
 monitoring:
   enabled: true
   prometheus:
-    retention: "30d"
-    storageClass: "fast-ssd"
-    storage: "100Gi"
-  
+    retention: '30d'
+    storageClass: 'fast-ssd'
+    storage: '100Gi'
+
   grafana:
-    adminPassword: "your-secure-password"
+    adminPassword: 'your-secure-password'
     dashboards:
       enabled: true
       defaultDashboards: true
-    
+
   alertmanager:
     enabled: true
     config:
@@ -187,10 +190,10 @@ init(
 # Your LLM application code
 def chat_with_llm(user_input):
     trace = langfuse.trace(name="chat_completion")
-    
+
     # Your LLM call here
     response = your_llm_call(user_input)
-    
+
     trace.generation(
         name="llm_response",
         input=user_input,
@@ -201,7 +204,7 @@ def chat_with_llm(user_input):
             "output_tokens": len(response.split()),
         }
     )
-    
+
     return response
 ```
 
@@ -218,26 +221,31 @@ import { init } from '@openlit/nodejs';
 const langfuse = new Langfuse({
   publicKey: 'pk-lf-your-public-key',
   secretKey: 'sk-lf-your-secret-key',
-  baseUrl: 'https://langfuse.yourdomain.com'
+  baseUrl: 'https://langfuse.yourdomain.com',
 });
 
 init({
   endpoint: 'https://otel.yourdomain.com',
-  headers: { 'Authorization': 'Bearer your-token' }
+  headers: { Authorization: 'Bearer your-token' },
 });
 ```
 
 ## Accessing the Dashboard
 
 ### Langfuse UI
-Navigate to `https://langfuse.yourdomain.com` to access the Langfuse interface for:
+
+Navigate to `https://langfuse.yourdomain.com` to access the Langfuse interface
+for:
+
 - Trace exploration
 - Performance analysis
 - Cost tracking
 - Model comparison
 
 ### Grafana Dashboards
+
 Access Grafana at `https://grafana.yourdomain.com` for:
+
 - System metrics
 - Custom dashboards
 - Alerting rules
@@ -278,22 +286,26 @@ trace.generation(
 ### Common Issues
 
 **Pods not starting**
+
 ```bash
 kubectl describe pod <pod-name> -n lang-observatory
 kubectl logs <pod-name> -n lang-observatory
 ```
 
 **Database connection issues**
+
 - Verify database credentials in secrets
 - Check network connectivity
 - Validate database schema initialization
 
 **Ingress not working**
+
 - Verify ingress controller is running
 - Check DNS resolution
 - Validate TLS certificates
 
 **Missing metrics**
+
 - Verify OpenTelemetry configuration
 - Check collector logs
 - Validate application instrumentation
@@ -301,8 +313,10 @@ kubectl logs <pod-name> -n lang-observatory
 ### Getting Help
 
 - **Documentation**: [Full documentation](../README.md)
-- **GitHub Issues**: [Report issues](https://github.com/terragon-labs/lang-observatory/issues)
-- **Community**: [Join discussions](https://github.com/terragon-labs/lang-observatory/discussions)
+- **GitHub Issues**:
+  [Report issues](https://github.com/terragon-labs/lang-observatory/issues)
+- **Community**:
+  [Join discussions](https://github.com/terragon-labs/lang-observatory/discussions)
 - **Support**: opensource@terragonlabs.com
 
 ## Next Steps

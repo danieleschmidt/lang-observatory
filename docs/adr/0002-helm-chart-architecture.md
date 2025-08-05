@@ -6,30 +6,39 @@ Accepted
 
 ## Context
 
-Lang-observatory needs to provide a turnkey observability stack for LLM applications. The solution must be:
+Lang-observatory needs to provide a turnkey observability stack for LLM
+applications. The solution must be:
+
 - Easy to deploy in Kubernetes environments
 - Configurable for different use cases
 - Maintainable and upgradeable
 - Following cloud-native best practices
 
-We need to decide on the packaging and deployment strategy for our observability stack components.
+We need to decide on the packaging and deployment strategy for our observability
+stack components.
 
 ## Decision
 
-We will use Helm charts as our primary packaging and deployment mechanism with the following architecture:
+We will use Helm charts as our primary packaging and deployment mechanism with
+the following architecture:
 
 1. **Single umbrella chart**: One main chart that includes all components
-2. **Dependency management**: Use Helm dependencies for third-party components (Prometheus, Grafana)
-3. **Configurable components**: Allow users to enable/disable individual components
-4. **Values-driven configuration**: Centralized configuration through values.yaml
-5. **Template-based customization**: Use Helm templates for dynamic configuration
+2. **Dependency management**: Use Helm dependencies for third-party components
+   (Prometheus, Grafana)
+3. **Configurable components**: Allow users to enable/disable individual
+   components
+4. **Values-driven configuration**: Centralized configuration through
+   values.yaml
+5. **Template-based customization**: Use Helm templates for dynamic
+   configuration
 
 ## Consequences
 
 ### Positive Consequences
 
 - **Simplified deployment**: Single command deployment for entire stack
-- **Standard packaging**: Helm is the de facto standard for Kubernetes applications
+- **Standard packaging**: Helm is the de facto standard for Kubernetes
+  applications
 - **Version management**: Clear versioning and upgrade paths
 - **Configuration management**: Centralized and templated configuration
 - **Community integration**: Easy integration with existing Helm ecosystems
@@ -52,6 +61,7 @@ We will use Helm charts as our primary packaging and deployment mechanism with t
 6. Document configuration options
 
 Chart structure:
+
 ```
 charts/lang-observatory/
 ├── Chart.yaml              # Chart metadata and dependencies

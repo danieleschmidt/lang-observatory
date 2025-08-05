@@ -15,9 +15,9 @@ langfuse:
     repository: langfuse/langfuse
     tag: "2.54.0"
     pullPolicy: IfNotPresent
-  
+
   replicaCount: 1
-  
+
   # Database configuration
   database:
     # Use external PostgreSQL
@@ -29,28 +29,28 @@ langfuse:
     # Password should be provided via secret
     existingSecret: "langfuse-db"
     secretKey: "password"
-  
+
   # Langfuse application configuration
   config:
     # Base URL for Langfuse
     nextauthUrl: "http://localhost:3000"
     # REQUIRED: Secret for NextAuth - Generate with: openssl rand -hex 32
     # WARNING: Never commit actual secrets to version control
-    nextauthSecret: ""  # REQUIRED
+    nextauthSecret: "" # REQUIRED
     # REQUIRED: Salt for encryption - Generate with: openssl rand -hex 32
-    salt: ""  # REQUIRED
+    salt: "" # REQUIRED
     # REQUIRED: Encryption key - Generate with: openssl rand -hex 32
-    encryptionKey: ""  # REQUIRED
+    encryptionKey: "" # REQUIRED
     # REQUIRED: Langfuse public API key - Use format: pk-lf-$(openssl rand -hex 16)
-    publicKey: ""  # REQUIRED
+    publicKey: "" # REQUIRED
     # REQUIRED: Langfuse secret API key - Use format: sk-lf-$(openssl rand -hex 32)
-    secretKey: ""  # REQUIRED
-  
+    secretKey: "" # REQUIRED
+
   service:
     type: ClusterIP
     port: 3000
     targetPort: 3000
-  
+
   ingress:
     enabled: false
     className: ""
@@ -61,7 +61,7 @@ langfuse:
           - path: /
             pathType: Prefix
     tls: []
-  
+
   resources:
     limits:
       cpu: 500m
@@ -78,9 +78,9 @@ openlit:
     repository: otel/opentelemetry-collector-contrib
     tag: "0.91.0"
     pullPolicy: IfNotPresent
-  
+
   replicaCount: 1
-  
+
   # OpenTelemetry Collector configuration
   config:
     receivers:
@@ -90,22 +90,22 @@ openlit:
             endpoint: 0.0.0.0:4317
           http:
             endpoint: 0.0.0.0:4318
-    
+
     processors:
       batch: {}
       memory_limiter:
         limit_mib: 400
-      
+
     exporters:
       prometheus:
         endpoint: "0.0.0.0:8889"
         namespace: "langfuse"
-      
+
       jaeger:
         endpoint: jaeger-collector:14250
         tls:
           insecure: true
-    
+
     service:
       pipelines:
         traces:
@@ -116,7 +116,7 @@ openlit:
           receivers: [otlp]
           processors: [memory_limiter, batch]
           exporters: [prometheus]
-  
+
   service:
     type: ClusterIP
     ports:
@@ -129,7 +129,7 @@ openlit:
       - name: metrics
         port: 8889
         targetPort: 8889
-  
+
   resources:
     limits:
       cpu: 200m
@@ -145,24 +145,24 @@ prometheus:
     persistentVolume:
       enabled: true
       size: 10Gi
-  
+
   # Prometheus rules for LLM observability
   rules:
     enabled: true
-  
+
   # Additional scrape configs for LLM metrics
   serverFiles:
     prometheus.yml:
       scrape_configs:
-        - job_name: 'langfuse-metrics'
+        - job_name: "langfuse-metrics"
           static_configs:
             - targets: ['{{ include "lang-observatory.fullname" . }}-langfuse:3000']
-          metrics_path: '/api/public/metrics'
+          metrics_path: "/api/public/metrics"
           scrape_interval: 30s
-        - job_name: 'openlit-metrics'
+        - job_name: "openlit-metrics"
           static_configs:
             - targets: ['{{ include "lang-observatory.fullname" . }}-openlit:8889']
-          metrics_path: '/metrics'
+          metrics_path: "/metrics"
           scrape_interval: 30s
 
 # Grafana configuration
@@ -171,11 +171,11 @@ grafana:
   persistence:
     enabled: true
     size: 1Gi
-  
+
   # Default admin credentials
   adminUser: admin
   adminPassword: admin
-  
+
   # Datasources
   datasources:
     datasources.yaml:
@@ -186,21 +186,21 @@ grafana:
           url: http://{{ .Release.Name }}-prometheus-server:80
           access: proxy
           isDefault: true
-  
+
   # Default dashboards
   dashboardProviders:
     dashboardproviders.yaml:
       apiVersion: 1
       providers:
-        - name: 'default'
+        - name: "default"
           orgId: 1
-          folder: ''
+          folder: ""
           type: file
           disableDeletion: false
           editable: true
           options:
             path: /var/lib/grafana/dashboards/default
-  
+
   dashboards:
     default:
       llm-overview:
