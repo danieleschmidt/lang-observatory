@@ -2,26 +2,35 @@
 
 ## Overview
 
-This document outlines specialized testing patterns for AI/ML observability systems, focusing on the unique challenges of monitoring large language models (LLMs) and machine learning pipelines.
+This document outlines specialized testing patterns for AI/ML observability
+systems, focusing on the unique challenges of monitoring large language models
+(LLMs) and machine learning pipelines.
 
 ## Core Testing Principles for AI/ML Systems
 
 ### 1. Data Quality Assurance
+
 AI/ML systems are only as good as their data. Testing must validate:
+
 - **Data Completeness**: All expected traces and metrics are captured
 - **Data Accuracy**: Metrics match actual model behavior
 - **Data Consistency**: Temporal and cross-system alignment
 - **Data Freshness**: Real-time ingestion performance
 
 ### 2. Model Performance Monitoring
-Unlike traditional applications, AI/ML systems have unique performance characteristics:
+
+Unlike traditional applications, AI/ML systems have unique performance
+characteristics:
+
 - **Inference Latency**: Time from request to response
 - **Batch Processing**: Throughput for bulk operations
 - **Resource Utilization**: GPU/CPU/Memory usage patterns
 - **Cost Efficiency**: Cost per inference/token/request
 
 ### 3. Quality Metrics Validation
+
 AI/ML systems require domain-specific quality measures:
+
 - **Accuracy Drift**: Model performance degradation over time
 - **Bias Detection**: Fairness across different input types
 - **Hallucination Rates**: Incorrect or nonsensical outputs
@@ -39,7 +48,7 @@ export class SyntheticLLMWorkload {
     this.models = config.models || {};
     this.userProfiles = config.userProfiles || this.generateUserProfiles();
   }
-  
+
   generateUserProfiles() {
     return [
       { type: 'developer', requestRate: 'high', complexity: 'medium' },
@@ -48,37 +57,37 @@ export class SyntheticLLMWorkload {
       { type: 'enterprise', requestRate: 'very_high', complexity: 'high' },
     ];
   }
-  
+
   generateRealisticPrompt(userProfile, context = {}) {
     const promptTemplates = {
       developer: [
-        "Write a {language} function that {functionality}",
-        "Debug this {language} code: {code_snippet}",
-        "Explain how {concept} works in {framework}",
+        'Write a {language} function that {functionality}',
+        'Debug this {language} code: {code_snippet}',
+        'Explain how {concept} works in {framework}',
       ],
       researcher: [
-        "Analyze this research paper: {paper_title}",
-        "Compare {method_a} and {method_b} for {domain}",
-        "Summarize the key findings in {field}",
+        'Analyze this research paper: {paper_title}',
+        'Compare {method_a} and {method_b} for {domain}',
+        'Summarize the key findings in {field}',
       ],
       student: [
-        "Help me understand {concept}",
-        "What is {topic} and why is it important?",
-        "Give me examples of {subject_area}",
+        'Help me understand {concept}',
+        'What is {topic} and why is it important?',
+        'Give me examples of {subject_area}',
       ],
       enterprise: [
-        "Generate a business report on {topic}",
-        "Create documentation for {system}",
-        "Analyze customer feedback: {feedback_data}",
+        'Generate a business report on {topic}',
+        'Create documentation for {system}',
+        'Analyze customer feedback: {feedback_data}',
       ],
     };
-    
+
     const templates = promptTemplates[userProfile.type];
     const template = templates[Math.floor(Math.random() * templates.length)];
-    
+
     return this.fillTemplate(template, context);
   }
-  
+
   simulateInferenceLatency(model, promptLength) {
     // Realistic latency simulation based on model and prompt complexity
     const baseLatency = {
@@ -88,18 +97,18 @@ export class SyntheticLLMWorkload {
       'claude-3-sonnet': 1200,
       'gemini-pro': 1000,
     };
-    
+
     const latencyVariation = promptLength * 0.1; // Longer prompts = higher latency
     const networkJitter = Math.random() * 200; // 0-200ms jitter
-    
+
     return baseLatency[model] + latencyVariation + networkJitter;
   }
-  
+
   generateTraceData(request) {
     const inputTokens = this.estimateTokens(request.prompt);
     const outputTokens = Math.floor(inputTokens * 0.3); // Typical output ratio
     const latency = this.simulateInferenceLatency(request.model, inputTokens);
-    
+
     return {
       trace_id: `synthetic_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
       model: request.model,
@@ -126,7 +135,7 @@ export class ModelPerformanceRegression {
     this.thresholds = config.thresholds;
     this.testCases = config.testCases;
   }
-  
+
   async runRegressionTest(model, provider) {
     const results = {
       model,
@@ -134,26 +143,30 @@ export class ModelPerformanceRegression {
       testResults: [],
       overallPass: true,
     };
-    
+
     for (const testCase of this.testCases) {
       const result = await this.executeTestCase(testCase, model, provider);
       results.testResults.push(result);
-      
+
       if (!result.passed) {
         results.overallPass = false;
       }
     }
-    
+
     return results;
   }
-  
+
   async executeTestCase(testCase, model, provider) {
     const startTime = Date.now();
-    
+
     try {
-      const response = await this.makeModelRequest(testCase.prompt, model, provider);
+      const response = await this.makeModelRequest(
+        testCase.prompt,
+        model,
+        provider
+      );
       const metrics = this.extractMetrics(response);
-      
+
       return {
         testCase: testCase.name,
         metrics,
@@ -171,22 +184,26 @@ export class ModelPerformanceRegression {
       };
     }
   }
-  
+
   evaluateMetrics(actual, expected) {
     const checks = [
       // Latency regression check
-      actual.latency_p95 <= expected.latency_p95 * this.thresholds.latency_tolerance,
-      
+      actual.latency_p95 <=
+        expected.latency_p95 * this.thresholds.latency_tolerance,
+
       // Quality regression check
-      actual.quality_score >= expected.quality_score * this.thresholds.quality_tolerance,
-      
+      actual.quality_score >=
+        expected.quality_score * this.thresholds.quality_tolerance,
+
       // Cost efficiency check
-      actual.cost_per_token <= expected.cost_per_token * this.thresholds.cost_tolerance,
-      
+      actual.cost_per_token <=
+        expected.cost_per_token * this.thresholds.cost_tolerance,
+
       // Token efficiency check
-      Math.abs(actual.output_tokens - expected.output_tokens) <= expected.output_tokens * this.thresholds.token_variance,
+      Math.abs(actual.output_tokens - expected.output_tokens) <=
+        expected.output_tokens * this.thresholds.token_variance,
     ];
-    
+
     return checks.every(check => check);
   }
 }
@@ -199,29 +216,38 @@ export class ModelPerformanceRegression {
 export class BiasAndFairnessTest {
   constructor() {
     this.protectedAttributes = [
-      'gender', 'race', 'age', 'religion', 'nationality', 'disability'
+      'gender',
+      'race',
+      'age',
+      'religion',
+      'nationality',
+      'disability',
     ];
     this.sensitiveTopics = [
-      'hiring', 'lending', 'healthcare', 'education', 'criminal_justice'
+      'hiring',
+      'lending',
+      'healthcare',
+      'education',
+      'criminal_justice',
     ];
   }
-  
+
   generateBiasTestCases() {
     const testCases = [];
-    
+
     for (const topic of this.sensitiveTopics) {
       for (const attribute of this.protectedAttributes) {
         testCases.push(...this.createAttributeVariations(topic, attribute));
       }
     }
-    
+
     return testCases;
   }
-  
+
   createAttributeVariations(topic, attribute) {
     const basePrompt = this.getBasePrompt(topic);
     const variations = this.getAttributeVariations(attribute);
-    
+
     return variations.map(variation => ({
       id: `bias_test_${topic}_${attribute}_${variation.id}`,
       topic,
@@ -231,38 +257,47 @@ export class BiasAndFairnessTest {
       expectedBehavior: 'consistent_across_variations',
     }));
   }
-  
+
   async runBiasTest(testCases, model, provider) {
     const results = [];
-    
+
     for (const testCase of testCases) {
-      const response = await this.makeModelRequest(testCase.prompt, model, provider);
-      
+      const response = await this.makeModelRequest(
+        testCase.prompt,
+        model,
+        provider
+      );
+
       results.push({
         testCase: testCase.id,
         response: response.text,
         sentiment_score: await this.analyzeSentiment(response.text),
         toxicity_score: await this.analyzeToxicity(response.text),
-        factual_accuracy: await this.checkFactualAccuracy(response.text, testCase.topic),
+        factual_accuracy: await this.checkFactualAccuracy(
+          response.text,
+          testCase.topic
+        ),
       });
     }
-    
+
     return this.analyzeBiasPatterns(results);
   }
-  
+
   analyzeBiasPatterns(results) {
     const grouped = this.groupByAttribute(results);
     const biasMetrics = {};
-    
+
     for (const [attribute, group] of Object.entries(grouped)) {
       biasMetrics[attribute] = {
-        sentiment_variance: this.calculateVariance(group.map(r => r.sentiment_score)),
+        sentiment_variance: this.calculateVariance(
+          group.map(r => r.sentiment_score)
+        ),
         toxicity_max: Math.max(...group.map(r => r.toxicity_score)),
         consistency_score: this.calculateConsistency(group),
         bias_detected: this.detectBias(group),
       };
     }
-    
+
     return biasMetrics;
   }
 }
@@ -277,11 +312,11 @@ export class CostEfficiencyTest {
     this.pricing = pricingModel;
     this.benchmarks = this.loadIndustryBenchmarks();
   }
-  
+
   async runCostEfficiencyAnalysis(workload, duration = '1h') {
     const costMetrics = await this.collectCostMetrics(workload, duration);
     const efficiencyScore = this.calculateEfficiencyScore(costMetrics);
-    
+
     return {
       total_cost: costMetrics.totalCost,
       cost_per_request: costMetrics.costPerRequest,
@@ -291,36 +326,39 @@ export class CostEfficiencyTest {
       comparison_to_benchmark: this.compareToIndustryBenchmarks(costMetrics),
     };
   }
-  
+
   calculateEfficiencyScore(metrics) {
     const factors = [
       // Cost effectiveness
-      this.benchmarks.cost_per_token / metrics.costPerToken * 0.3,
-      
+      (this.benchmarks.cost_per_token / metrics.costPerToken) * 0.3,
+
       // Resource utilization
       metrics.resourceUtilization * 0.2,
-      
+
       // Quality per dollar
       (metrics.qualityScore / metrics.costPerRequest) * 0.3,
-      
+
       // Latency per dollar (lower is better)
       (1 / (metrics.avgLatency * metrics.costPerRequest)) * 0.2,
     ];
-    
+
     return factors.reduce((sum, factor) => sum + factor, 0);
   }
-  
+
   generateOptimizationRecommendations(metrics) {
     const recommendations = [];
-    
+
     if (metrics.costPerToken > this.benchmarks.cost_per_token * 1.2) {
       recommendations.push({
         type: 'model_optimization',
         description: 'Consider using a more cost-effective model',
-        potential_savings: this.calculatePotentialSavings('model_switch', metrics),
+        potential_savings: this.calculatePotentialSavings(
+          'model_switch',
+          metrics
+        ),
       });
     }
-    
+
     if (metrics.resourceUtilization < 0.7) {
       recommendations.push({
         type: 'resource_optimization',
@@ -328,7 +366,7 @@ export class CostEfficiencyTest {
         potential_savings: this.calculatePotentialSavings('batching', metrics),
       });
     }
-    
+
     if (metrics.cacheHitRate < 0.3) {
       recommendations.push({
         type: 'caching_optimization',
@@ -336,7 +374,7 @@ export class CostEfficiencyTest {
         potential_savings: this.calculatePotentialSavings('caching', metrics),
       });
     }
-    
+
     return recommendations;
   }
 }
@@ -353,19 +391,19 @@ export class ModelABTest {
     this.trafficSplit = config.trafficSplit || 0.5;
     this.successMetrics = config.successMetrics;
   }
-  
+
   async runABTest(duration, requestCount) {
     const controlResults = [];
     const testResults = [];
-    
+
     for (let i = 0; i < requestCount; i++) {
       const useTestModel = Math.random() < this.trafficSplit;
       const model = useTestModel ? this.testModel : this.controlModel;
       const testCase = this.generateTestCase();
-      
+
       try {
         const result = await this.executeRequest(testCase, model);
-        
+
         if (useTestModel) {
           testResults.push(result);
         } else {
@@ -375,10 +413,10 @@ export class ModelABTest {
         console.error(`Request failed for ${model.name}:`, error);
       }
     }
-    
+
     return this.analyzeResults(controlResults, testResults);
   }
-  
+
   analyzeResults(controlResults, testResults) {
     const analysis = {
       control: this.calculateMetrics(controlResults),
@@ -386,7 +424,7 @@ export class ModelABTest {
       significance: {},
       recommendation: null,
     };
-    
+
     // Statistical significance testing
     for (const metric of this.successMetrics) {
       analysis.significance[metric] = this.calculateSignificance(
@@ -394,26 +432,29 @@ export class ModelABTest {
         testResults.map(r => r[metric])
       );
     }
-    
+
     // Generate recommendation based on results
     analysis.recommendation = this.generateRecommendation(analysis);
-    
+
     return analysis;
   }
-  
+
   calculateSignificance(controlData, testData) {
     // Implement statistical significance testing (e.g., t-test, Mann-Whitney U)
-    const controlMean = controlData.reduce((a, b) => a + b, 0) / controlData.length;
+    const controlMean =
+      controlData.reduce((a, b) => a + b, 0) / controlData.length;
     const testMean = testData.reduce((a, b) => a + b, 0) / testData.length;
-    
+
     const improvement = (testMean - controlMean) / controlMean;
-    
+
     return {
       control_mean: controlMean,
       test_mean: testMean,
       improvement_pct: improvement * 100,
       p_value: this.calculatePValue(controlData, testData),
-      is_significant: Math.abs(improvement) > 0.05 && this.calculatePValue(controlData, testData) < 0.05,
+      is_significant:
+        Math.abs(improvement) > 0.05 &&
+        this.calculatePValue(controlData, testData) < 0.05,
     };
   }
 }
@@ -461,58 +502,65 @@ The testing patterns generate specialized metrics that should be visualized:
 - **Model Performance Trends**: Latency, accuracy, cost over time
 - **Bias Detection Alerts**: Automated alerts for detected bias patterns
 - **Cost Efficiency Tracking**: Cost per request/token trends and optimizations
-- **A/B Test Results**: Model comparison dashboards with statistical significance
+- **A/B Test Results**: Model comparison dashboards with statistical
+  significance
 
 ### Alerting Rules for AI/ML Quality
 
 ```yaml
 # prometheus rules for AI/ML quality
 groups:
-- name: ai_ml_quality
-  rules:
-  - alert: ModelLatencyRegression
-    expr: histogram_quantile(0.95, rate(model_inference_duration_seconds_bucket[5m])) > 2
-    for: 10m
-    labels:
-      severity: warning
-    annotations:
-      summary: "Model inference latency regression detected"
-      
-  - alert: BiasDetected
-    expr: ai_bias_score > 0.7
-    for: 5m
-    labels:
-      severity: critical
-    annotations:
-      summary: "Potential bias detected in model responses"
-      
-  - alert: CostEfficiencyDegraded
-    expr: rate(model_cost_total[1h]) / rate(model_requests_total[1h]) > 0.05
-    for: 30m
-    labels:
-      severity: warning
-    annotations:
-      summary: "Model cost efficiency below threshold"
+  - name: ai_ml_quality
+    rules:
+      - alert: ModelLatencyRegression
+        expr:
+          histogram_quantile(0.95,
+          rate(model_inference_duration_seconds_bucket[5m])) > 2
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: 'Model inference latency regression detected'
+
+      - alert: BiasDetected
+        expr: ai_bias_score > 0.7
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: 'Potential bias detected in model responses'
+
+      - alert: CostEfficiencyDegraded
+        expr: rate(model_cost_total[1h]) / rate(model_requests_total[1h]) > 0.05
+        for: 30m
+        labels:
+          severity: warning
+        annotations:
+          summary: 'Model cost efficiency below threshold'
 ```
 
 ## Best Practices
 
 ### 1. Test Data Management
+
 - Use synthetic data generation for consistent testing
 - Implement data versioning for reproducible tests
 - Sanitize sensitive data in test datasets
 
 ### 2. Performance Baselines
+
 - Establish performance baselines for each model
 - Track performance drift over time
 - Set up automatic regression detection
 
 ### 3. Ethical AI Testing
+
 - Include bias testing in CI/CD pipelines
 - Test for fairness across protected characteristics
 - Monitor for potential harmful outputs
 
 ### 4. Cost Optimization
+
 - Implement cost-aware testing strategies
 - Use smaller models for development testing
 - Monitor and alert on cost thresholds

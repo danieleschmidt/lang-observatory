@@ -1,8 +1,10 @@
 # GitHub Actions Setup Guide
 
-This document provides templates and instructions for setting up GitHub Actions workflows for Lang Observatory.
+This document provides templates and instructions for setting up GitHub Actions
+workflows for Lang Observatory.
 
-⚠️ **Manual Setup Required**: Due to GitHub App security restrictions, workflow files must be manually created in your repository.
+⚠️ **Manual Setup Required**: Due to GitHub App security restrictions, workflow
+files must be manually created in your repository.
 
 ## Workflow Templates
 
@@ -28,16 +30,16 @@ jobs:
         with:
           node-version: '20'
           cache: 'npm'
-      
+
       - name: Install dependencies
         run: npm ci
-      
+
       - name: Run tests
         run: npm test
-      
+
       - name: Lint Helm charts
         run: helm lint charts/lang-observatory
-      
+
       - name: Security scan
         run: |
           curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin
@@ -49,17 +51,17 @@ jobs:
     if: github.event_name == 'push'
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Build and package
         run: |
           helm dependency update charts/lang-observatory
           helm package charts/lang-observatory
-      
+
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
           name: helm-chart
-          path: "*.tgz"
+          path: '*.tgz'
 ```
 
 ### 2. Security Scanning Workflow
@@ -82,7 +84,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Run Trivy vulnerability scanner
         uses: aquasecurity/trivy-action@master
         with:
@@ -90,17 +92,17 @@ jobs:
           scan-ref: '.'
           format: 'sarif'
           output: 'trivy-results.sarif'
-      
+
       - name: Upload Trivy scan results
         uses: github/codeql-action/upload-sarif@v3
         with:
           sarif_file: 'trivy-results.sarif'
-      
+
       - name: Generate SBOM
         run: |
           curl -sSfL https://raw.githubusercontent.com/anchore/syft/main/install.sh | sh -s -- -b /usr/local/bin
           syft packages . -o spdx-json > sbom.json
-      
+
       - name: Upload SBOM
         uses: actions/upload-artifact@v4
         with:
@@ -121,27 +123,27 @@ on:
   pull_request:
     branches: [main]
   schedule:
-    - cron: '0 2 * * 0'  # Weekly
+    - cron: '0 2 * * 0' # Weekly
 
 jobs:
   performance-test:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Setup k6
         run: |
           curl https://github.com/grafana/k6/releases/download/v0.47.0/k6-v0.47.0-linux-amd64.tar.gz -L | tar xvz --strip-components 1
           sudo mv k6 /usr/local/bin/
-      
+
       - name: Run performance tests
         run: |
           k6 run tests/performance/load-test.js
           k6 run tests/performance/api-load-test.js
-      
+
       - name: Generate performance report
         run: node scripts/generate-performance-report.js
-      
+
       - name: Upload performance results
         uses: actions/upload-artifact@v4
         with:
@@ -184,6 +186,7 @@ Branch protection rules for 'main':
 ## Manual Setup Steps
 
 1. **Create workflow directory**:
+
    ```bash
    mkdir -p .github/workflows
    ```
@@ -199,6 +202,7 @@ Branch protection rules for 'main':
 ## Integration with Existing Tools
 
 These workflows integrate with:
+
 - **Existing test suite**: `npm test`, `npm run test:*`
 - **Helm validation**: `helm lint`, `helm template`
 - **Security tools**: Trivy, SBOM generation
@@ -207,6 +211,7 @@ These workflows integrate with:
 ## Monitoring Workflow Performance
 
 Track workflow metrics through:
+
 - GitHub Actions insights
 - Custom Grafana dashboards (if integrated)
 - Performance trend analysis

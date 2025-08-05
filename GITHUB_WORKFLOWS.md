@@ -1,12 +1,16 @@
 # GitHub Actions Workflows
 
-Due to permission restrictions, the GitHub Actions workflow files need to be created manually. Below are the three comprehensive workflows that should be added to `.github/workflows/`:
+Due to permission restrictions, the GitHub Actions workflow files need to be
+created manually. Below are the three comprehensive workflows that should be
+added to `.github/workflows/`:
 
 ## 1. Continuous Integration (ci.yml)
 
-This workflow handles code quality, testing, and validation on every push and pull request.
+This workflow handles code quality, testing, and validation on every push and
+pull request.
 
 ### Features:
+
 - Code quality validation (ESLint, Prettier, YAML linting)
 - Security scanning (Trivy, CodeQL, secrets detection)
 - Comprehensive testing (unit, integration, e2e)
@@ -15,6 +19,7 @@ This workflow handles code quality, testing, and validation on every push and pu
 - Multi-stage validation with quality gates
 
 ### Key Jobs:
+
 - `quality`: Code quality and linting
 - `security`: Security scanning and vulnerability detection
 - `helm`: Helm chart validation and testing
@@ -26,9 +31,11 @@ This workflow handles code quality, testing, and validation on every push and pu
 
 ## 2. Continuous Deployment (cd.yml)
 
-This workflow handles automated deployments to staging and production environments.
+This workflow handles automated deployments to staging and production
+environments.
 
 ### Features:
+
 - Blue-green deployment strategy
 - Environment-specific configuration
 - Automated rollback capabilities
@@ -37,6 +44,7 @@ This workflow handles automated deployments to staging and production environmen
 - Comprehensive monitoring integration
 
 ### Key Jobs:
+
 - `strategy`: Deployment strategy determination
 - `build`: Container image building and pushing
 - `package`: Helm chart packaging with version updates
@@ -50,6 +58,7 @@ This workflow handles automated deployments to staging and production environmen
 This workflow provides comprehensive security scanning and compliance checking.
 
 ### Features:
+
 - Daily automated security scans
 - Dependency vulnerability scanning
 - Container security validation
@@ -58,6 +67,7 @@ This workflow provides comprehensive security scanning and compliance checking.
 - SBOM generation and license compliance
 
 ### Key Jobs:
+
 - `dependency-scan`: NPM audit and Snyk scanning
 - `container-scan`: Trivy and Grype container scanning
 - `infrastructure-scan`: Kubesec, Checkov, and Kics scanning
@@ -84,12 +94,15 @@ To add these workflows to your repository:
 ## Workflow Triggers
 
 - **CI Workflow**: Triggered on push to main/develop branches and pull requests
-- **CD Workflow**: Triggered on push to main, tags starting with 'v', and manual dispatch
-- **Security Workflow**: Triggered daily at 2 AM UTC, on push/PR, and manual dispatch
+- **CD Workflow**: Triggered on push to main, tags starting with 'v', and manual
+  dispatch
+- **Security Workflow**: Triggered daily at 2 AM UTC, on push/PR, and manual
+  dispatch
 
 ## Integration with SDLC
 
-These workflows integrate with all the development tools and processes established:
+These workflows integrate with all the development tools and processes
+established:
 
 - **Pre-commit hooks** validate locally before CI
 - **Makefile commands** mirror CI operations for local testing
@@ -97,4 +110,6 @@ These workflows integrate with all the development tools and processes establish
 - **Health checks and monitoring** validate deployment success
 - **Security scanning** ensures continuous compliance
 
-The workflows provide comprehensive automation for the entire software development lifecycle while maintaining security, quality, and reliability standards.
+The workflows provide comprehensive automation for the entire software
+development lifecycle while maintaining security, quality, and reliability
+standards.

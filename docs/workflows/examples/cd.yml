@@ -2,14 +2,14 @@ name: Continuous Deployment
 
 on:
   push:
-    branches: [ main ]
-    tags: [ 'v*' ]
+    branches: [main]
+    tags: ["v*"]
   workflow_dispatch:
     inputs:
       environment:
-        description: 'Deployment environment'
+        description: "Deployment environment"
         required: true
-        default: 'staging'
+        default: "staging"
         type: choice
         options:
           - staging
@@ -18,7 +18,7 @@ on:
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
-  HELM_VERSION: '3.14.0'
+  HELM_VERSION: "3.14.0"
 
 jobs:
   # Only run release job on tag push or manual dispatch
@@ -30,11 +30,11 @@ jobs:
       contents: write
       packages: write
       id-token: write
-    
+
     outputs:
       version: ${{ steps.version.outputs.version }}
       chart-version: ${{ steps.version.outputs.chart-version }}
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -44,8 +44,8 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20.x'
-          cache: 'npm'
+          node-version: "20.x"
+          cache: "npm"
 
       - name: Setup Helm
         uses: azure/setup-helm@v3
@@ -108,13 +108,13 @@ jobs:
           body: |
             ## Changes
             ${{ steps.changelog.outputs.changelog }}
-            
+
             ## Installation
             ```bash
             helm repo add terragon-charts https://terragon-labs.github.io/lang-observatory
             helm install lang-observatory terragon-charts/lang-observatory --version ${{ steps.version.outputs.chart-version }}
             ```
-            
+
             ## Verification
             ```bash
             kubectl get pods -l app.kubernetes.io/name=lang-observatory
@@ -141,7 +141,7 @@ jobs:
     environment:
       name: staging
       url: https://lang-observatory-staging.terragonlabs.com
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -165,7 +165,7 @@ jobs:
       - name: Deploy to staging
         run: |
           export KUBECONFIG=kubeconfig
-          
+
           helm upgrade --install lang-observatory-staging ./dist/lang-observatory-*.tgz \
             --namespace lang-observatory-staging \
             --create-namespace \
@@ -178,14 +178,14 @@ jobs:
       - name: Verify deployment
         run: |
           export KUBECONFIG=kubeconfig
-          
+
           # Wait for rollout to complete
           kubectl rollout status deployment/lang-observatory-staging-langfuse -n lang-observatory-staging --timeout=300s
           kubectl rollout status deployment/lang-observatory-staging-grafana -n lang-observatory-staging --timeout=300s
-          
+
           # Check pod health
           kubectl get pods -n lang-observatory-staging
-          
+
           # Basic smoke test
           kubectl run smoke-test --rm -i --restart=Never --image=curlimages/curl -- \
             curl -f http://lang-observatory-staging-langfuse.lang-observatory-staging.svc.cluster.local:3000/api/public/health
@@ -193,13 +193,13 @@ jobs:
       - name: Run deployment tests
         run: |
           export KUBECONFIG=kubeconfig
-          
+
           # Port forward for testing
           kubectl port-forward svc/lang-observatory-staging-langfuse 3000:3000 -n lang-observatory-staging &
           kubectl port-forward svc/lang-observatory-staging-grafana 3001:3000 -n lang-observatory-staging &
-          
+
           sleep 10
-          
+
           # Run E2E tests against staging
           npm run test:e2e -- --config baseURL=http://localhost:3000
 
@@ -212,7 +212,7 @@ jobs:
     environment:
       name: production
       url: https://lang-observatory.terragonlabs.com
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -236,14 +236,14 @@ jobs:
       - name: Pre-deployment backup
         run: |
           export KUBECONFIG=kubeconfig
-          
+
           # Backup current state
           kubectl get all -n lang-observatory-production -o yaml > backup-$(date +%Y%m%d-%H%M%S).yaml
 
       - name: Deploy to production
         run: |
           export KUBECONFIG=kubeconfig
-          
+
           helm upgrade --install lang-observatory-production ./dist/lang-observatory-*.tgz \
             --namespace lang-observatory-production \
             --create-namespace \
@@ -256,14 +256,14 @@ jobs:
       - name: Verify production deployment
         run: |
           export KUBECONFIG=kubeconfig
-          
+
           # Wait for rollout to complete
           kubectl rollout status deployment/lang-observatory-production-langfuse -n lang-observatory-production --timeout=600s
           kubectl rollout status deployment/lang-observatory-production-grafana -n lang-observatory-production --timeout=600s
-          
+
           # Check pod health
           kubectl get pods -n lang-observatory-production
-          
+
           # Health check
           kubectl run prod-health-check --rm -i --restart=Never --image=curlimages/curl -- \
             curl -f http://lang-observatory-production-langfuse.lang-observatory-production.svc.cluster.local:3000/api/public/health
@@ -271,13 +271,13 @@ jobs:
       - name: Run production smoke tests
         run: |
           export KUBECONFIG=kubeconfig
-          
+
           # Port forward for testing
           kubectl port-forward svc/lang-observatory-production-langfuse 3000:3000 -n lang-observatory-production &
           kubectl port-forward svc/lang-observatory-production-grafana 3001:3000 -n lang-observatory-production &
-          
+
           sleep 10
-          
+
           # Run critical path tests
           npm run test:e2e:smoke -- --config baseURL=http://localhost:3000
 
@@ -292,10 +292,10 @@ jobs:
         if: failure()
         run: |
           export KUBECONFIG=kubeconfig
-          
+
           echo "❌ Production deployment failed! Initiating rollback..."
           helm rollback lang-observatory-production -n lang-observatory-production
-          
+
           # Wait for rollback to complete
           kubectl rollout undo deployment/lang-observatory-production-langfuse -n lang-observatory-production
           kubectl rollout status deployment/lang-observatory-production-langfuse -n lang-observatory-production --timeout=300s
@@ -306,7 +306,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: deploy-staging
     if: always() && github.ref == 'refs/heads/main'
-    
+
     steps:
       - name: Configure kubectl
         run: |
@@ -316,7 +316,7 @@ jobs:
       - name: Cleanup old releases
         run: |
           export KUBECONFIG=kubeconfig
-          
+
           # Keep only the last 5 releases
           helm history lang-observatory-staging -n lang-observatory-staging --max 10 -o json | \
             jq -r '.[:-5] | .[] | .revision' | \
@@ -331,7 +331,7 @@ jobs:
     permissions:
       contents: write
       pages: write
-    
+
     steps:
       - name: Checkout helm-charts repository
         uses: actions/checkout@v4
@@ -354,13 +354,13 @@ jobs:
       - name: Update Helm repository
         run: |
           cd helm-charts
-          
+
           # Copy new chart
           cp ../dist/*.tgz .
-          
+
           # Update index
           helm repo index . --url https://terragon-labs.github.io/helm-charts
-          
+
           # Commit changes
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"

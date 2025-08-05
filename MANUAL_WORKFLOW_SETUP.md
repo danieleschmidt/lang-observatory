@@ -1,6 +1,7 @@
 # Manual GitHub Workflow Setup Required
 
-Due to GitHub App permission constraints, the following workflow files must be created manually:
+Due to GitHub App permission constraints, the following workflow files must be
+created manually:
 
 ## 1. Auto-Rebase Workflow
 
@@ -62,14 +63,14 @@ jobs:
           echo "# Rerere Audit Report" > rerere-audit.md
           echo "Generated on: $(date)" >> rerere-audit.md
           echo "" >> rerere-audit.md
-          
+
           if git rerere diff > /dev/null 2>&1; then
             echo "## Recorded Conflict Resolutions" >> rerere-audit.md
             git rerere diff >> rerere-audit.md
           else
             echo "## No recorded conflict resolutions found" >> rerere-audit.md
           fi
-          
+
           echo "" >> rerere-audit.md
           echo "## Rerere Status" >> rerere-audit.md
           git rerere status >> rerere-audit.md || echo "No pending rerere operations" >> rerere-audit.md
@@ -90,4 +91,6 @@ jobs:
 
 ## Note
 
-All other components (rerere config, merge drivers, hooks, Mergify) are already configured and working. Only the GitHub Actions workflows require manual creation due to permission constraints.
+All other components (rerere config, merge drivers, hooks, Mergify) are already
+configured and working. Only the GitHub Actions workflows require manual
+creation due to permission constraints.

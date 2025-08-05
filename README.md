@@ -5,20 +5,29 @@
 [![License](https://img.shields.io/github/license/terragon-labs/lang-observatory)](LICENSE)
 [![Version](https://img.shields.io/badge/version-v0.1.0-blue)](https://semver.org)
 
-A turnkey observability stack for large language models, packaged as a Helm chart. It bundles the Langfuse UI, OpenLIT OTEL exporters, and Prometheus/Grafana to create a comprehensive, self-hostable solution for monitoring LLM applications.
+A turnkey observability stack for large language models, packaged as a Helm
+chart. It bundles the Langfuse UI, OpenLIT OTEL exporters, and
+Prometheus/Grafana to create a comprehensive, self-hostable solution for
+monitoring LLM applications.
 
 ## ✨ Key Features
 
-*   **Turnkey Helm Chart**: Simplifies deployment of a complete observability stack.
-*   **Integrated Tooling**: Combines Langfuse for tracing, OpenLIT for telemetry, and Grafana for visualization.
-*   **Unified Root-Cause Analysis**: A Python SDK extension allows logging artifacts from other tools into the same trace.
-*   **Scalable Collection**: Recommends using the OpenTelemetry Operator (or OPAMP sidecar) for auto-scaling collectors.
+- **Turnkey Helm Chart**: Simplifies deployment of a complete observability
+  stack.
+- **Integrated Tooling**: Combines Langfuse for tracing, OpenLIT for telemetry,
+  and Grafana for visualization.
+- **Unified Root-Cause Analysis**: A Python SDK extension allows logging
+  artifacts from other tools into the same trace.
+- **Scalable Collection**: Recommends using the OpenTelemetry Operator (or OPAMP
+  sidecar) for auto-scaling collectors.
 
 ## ⚡ Quick Start
 
-1.  Add the Helm repository: `helm repo add terragon-charts https://terragon-labs.github.io/lang-observatory`
+1.  Add the Helm repository:
+    `helm repo add terragon-charts https://terragon-labs.github.io/lang-observatory`
 2.  Create a `values.yaml` file (see example below).
-3.  Install the chart: `helm install lang-observatory terragon-charts/lang-observatory -f values.yaml`.
+3.  Install the chart:
+    `helm install lang-observatory terragon-charts/lang-observatory -f values.yaml`.
 
 ## 🛠️ Configuration Sample `values.yaml`
 
@@ -53,3 +62,4 @@ OpenLIT: Licensed under the Apache-2.0 License.
 📚 References
 Langfuse: Official Site & GitHub
 OpenLIT: Official Site & GitHub
+```

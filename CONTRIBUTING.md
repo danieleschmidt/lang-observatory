@@ -1,16 +1,21 @@
 # Contributing to Lang Observatory
 
-We welcome contributions to Lang Observatory! This document provides guidelines for contributing to the project.
+We welcome contributions to Lang Observatory! This document provides guidelines
+for contributing to the project.
 
 ## Code of Conduct
 
-This project and everyone participating in it is governed by our [Code of Conduct](CODE_OF_CONDUCT.md). By participating, you are expected to uphold this code.
+This project and everyone participating in it is governed by our
+[Code of Conduct](CODE_OF_CONDUCT.md). By participating, you are expected to
+uphold this code.
 
 ## How to Contribute
 
 ### Reporting Bugs
 
-Before creating bug reports, please check the [existing issues](https://github.com/terragon-labs/lang-observatory/issues) to see if the problem has already been reported.
+Before creating bug reports, please check the
+[existing issues](https://github.com/terragon-labs/lang-observatory/issues) to
+see if the problem has already been reported.
 
 When creating a bug report, include:
 
@@ -37,7 +42,8 @@ Enhancement suggestions are welcome! When suggesting an enhancement:
 #### Development Process
 
 1. **Fork the repository** and create a feature branch from `main`
-2. **Set up development environment** following the [Development Guide](docs/DEVELOPMENT.md)
+2. **Set up development environment** following the
+   [Development Guide](docs/DEVELOPMENT.md)
 3. **Make your changes** following our coding standards
 4. **Add or update tests** for your changes
 5. **Update documentation** if needed
@@ -68,6 +74,7 @@ type(scope): description
 ```
 
 **Types:**
+
 - `feat`: New feature
 - `fix`: Bug fix
 - `docs`: Documentation changes
@@ -77,6 +84,7 @@ type(scope): description
 - `chore`: Maintenance tasks
 
 **Examples:**
+
 ```
 feat(langfuse): add custom dashboard support
 fix(prometheus): resolve memory leak in collector
@@ -149,7 +157,8 @@ test(helm): add integration tests for ingress
 - Update README.md for user-facing changes
 - Update docs/ for architectural changes
 - Include inline code comments for complex logic
-- Update CHANGELOG.md following [Keep a Changelog](https://keepachangelog.com/) format
+- Update CHANGELOG.md following [Keep a Changelog](https://keepachangelog.com/)
+  format
 
 ## Project Structure
 
@@ -218,7 +227,8 @@ Contributors are recognized in several ways:
 
 ## License
 
-By contributing to Lang Observatory, you agree that your contributions will be licensed under the [Apache-2.0 License](LICENSE).
+By contributing to Lang Observatory, you agree that your contributions will be
+licensed under the [Apache-2.0 License](LICENSE).
 
 ## Questions?
 

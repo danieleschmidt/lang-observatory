@@ -73,7 +73,7 @@
   "compliance": {
     "sdlc_phases_covered": [
       "planning",
-      "design", 
+      "design",
       "implementation",
       "testing",
       "deployment",
@@ -87,13 +87,7 @@
       "vulnerability_assessment",
       "sbom_generation"
     ],
-    "quality_standards": [
-      "code_review",
-      "automated_testing",
-      "linting",
-      "formatting",
-      "documentation"
-    ]
+    "quality_standards": ["code_review", "automated_testing", "linting", "formatting", "documentation"]
   },
   "automation_score": {
     "build_automation": 100,
@@ -113,7 +107,7 @@
     {
       "area": "Documentation",
       "description": "Complete user guide implementations",
-      "priority": "medium", 
+      "priority": "medium",
       "effort": "low"
     },
     {

@@ -62,6 +62,7 @@ docker-compose down
 ```
 
 Access services:
+
 - **Langfuse**: http://localhost:3000
 - **Grafana**: http://localhost:3001 (admin/admin)
 - **Prometheus**: http://localhost:9090

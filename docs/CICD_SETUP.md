@@ -2,7 +2,8 @@
 
 ## GitHub Actions Workflows
 
-**Note: As per security guidelines, I cannot create GitHub Actions workflows directly. These should be manually created by the repository maintainer.**
+**Note: As per security guidelines, I cannot create GitHub Actions workflows
+directly. These should be manually created by the repository maintainer.**
 
 ### Required Workflows
 
@@ -13,7 +14,7 @@ name: PR Validation
 
 on:
   pull_request:
-    branches: [ main, develop ]
+    branches: [main, develop]
 
 jobs:
   lint:
@@ -58,9 +59,9 @@ name: Build and Package
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
   release:
-    types: [ published ]
+    types: [published]
 
 jobs:
   build:
@@ -85,9 +86,9 @@ name: Security Scanning
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
   pull_request:
-    branches: [ main ]
+    branches: [main]
   schedule:
     - cron: '0 2 * * 1'
 

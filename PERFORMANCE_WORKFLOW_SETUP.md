@@ -1,10 +1,13 @@
 # Performance Benchmarking Workflow Setup
 
-Due to GitHub App permission restrictions, the performance benchmarking workflow needs to be created manually. Below is the complete workflow file that should be added to `.github/workflows/performance-benchmarks.yml`.
+Due to GitHub App permission restrictions, the performance benchmarking workflow
+needs to be created manually. Below is the complete workflow file that should be
+added to `.github/workflows/performance-benchmarks.yml`.
 
 ## Workflow File Content
 
-Create `.github/workflows/performance-benchmarks.yml` with the following content:
+Create `.github/workflows/performance-benchmarks.yml` with the following
+content:
 
 ```yaml
 name: Performance Benchmarks
@@ -41,7 +44,7 @@ jobs:
   performance-baseline:
     runs-on: ubuntu-latest
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -59,7 +62,7 @@ jobs:
         run: |
           npm run test:performance:baseline
           npm run test:performance:memory-usage
-        
+
       - name: Store baseline results
         uses: actions/upload-artifact@v4
         with:
@@ -73,13 +76,14 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        scenario: [
-          'langfuse-ingestion',
-          'grafana-queries', 
-          'prometheus-queries',
-          'openlit-telemetry'
-        ]
-    
+        scenario:
+          [
+            'langfuse-ingestion',
+            'grafana-queries',
+            'prometheus-queries',
+            'openlit-telemetry',
+          ]
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -150,23 +154,23 @@ jobs:
           script: |
             const fs = require('fs');
             const results = JSON.parse(fs.readFileSync('results-${{ matrix.scenario }}.json', 'utf8'));
-            
+
             const metrics = results.metrics;
             const p95 = metrics.http_req_duration?.p95 || 'N/A';
             const errorRate = metrics.http_req_failed?.rate || 0;
             const throughput = metrics.http_reqs?.rate || 'N/A';
-            
+
             const comment = `## Performance Results - ${{ matrix.scenario }}
-            
+
             | Metric | Value |
             |--------|-------|
             | P95 Response Time | ${p95}ms |
             | Error Rate | ${(errorRate * 100).toFixed(2)}% |
             | Throughput | ${throughput} req/s |
             | Duration | ${process.env.BENCHMARK_DURATION}m |
-            
+
             📊 [Full Report](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})`;
-            
+
             github.rest.issues.createComment({
               issue_number: context.issue.number,
               owner: context.repo.owner,
@@ -185,7 +189,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: [load-testing]
     if: github.event_name == 'pull_request'
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -216,7 +220,7 @@ jobs:
           script: |
             const fs = require('fs');
             const report = fs.readFileSync('comparison-report.md', 'utf8');
-            
+
             github.rest.issues.createComment({
               issue_number: context.issue.number,
               owner: context.repo.owner,
@@ -226,8 +230,10 @@ jobs:
 
   stress-testing:
     runs-on: ubuntu-latest
-    if: github.event_name == 'schedule' || github.event.inputs.environment == 'staging'
-    
+    if:
+      github.event_name == 'schedule' || github.event.inputs.environment ==
+      'staging'
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -267,8 +273,10 @@ jobs:
 
   memory-profiling:
     runs-on: ubuntu-latest-16-cores
-    if: github.event_name == 'schedule' || contains(github.event.head_commit.message, '[profile-memory]')
-    
+    if:
+      github.event_name == 'schedule' ||
+      contains(github.event.head_commit.message, '[profile-memory]')
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -286,7 +294,8 @@ jobs:
         run: |
           npm run test:performance:memory-profile
         env:
-          NODE_OPTIONS: '--max-old-space-size=4096 --heap-prof --heap-prof-interval=10000'
+          NODE_OPTIONS:
+            '--max-old-space-size=4096 --heap-prof --heap-prof-interval=10000'
 
       - name: Analyze heap profiles
         run: |
@@ -313,10 +322,11 @@ jobs:
 ## Setup Instructions
 
 1. **Create the workflow file**:
+
    ```bash
    # Create the workflows directory if it doesn't exist
    mkdir -p .github/workflows
-   
+
    # Create the workflow file
    cp PERFORMANCE_WORKFLOW_SETUP.md .github/workflows/performance-benchmarks.yml
    # Then edit the file to contain only the YAML content above
@@ -337,7 +347,8 @@ jobs:
 
 Once the workflow is set up:
 
-- **Automatic runs**: Performance tests run on push to main/develop and PR creation
+- **Automatic runs**: Performance tests run on push to main/develop and PR
+  creation
 - **Scheduled runs**: Nightly comprehensive benchmarks at 2 AM UTC
 - **Manual runs**: Use GitHub Actions UI to trigger with custom parameters
 - **PR comments**: Automatic performance comparison comments on PRs
@@ -345,6 +356,7 @@ Once the workflow is set up:
 ## Integration with Existing Infrastructure
 
 The workflow integrates seamlessly with:
+
 - ✅ Existing Kubernetes cluster setup
 - ✅ Helm chart deployment process
 - ✅ Prometheus and Grafana monitoring stack
@@ -354,6 +366,7 @@ The workflow integrates seamlessly with:
 ## Performance Thresholds
 
 The workflow enforces these performance standards:
+
 - **Response Time P95**: < 500ms for all critical endpoints
 - **Error Rate**: < 0.1% under normal load conditions
 - **Memory Usage**: < 512MB baseline for core services
@@ -362,10 +375,12 @@ The workflow enforces these performance standards:
 ## Troubleshooting
 
 If performance tests fail:
+
 1. Check cluster resource availability
 2. Verify Helm chart deployment success
 3. Review k6 test results for specific failure points
 4. Check memory and CPU utilization during tests
 5. Ensure network connectivity between test runner and services
 
-This workflow provides enterprise-grade performance monitoring and ensures the Lang Observatory maintains excellent performance characteristics as it scales.
+This workflow provides enterprise-grade performance monitoring and ensures the
+Lang Observatory maintains excellent performance characteristics as it scales.

@@ -6,14 +6,18 @@ Accepted
 
 ## Context
 
-Lang Observatory collects and stores multiple types of data with different retention requirements:
+Lang Observatory collects and stores multiple types of data with different
+retention requirements:
 
-- **Traces and Spans**: High-volume, detailed execution data from LLM applications
+- **Traces and Spans**: High-volume, detailed execution data from LLM
+  applications
 - **Metrics**: Time-series data for monitoring and alerting
 - **Logs**: Application and system logs for debugging
 - **Cost Data**: Financial tracking information for LLM usage
 
-Different data types have varying value over time, storage costs, and compliance requirements. Without proper lifecycle management, storage costs will grow unbounded and performance will degrade.
+Different data types have varying value over time, storage costs, and compliance
+requirements. Without proper lifecycle management, storage costs will grow
+unbounded and performance will degrade.
 
 ## Decision
 
@@ -96,24 +100,24 @@ dataRetention:
     hotTierDays: 7
     warmTierDays: 90
     coldTierYears: 2
-  
+
   traces:
     hotTierDays: 7
     warmTierDays: 30
     coldTierYears: 1
     compressionEnabled: true
-  
+
   metrics:
     hotTierDays: 30
     warmTierDays: 180
     coldTierYears: 2
     aggregationRules:
-      - interval: "5m"
-        retention: "7d"
-      - interval: "1h"
-        retention: "90d"
-      - interval: "1d"
-        retention: "2y"
+      - interval: '5m'
+        retention: '7d'
+      - interval: '1h'
+        retention: '90d'
+      - interval: '1d'
+        retention: '2y'
 ```
 
 ## Alternatives Considered

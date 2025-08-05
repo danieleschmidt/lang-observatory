@@ -1,10 +1,12 @@
 # Architecture Decision Records (ADRs)
 
-This directory contains Architecture Decision Records for the lang-observatory project.
+This directory contains Architecture Decision Records for the lang-observatory
+project.
 
 ## What is an ADR?
 
-An Architecture Decision Record (ADR) is a document that captures an important architectural decision made along with its context and consequences.
+An Architecture Decision Record (ADR) is a document that captures an important
+architectural decision made along with its context and consequences.
 
 ## ADR Process
 
@@ -27,8 +29,8 @@ Copy `template.md` when creating new ADRs and follow the naming convention:
 
 ## Index
 
-| Number | Title | Status |
-|--------|-------|--------|
-| [0001](0001-adopt-adr-process.md) | Adopt ADR Process | Accepted |
-| [0002](0002-helm-chart-architecture.md) | Helm Chart Architecture | Accepted |
+| Number                                        | Title                         | Status   |
+| --------------------------------------------- | ----------------------------- | -------- |
+| [0001](0001-adopt-adr-process.md)             | Adopt ADR Process             | Accepted |
+| [0002](0002-helm-chart-architecture.md)       | Helm Chart Architecture       | Accepted |
 | [0003](0003-observability-stack-selection.md) | Observability Stack Selection | Accepted |

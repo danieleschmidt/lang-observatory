@@ -2,7 +2,8 @@
 
 ## Supported Versions
 
-We actively support the following versions of Lang Observatory with security updates:
+We actively support the following versions of Lang Observatory with security
+updates:
 
 | Version | Supported          |
 | ------- | ------------------ |
@@ -14,7 +15,9 @@ We actively support the following versions of Lang Observatory with security upd
 Lang Observatory implements comprehensive security measures:
 
 ### 🔒 Security Controls
-- **Container Security**: Multi-stage builds, non-root users, minimal base images
+
+- **Container Security**: Multi-stage builds, non-root users, minimal base
+  images
 - **Secret Management**: Kubernetes secrets, encrypted at rest
 - **Network Security**: Network policies, TLS everywhere
 - **Access Control**: RBAC, least privilege principle
@@ -22,6 +25,7 @@ Lang Observatory implements comprehensive security measures:
 - **Runtime Security**: Pod security standards, security contexts
 
 ### 🛡️ Security Scanning
+
 - **SAST**: Static application security testing in CI/CD
 - **Container Scanning**: Trivy security scans for vulnerabilities
 - **Dependency Scanning**: Automated vulnerability detection
@@ -30,14 +34,18 @@ Lang Observatory implements comprehensive security measures:
 
 ## Reporting a Vulnerability
 
-We take security vulnerabilities seriously. Please follow our responsible disclosure process:
+We take security vulnerabilities seriously. Please follow our responsible
+disclosure process:
 
 ### 🚨 Critical/High Severity Vulnerabilities
-For critical or high-severity vulnerabilities that could impact production systems:
+
+For critical or high-severity vulnerabilities that could impact production
+systems:
 
 1. **DO NOT** create a public GitHub issue
 2. **Email**: [security@terragonlabs.com](mailto:security@terragonlabs.com)
-3. **Subject**: `[SECURITY] Lang Observatory Vulnerability - [Brief Description]`
+3. **Subject**:
+   `[SECURITY] Lang Observatory Vulnerability - [Brief Description]`
 4. **Include**:
    - Detailed description of the vulnerability
    - Steps to reproduce
@@ -46,12 +54,14 @@ For critical or high-severity vulnerabilities that could impact production syste
    - Your contact information
 
 **Response Timeline:**
+
 - **Initial Response**: Within 24 hours
 - **Vulnerability Assessment**: Within 48 hours
 - **Fix Development**: 1-7 days (depending on severity)
 - **Coordinated Disclosure**: After fix is available
 
 ### 📧 Medium/Low Severity Issues
+
 For medium or low-severity issues:
 
 1. Create a GitHub issue with the `security` label
@@ -59,9 +69,12 @@ For medium or low-severity issues:
 3. We'll triage and respond within 3 business days
 
 ### 🎯 Bug Bounty Program
-We currently do not have a formal bug bounty program, but we recognize and appreciate security researchers who help improve our security posture.
+
+We currently do not have a formal bug bounty program, but we recognize and
+appreciate security researchers who help improve our security posture.
 
 **Recognition:**
+
 - Public acknowledgment (with permission)
 - Credit in release notes
 - Direct communication with our security team
@@ -69,6 +82,7 @@ We currently do not have a formal bug bounty program, but we recognize and appre
 ## Security Architecture
 
 ### 🏗️ Defense in Depth
+
 Lang Observatory implements multiple layers of security:
 
 1. **Network Layer**
@@ -92,12 +106,14 @@ Lang Observatory implements multiple layers of security:
    - Secure backup and recovery
 
 ### 🔐 Secrets Management
+
 - **Kubernetes Secrets**: Encrypted at rest
 - **External Secret Operators**: Integration with external secret stores
 - **Secret Rotation**: Automated rotation policies
 - **Least Privilege**: Minimal secret access scope
 
 ### 📊 Security Monitoring
+
 - **Audit Logging**: All security-relevant events
 - **Anomaly Detection**: Behavioral analysis
 - **Threat Intelligence**: Integration with security feeds
@@ -106,6 +122,7 @@ Lang Observatory implements multiple layers of security:
 ## Security Best Practices
 
 ### 🚀 For Operators
+
 1. **Regular Updates**: Keep all components updated
 2. **Access Reviews**: Quarterly access rights reviews
 3. **Monitoring**: Enable comprehensive security monitoring
@@ -113,6 +130,7 @@ Lang Observatory implements multiple layers of security:
 5. **Incident Planning**: Have incident response procedures ready
 
 ### 👩‍💻 For Developers
+
 1. **Secure Coding**: Follow OWASP guidelines
 2. **Dependencies**: Keep dependencies updated
 3. **Testing**: Include security tests in CI/CD
@@ -120,6 +138,7 @@ Lang Observatory implements multiple layers of security:
 5. **Documentation**: Document security considerations
 
 ### 🔧 For Users
+
 1. **Strong Authentication**: Use strong, unique passwords
 2. **Principle of Least Privilege**: Request minimal necessary access
 3. **Regular Audits**: Review access and usage regularly
@@ -129,6 +148,7 @@ Lang Observatory implements multiple layers of security:
 ## Compliance and Certifications
 
 ### 📜 Standards Compliance
+
 - **SOC 2 Type II**: Security, Availability, Confidentiality
 - **ISO 27001**: Information Security Management
 - **NIST Cybersecurity Framework**: Risk management
@@ -136,6 +156,7 @@ Lang Observatory implements multiple layers of security:
 - **OWASP Top 10**: Web application security
 
 ### 🏛️ Regulatory Compliance
+
 - **GDPR**: European data protection regulation
 - **CCPA**: California Consumer Privacy Act
 - **HIPAA**: Healthcare data protection (configurable)
@@ -145,12 +166,18 @@ Lang Observatory implements multiple layers of security:
 ## Security Documentation
 
 ### 📚 Additional Resources
-- **[Security Architecture](docs/ARCHITECTURE.md#security)**: Detailed security design
-- **[Compliance Framework](docs/COMPLIANCE_FRAMEWORK.md)**: Compliance procedures
-- **[Incident Response Plan](docs/INCIDENT_RESPONSE.md)**: Security incident procedures
-- **[Security Configuration Guide](docs/SECURITY_CONFIGURATION.md)**: Hardening guidelines
+
+- **[Security Architecture](docs/ARCHITECTURE.md#security)**: Detailed security
+  design
+- **[Compliance Framework](docs/COMPLIANCE_FRAMEWORK.md)**: Compliance
+  procedures
+- **[Incident Response Plan](docs/INCIDENT_RESPONSE.md)**: Security incident
+  procedures
+- **[Security Configuration Guide](docs/SECURITY_CONFIGURATION.md)**: Hardening
+  guidelines
 
 ### 🎓 Training and Awareness
+
 - **Security Training**: Regular security awareness training
 - **Threat Modeling**: Application threat modeling sessions
 - **Incident Simulations**: Regular incident response drills
@@ -159,22 +186,28 @@ Lang Observatory implements multiple layers of security:
 ## Contact Information
 
 ### 🏢 Security Team
-- **Primary Contact**: [security@terragonlabs.com](mailto:security@terragonlabs.com)
+
+- **Primary Contact**:
+  [security@terragonlabs.com](mailto:security@terragonlabs.com)
 - **Emergency**: [emergency@terragonlabs.com](mailto:emergency@terragonlabs.com)
 - **GPG Key**: Available upon request
 
 ### 🔗 External Resources
-- **Security Advisory**: [GitHub Security Advisories](https://github.com/terragon-labs/lang-observatory/security/advisories)
+
+- **Security Advisory**:
+  [GitHub Security Advisories](https://github.com/terragon-labs/lang-observatory/security/advisories)
 - **Vulnerability Database**: [CVE Database](https://cve.mitre.org/)
-- **Security Blog**: [Terragon Labs Security Blog](https://blog.terragonlabs.com/security)
+- **Security Blog**:
+  [Terragon Labs Security Blog](https://blog.terragonlabs.com/security)
 
 ---
 
 ## Hall of Fame
 
-We recognize security researchers who have helped improve Lang Observatory's security:
+We recognize security researchers who have helped improve Lang Observatory's
+security:
 
-*No vulnerabilities reported yet - be the first to help us improve!*
+_No vulnerabilities reported yet - be the first to help us improve!_
 
 ---
 

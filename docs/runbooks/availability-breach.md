@@ -2,7 +2,9 @@
 
 ## Overview
 
-This runbook provides step-by-step instructions for responding to Lang Observatory availability breaches when system availability drops below 99.9% SLO threshold.
+This runbook provides step-by-step instructions for responding to Lang
+Observatory availability breaches when system availability drops below 99.9% SLO
+threshold.
 
 ## Severity Classification
 
@@ -13,6 +15,7 @@ This runbook provides step-by-step instructions for responding to Lang Observato
 ## Immediate Response (0-5 minutes)
 
 ### 1. Acknowledge Alert
+
 ```bash
 # Silence alert to prevent spam
 curl -X POST http://alertmanager:9093/api/v1/silences \
@@ -26,6 +29,7 @@ curl -X POST http://alertmanager:9093/api/v1/silences \
 ```
 
 ### 2. Quick Health Check
+
 ```bash
 # Check all core services
 kubectl get pods -n lang-observatory -l app.kubernetes.io/instance=lang-observatory
@@ -42,6 +46,7 @@ curl -f http://prometheus-service:9090/-/healthy || echo "Prometheus DOWN"
 ```
 
 ### 3. Identify Failing Component
+
 ```bash
 # Check service availability metrics
 kubectl exec -n lang-observatory deployment/prometheus -- \
@@ -55,6 +60,7 @@ kubectl exec -n lang-observatory deployment/prometheus -- \
 ## Investigation Phase (5-15 minutes)
 
 ### 4. Resource Analysis
+
 ```bash
 # Check resource utilization
 kubectl top pods -n lang-observatory
@@ -68,6 +74,7 @@ kubectl get pods -n lang-observatory -o jsonpath='{range .items[*]}{.metadata.na
 ```
 
 ### 5. Recent Changes Assessment
+
 ```bash
 # Check recent deployments
 kubectl rollout history deployment -n lang-observatory
@@ -78,6 +85,7 @@ helm history lang-observatory -n lang-observatory
 ```
 
 ### 6. Database and Storage Health
+
 ```bash
 # Check persistent volumes
 kubectl get pv,pvc -n lang-observatory
@@ -93,6 +101,7 @@ kubectl exec -n lang-observatory deployment/prometheus -- df -h
 ## Diagnosis Deep Dive (15-30 minutes)
 
 ### 7. Log Analysis
+
 ```bash
 # Recent error logs from all services
 kubectl logs -n lang-observatory -l app.kubernetes.io/instance=lang-observatory --since=10m | grep -i error
@@ -105,6 +114,7 @@ kubectl logs -n lang-observatory deployment/prometheus --tail=100
 ```
 
 ### 8. Network Connectivity
+
 ```bash
 # DNS resolution
 kubectl exec -n lang-observatory deployment/langfuse -- nslookup prometheus-service
@@ -119,6 +129,7 @@ kubectl exec -n lang-observatory deployment/langfuse -- \
 ```
 
 ### 9. Performance Metrics Analysis
+
 ```bash
 # Query Prometheus for detailed metrics
 kubectl port-forward -n lang-observatory svc/prometheus-service 9090:9090 &
@@ -127,7 +138,7 @@ PF_PID=$!
 # Response time trends
 curl -s "http://localhost:9090/api/v1/query_range?query=histogram_quantile(0.95,rate(http_request_duration_seconds_bucket[5m]))&start=$(date -d '1 hour ago' +%s)&end=$(date +%s)&step=60"
 
-# Error rate trends  
+# Error rate trends
 curl -s "http://localhost:9090/api/v1/query_range?query=rate(http_requests_total{code!~\"2..\"}[5m])&start=$(date -d '1 hour ago' +%s)&end=$(date +%s)&step=60"
 
 kill $PF_PID
@@ -138,6 +149,7 @@ kill $PF_PID
 ### 10. Quick Fixes
 
 #### Restart Unhealthy Pods
+
 ```bash
 # Restart specific deployment
 kubectl rollout restart deployment/langfuse -n lang-observatory
@@ -148,6 +160,7 @@ kubectl rollout status deployment/langfuse -n lang-observatory --timeout=300s
 ```
 
 #### Scale Up Resources
+
 ```bash
 # Increase replica count
 kubectl scale deployment/langfuse --replicas=3 -n lang-observatory
@@ -173,6 +186,7 @@ kubectl patch deployment langfuse -n lang-observatory -p='
 ```
 
 #### Traffic Rerouting
+
 ```bash
 # Check ingress configuration
 kubectl get ingress -n lang-observatory -o yaml
@@ -183,6 +197,7 @@ kubectl annotate ingress langfuse-ingress -n lang-observatory \
 ```
 
 ### 11. Database Recovery
+
 ```bash
 # If database is the issue
 kubectl exec -n lang-observatory deployment/langfuse -- \
@@ -193,6 +208,7 @@ kubectl rollout restart deployment/langfuse -n lang-observatory
 ```
 
 ### 12. Rollback Strategy
+
 ```bash
 # If recent deployment caused issue
 helm rollback lang-observatory 1 -n lang-observatory
@@ -204,6 +220,7 @@ kubectl rollout status deployment -n lang-observatory --timeout=600s
 ## Recovery Verification (30-45 minutes)
 
 ### 13. Health Validation
+
 ```bash
 # Comprehensive health check
 for service in langfuse openlit grafana prometheus; do
@@ -214,6 +231,7 @@ done
 ```
 
 ### 14. Load Testing
+
 ```bash
 # Run quick load test to verify stability
 k6 run --duration=2m --vus=10 tests/performance/load-test.js
@@ -224,6 +242,7 @@ kubectl exec -n lang-observatory deployment/prometheus -- \
 ```
 
 ### 15. Error Budget Impact
+
 ```bash
 # Calculate error budget consumption
 kubectl exec -n lang-observatory deployment/prometheus -- \
@@ -237,6 +256,7 @@ echo "Duration: $(( $(date +%s) - START_TIME )) seconds" >> /tmp/incident-log.tx
 ## Communication
 
 ### 16. Status Updates
+
 ```bash
 # Update incident status
 curl -X POST $SLACK_WEBHOOK -H 'Content-Type: application/json' -d '{
@@ -254,6 +274,7 @@ curl -X POST $SLACK_WEBHOOK -H 'Content-Type: application/json' -d '{
 ```
 
 ### 17. Resolution Communication
+
 ```bash
 # Resolution notification
 curl -X POST $SLACK_WEBHOOK -H 'Content-Type: application/json' -d '{
@@ -272,6 +293,7 @@ curl -X POST $SLACK_WEBHOOK -H 'Content-Type: application/json' -d '{
 ## Post-Incident Activities
 
 ### 18. Data Collection
+
 ```bash
 # Export relevant metrics for analysis
 kubectl exec -n lang-observatory deployment/prometheus -- \
@@ -282,6 +304,7 @@ kubectl logs -n lang-observatory --all-containers --since=2h > incident-logs.txt
 ```
 
 ### 19. Immediate Improvements
+
 ```bash
 # Add additional monitoring
 kubectl apply -f - <<EOF
@@ -307,6 +330,7 @@ EOF
 ## Prevention Measures
 
 ### 20. Capacity Planning
+
 ```bash
 # Document resource usage patterns
 kubectl exec -n lang-observatory deployment/prometheus -- \
@@ -319,7 +343,7 @@ kubectl apply -f monitoring/proactive-scaling-alerts.yaml
 ## Escalation Contacts
 
 - **Primary On-Call**: Lang Observatory Team
-- **Secondary**: Platform Engineering Team  
+- **Secondary**: Platform Engineering Team
 - **Management**: Director of Engineering
 - **External Vendor**: Cloud Provider Support
 
@@ -332,6 +356,5 @@ kubectl apply -f monitoring/proactive-scaling-alerts.yaml
 
 ## Runbook Maintenance
 
-Last Updated: {{ date }}
-Next Review: {{ date + 3 months }}
-Owner: Lang Observatory SRE Team
+Last Updated: {{ date }} Next Review: {{ date + 3 months }} Owner: Lang
+Observatory SRE Team

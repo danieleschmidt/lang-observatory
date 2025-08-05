@@ -4,7 +4,7 @@
 ai_assistant:
   name: "Lang Observatory AI Assistant"
   version: "1.0.0"
-  
+
   # AI Model Configuration
   models:
     primary:
@@ -12,27 +12,27 @@ ai_assistant:
       model: "claude-3-sonnet-20240229"
       max_tokens: 4096
       temperature: 0.1
-    
+
     fallback:
       provider: "openai"
       model: "gpt-4"
       max_tokens: 4096
       temperature: 0.1
-  
+
   # Capabilities and Features
   capabilities:
     - name: "troubleshooting"
       description: "Automated problem diagnosis and resolution"
       confidence_threshold: 0.8
-      
+
     - name: "optimization"
       description: "Performance and resource optimization recommendations"
       confidence_threshold: 0.7
-      
+
     - name: "monitoring"
       description: "Intelligent monitoring and alerting assistance"
       confidence_threshold: 0.9
-      
+
     - name: "documentation"
       description: "Auto-generated documentation and explanations"
       confidence_threshold: 0.6
@@ -44,27 +44,27 @@ ai_assistant:
       - path: "docs/"
         type: "documentation"
         weight: 1.0
-        
+
       - path: "charts/"
         type: "configuration"
         weight: 0.8
-        
+
       - path: "scripts/"
         type: "automation"
         weight: 0.6
-    
+
     # External Knowledge Sources
     external:
       - name: "langfuse_docs"
         url: "https://langfuse.com/docs"
         type: "api_documentation"
         refresh_interval: "24h"
-        
+
       - name: "openlit_docs"
         url: "https://docs.openlit.io"
         type: "integration_guide"
         refresh_interval: "24h"
-        
+
       - name: "prometheus_docs"
         url: "https://prometheus.io/docs"
         type: "monitoring_guide"
@@ -77,23 +77,23 @@ ai_assistant:
       endpoint: "http://prometheus:9090"
       query_timeout: "30s"
       metrics_context: true
-      
+
     grafana:
       endpoint: "http://grafana:3000"
       api_key_secret: "grafana-api-key"
       dashboard_analysis: true
-      
+
     langfuse:
       endpoint: "http://langfuse:3000"
       api_key_secret: "langfuse-api-key"
       trace_analysis: true
-    
+
     # Kubernetes Integration
     kubernetes:
       in_cluster: true
       namespace: "lang-observatory"
       resource_monitoring: true
-      
+
     # Log Analysis
     loki:
       endpoint: "http://loki:3100"
@@ -108,19 +108,19 @@ ai_assistant:
       include_confidence: true
       provide_explanations: true
       show_alternatives: true
-      
+
     # Proactive Assistance
     proactive:
       enabled: true
       monitoring_interval: "5m"
       alert_threshold: 0.8
-      
+
     # Learning and Adaptation
     learning:
       enabled: true
       feedback_collection: true
       model_updates: "weekly"
-      
+
     # Safety and Limits
     safety:
       max_actions_per_request: 3
@@ -140,7 +140,7 @@ ai_assistant:
           - "analyze_metrics"
           - "check_resource_usage"
           - "suggest_optimizations"
-          
+
       - name: "memory_leak"
         description: "Identify and resolve memory leaks"
         triggers:
@@ -150,7 +150,7 @@ ai_assistant:
           - "analyze_memory_patterns"
           - "identify_leak_sources"
           - "recommend_fixes"
-    
+
     # Optimization Scenarios
     optimization:
       - name: "resource_optimization"
@@ -162,7 +162,7 @@ ai_assistant:
           - "analyze_resource_patterns"
           - "calculate_optimal_sizing"
           - "generate_recommendations"
-          
+
       - name: "query_optimization"
         description: "Optimize Prometheus queries and dashboards"
         triggers:
@@ -183,14 +183,14 @@ ai_assistant:
         - "#lang-observatory-alerts"
         - "#devops-team"
       message_format: "structured"
-      
+
     # Microsoft Teams
     teams:
       enabled: false
       webhook_url_secret: "teams-webhook"
       channels:
         - "Lang Observatory Operations"
-      
+
     # Email Notifications
     email:
       enabled: true
@@ -198,7 +198,7 @@ ai_assistant:
       recipients:
         - "ops-team@terragonlabs.com"
         - "devops@terragonlabs.com"
-      
+
     # Web Interface
     web:
       enabled: true
@@ -212,7 +212,7 @@ ai_assistant:
     data_retention: "30d"
     anonymize_sensitive_data: true
     encrypt_at_rest: true
-    
+
     # PII Protection
     pii_detection: true
     pii_masking: true
@@ -221,7 +221,7 @@ ai_assistant:
       - "user_id"
       - "api_key"
       - "password"
-    
+
     # Audit and Compliance
     audit_logging: true
     compliance_mode: "strict"
@@ -233,16 +233,16 @@ ai_assistant:
     target_response_time: "2s"
     max_response_time: "10s"
     timeout_handling: "graceful"
-    
+
     # Caching
     cache_enabled: true
     cache_ttl: "1h"
     cache_size: "100MB"
-    
+
     # Rate Limiting
     rate_limit: "100/min"
     burst_limit: "20"
-    
+
     # Health Checks
     health_check_interval: "30s"
     health_check_timeout: "5s"
@@ -255,13 +255,13 @@ ai_assistant:
       enabled: true
       port: 9090
       path: "/metrics"
-      
+
     # Tracing
     tracing:
       enabled: true
       jaeger_endpoint: "http://jaeger:14268"
       sample_rate: 0.1
-      
+
     # Logging
     logging:
       level: "info"
@@ -282,7 +282,7 @@ environments:
       observability:
         logging:
           level: "debug"
-          
+
   production:
     ai_assistant:
       models:

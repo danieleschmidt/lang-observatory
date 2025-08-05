@@ -2,7 +2,8 @@
 
 ## Overview
 
-Lang Observatory provides several API endpoints for programmatic access to observability data, configuration, and management operations.
+Lang Observatory provides several API endpoints for programmatic access to
+observability data, configuration, and management operations.
 
 ## Base URLs
 
@@ -34,13 +35,14 @@ Authorization: Bearer <your-api-token>
 Returns the health status of all components.
 
 **Response:**
+
 ```json
 {
   "status": "healthy",
   "timestamp": "2024-01-01T12:00:00Z",
   "components": {
     "langfuse": "healthy",
-    "openlit": "healthy", 
+    "openlit": "healthy",
     "prometheus": "healthy",
     "grafana": "healthy"
   },
@@ -55,6 +57,7 @@ Returns the health status of all components.
 Retrieve traces with optional filtering.
 
 **Query Parameters:**
+
 - `limit` (optional): Number of traces to return (default: 100, max: 1000)
 - `offset` (optional): Offset for pagination (default: 0)
 - `from` (optional): Start date (ISO 8601 format)
@@ -63,6 +66,7 @@ Retrieve traces with optional filtering.
 - `user_id` (optional): Filter by user ID
 
 **Response:**
+
 ```json
 {
   "traces": [
@@ -97,6 +101,7 @@ Retrieve traces with optional filtering.
 Create a new trace.
 
 **Request Body:**
+
 ```json
 {
   "name": "llm-completion",
@@ -115,6 +120,7 @@ Create a new trace.
 ```
 
 **Response:**
+
 ```json
 {
   "id": "trace-123",
@@ -129,12 +135,14 @@ Create a new trace.
 Retrieve aggregated metrics.
 
 **Query Parameters:**
+
 - `from` (required): Start date (ISO 8601 format)
 - `to` (required): End date (ISO 8601 format)
 - `granularity` (optional): hour, day, week, month (default: hour)
 - `metrics` (optional): Comma-separated list of metric names
 
 **Response:**
+
 ```json
 {
   "metrics": [
@@ -151,7 +159,7 @@ Retrieve aggregated metrics.
       "name": "total_tokens",
       "values": [
         {
-          "timestamp": "2024-01-01T12:00:00Z", 
+          "timestamp": "2024-01-01T12:00:00Z",
           "value": 12500
         }
       ]
@@ -179,6 +187,7 @@ Retrieve aggregated metrics.
 Get statistics for all models.
 
 **Response:**
+
 ```json
 {
   "models": [
@@ -186,15 +195,15 @@ Get statistics for all models.
       "name": "gpt-4",
       "total_requests": 500,
       "total_tokens": 125000,
-      "total_cost_usd": 12.50,
+      "total_cost_usd": 12.5,
       "avg_latency_ms": 1200,
       "error_rate": 0.02
     },
     {
-      "name": "gpt-3.5-turbo", 
+      "name": "gpt-3.5-turbo",
       "total_requests": 1500,
       "total_tokens": 300000,
-      "total_cost_usd": 15.00,
+      "total_cost_usd": 15.0,
       "avg_latency_ms": 800,
       "error_rate": 0.01
     }
@@ -209,12 +218,13 @@ Get statistics for all models.
 Get metrics for a specific user.
 
 **Response:**
+
 ```json
 {
   "user_id": "user-456",
   "total_requests": 25,
   "total_tokens": 5000,
-  "total_cost_usd": 2.50,
+  "total_cost_usd": 2.5,
   "models_used": ["gpt-4", "gpt-3.5-turbo"],
   "first_request": "2024-01-01T10:00:00Z",
   "last_request": "2024-01-01T18:00:00Z"
@@ -228,6 +238,7 @@ Get metrics for a specific user.
 Get current configuration.
 
 **Response:**
+
 ```json
 {
   "retention_days": 30,
@@ -243,6 +254,7 @@ Get current configuration.
 Update configuration (admin only).
 
 **Request Body:**
+
 ```json
 {
   "retention_days": 60,
@@ -257,6 +269,7 @@ Update configuration (admin only).
 Export data in various formats.
 
 **Request Body:**
+
 ```json
 {
   "format": "csv",
@@ -268,6 +281,7 @@ Export data in various formats.
 ```
 
 **Response:**
+
 ```json
 {
   "export_id": "export-123",
@@ -281,6 +295,7 @@ Export data in various formats.
 Get export status and download link.
 
 **Response:**
+
 ```json
 {
   "export_id": "export-123",
@@ -294,11 +309,13 @@ Get export status and download link.
 ## Rate Limiting
 
 API endpoints are rate limited:
+
 - **Free tier**: 1000 requests per hour
-- **Pro tier**: 10000 requests per hour  
+- **Pro tier**: 10000 requests per hour
 - **Enterprise**: Custom limits
 
 Rate limit headers are included in responses:
+
 ```
 X-RateLimit-Limit: 1000
 X-RateLimit-Remaining: 999
@@ -365,14 +382,14 @@ import { LangObservatory } from '@lang-observatory/client';
 
 const client = new LangObservatory({
   apiKey: 'your-api-key',
-  baseUrl: 'https://api.lang-observatory.com'
+  baseUrl: 'https://api.lang-observatory.com',
 });
 
 // Get metrics
 const metrics = await client.metrics.get({
   from: '2024-01-01T00:00:00Z',
   to: '2024-01-01T23:59:59Z',
-  granularity: 'hour'
+  granularity: 'hour',
 });
 ```
 
@@ -385,6 +402,7 @@ Register webhooks to receive real-time notifications:
 Register a webhook endpoint.
 
 **Request Body:**
+
 ```json
 {
   "url": "https://your-app.com/webhooks/lang-observatory",
@@ -402,6 +420,8 @@ Register a webhook endpoint.
 
 ## Support
 
-- **Documentation**: [https://docs.lang-observatory.com](https://docs.lang-observatory.com)
-- **API Issues**: [GitHub Issues](https://github.com/terragon-labs/lang-observatory/issues)
+- **Documentation**:
+  [https://docs.lang-observatory.com](https://docs.lang-observatory.com)
+- **API Issues**:
+  [GitHub Issues](https://github.com/terragon-labs/lang-observatory/issues)
 - **Enterprise Support**: enterprise@terragonlabs.com

@@ -18,10 +18,7 @@
       "ice_score": 432,
       "composite_score": 87.4,
       "priority": "high",
-      "file_locations": [
-        "/root/repo/docs/GITHUB_ACTIONS_SETUP.md:11-30",
-        "/root/repo/.github/"
-      ],
+      "file_locations": ["/root/repo/docs/GITHUB_ACTIONS_SETUP.md:11-30", "/root/repo/.github/"],
       "estimated_hours": 8,
       "automation_feasibility": "high",
       "dependencies": [],

@@ -6,18 +6,27 @@ Accepted
 
 ## Context
 
-Lang Observatory handles sensitive LLM operational data including API keys, usage metrics, and potentially sensitive prompts/responses. As an observability platform, it requires comprehensive security hardening to protect against data breaches, unauthorized access, and ensure compliance with enterprise security requirements.
+Lang Observatory handles sensitive LLM operational data including API keys,
+usage metrics, and potentially sensitive prompts/responses. As an observability
+platform, it requires comprehensive security hardening to protect against data
+breaches, unauthorized access, and ensure compliance with enterprise security
+requirements.
 
-The platform integrates multiple components (Langfuse, OpenLIT, Prometheus, Grafana) each with their own security considerations, requiring a unified security approach.
+The platform integrates multiple components (Langfuse, OpenLIT, Prometheus,
+Grafana) each with their own security considerations, requiring a unified
+security approach.
 
 ## Decision
 
-We will implement a comprehensive security hardening strategy with the following components:
+We will implement a comprehensive security hardening strategy with the following
+components:
 
-1. **Pod Security Standards**: Enforce restricted Pod Security Standards across all components
+1. **Pod Security Standards**: Enforce restricted Pod Security Standards across
+   all components
 2. **Network Policies**: Implement fine-grained network segmentation
 3. **RBAC**: Strict role-based access control for Kubernetes resources
-4. **Secret Management**: External secret management integration (HashiCorp Vault, AWS Secrets Manager)
+4. **Secret Management**: External secret management integration (HashiCorp
+   Vault, AWS Secrets Manager)
 5. **mTLS**: Mutual TLS for all inter-service communication
 6. **Admission Controllers**: OPA Gatekeeper policies for security compliance
 7. **Runtime Security**: Falco integration for runtime threat detection
@@ -43,18 +52,21 @@ We will implement a comprehensive security hardening strategy with the following
 ## Implementation
 
 ### Phase 1: Core Security (Immediate)
+
 - Implement Pod Security Standards
 - Deploy network policies
 - Configure RBAC
 - Enable audit logging
 
 ### Phase 2: Advanced Security (Next Release)
+
 - Integrate external secret management
 - Implement mTLS
 - Deploy OPA Gatekeeper
 - Add Falco monitoring
 
 ### Phase 3: Compliance (Future)
+
 - SLSA compliance implementation
 - SOC2 readiness
 - Automated compliance reporting
@@ -63,7 +75,8 @@ We will implement a comprehensive security hardening strategy with the following
 
 - **Basic Security Only**: Rely only on Kubernetes default security features
   - Rejected: Insufficient for enterprise requirements
-- **Third-party Security Platform**: Use external security platform like Twistlock/Prisma
+- **Third-party Security Platform**: Use external security platform like
+  Twistlock/Prisma
   - Rejected: Adds external dependency and cost
 - **Service Mesh Security**: Use Istio/Linkerd for all security features
   - Rejected: Too heavy for single-purpose observability platform

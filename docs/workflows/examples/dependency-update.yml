@@ -3,13 +3,13 @@ name: Dependency Updates
 on:
   schedule:
     # Run weekly on Mondays at 9 AM UTC
-    - cron: '0 9 * * 1'
+    - cron: "0 9 * * 1"
   workflow_dispatch:
     inputs:
       update-type:
-        description: 'Type of update to perform'
+        description: "Type of update to perform"
         required: true
-        default: 'minor'
+        default: "minor"
         type: choice
         options:
           - patch
@@ -18,9 +18,9 @@ on:
           - all
 
 env:
-  NODE_VERSION: '20.x'
-  PYTHON_VERSION: '3.11'
-  HELM_VERSION: '3.14.0'
+  NODE_VERSION: "20.x"
+  PYTHON_VERSION: "3.11"
+  HELM_VERSION: "3.14.0"
 
 jobs:
   check-dependencies:
@@ -30,7 +30,7 @@ jobs:
       npm-updates: ${{ steps.npm-check.outputs.updates }}
       python-updates: ${{ steps.python-check.outputs.updates }}
       helm-updates: ${{ steps.helm-check.outputs.updates }}
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -39,13 +39,13 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
+          cache: "npm"
 
       - name: Setup Python
         uses: actions/setup-python@v4
         with:
           python-version: ${{ env.PYTHON_VERSION }}
-          cache: 'pip'
+          cache: "pip"
 
       - name: Setup Helm
         uses: azure/setup-helm@v3
@@ -90,14 +90,14 @@ jobs:
           helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
           helm repo add grafana https://grafana.github.io/helm-charts
           helm repo update
-          
+
           # Check for updates in Chart.yaml dependencies
           current_prometheus=$(grep -A1 "name: prometheus" charts/lang-observatory/Chart.yaml | grep version | awk '{print $2}')
           current_grafana=$(grep -A1 "name: grafana" charts/lang-observatory/Chart.yaml | grep version | awk '{print $2}')
-          
+
           latest_prometheus=$(helm search repo prometheus-community/prometheus --output json | jq -r '.[0].version')
           latest_grafana=$(helm search repo grafana/grafana --output json | jq -r '.[0].version')
-          
+
           if [ "$current_prometheus" != "$latest_prometheus" ] || [ "$current_grafana" != "$latest_grafana" ]; then
             echo "updates=true" >> $GITHUB_OUTPUT
             echo "Helm dependency updates available:"
@@ -122,7 +122,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: check-dependencies
     if: needs.check-dependencies.outputs.npm-updates == 'true'
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -133,7 +133,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
+          cache: "npm"
 
       - name: Configure git
         run: |
@@ -143,7 +143,7 @@ jobs:
       - name: Update dependencies
         run: |
           UPDATE_TYPE="${{ github.event.inputs.update-type || 'minor' }}"
-          
+
           case $UPDATE_TYPE in
             patch)
               npm update --save
@@ -176,21 +176,21 @@ jobs:
           title: "🔄 Update npm dependencies (${{ github.event.inputs.update-type || 'minor' }})"
           body: |
             ## Dependency Updates
-            
+
             Automated dependency update for npm packages.
-            
+
             **Update type**: ${{ github.event.inputs.update-type || 'minor' }}
-            
+
             ### Changes
             - Updated npm dependencies to latest ${{ github.event.inputs.update-type || 'minor' }} versions
             - All tests passing ✅
             - Linting checks passed ✅
-            
+
             ### Testing
             - [ ] Unit tests pass
             - [ ] Integration tests pass
             - [ ] Manual testing completed
-            
+
             This PR was created automatically by the dependency update workflow.
           branch: dependency-updates/npm-${{ github.run_number }}
           labels: |
@@ -203,7 +203,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: check-dependencies
     if: needs.check-dependencies.outputs.python-updates == 'true'
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -226,7 +226,7 @@ jobs:
       - name: Update Python dependencies
         run: |
           UPDATE_TYPE="${{ github.event.inputs.update-type || 'minor' }}"
-          
+
           # Create temporary requirements file with updated versions
           case $UPDATE_TYPE in
             patch)
@@ -236,7 +236,7 @@ jobs:
               pip-compile --upgrade requirements-dev.txt --output-file requirements-dev.txt
               ;;
           esac
-          
+
           pip install -r requirements-dev.txt
 
       - name: Run Python tests
@@ -252,21 +252,21 @@ jobs:
           title: "🐍 Update Python dependencies (${{ github.event.inputs.update-type || 'minor' }})"
           body: |
             ## Python Dependency Updates
-            
+
             Automated dependency update for Python packages.
-            
+
             **Update type**: ${{ github.event.inputs.update-type || 'minor' }}
-            
+
             ### Changes
             - Updated Python dependencies in requirements-dev.txt
             - All tests passing ✅
             - Linting checks passed ✅
-            
+
             ### Testing
             - [ ] Unit tests pass
             - [ ] Integration tests pass
             - [ ] Security scan passed
-            
+
             This PR was created automatically by the dependency update workflow.
           branch: dependency-updates/python-${{ github.run_number }}
           labels: |
@@ -279,7 +279,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: check-dependencies
     if: needs.check-dependencies.outputs.helm-updates == 'true'
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -299,20 +299,20 @@ jobs:
       - name: Update Helm dependencies
         run: |
           cd charts/lang-observatory
-          
+
           # Add repositories
           helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
           helm repo add grafana https://grafana.github.io/helm-charts
           helm repo update
-          
+
           # Get latest versions
           LATEST_PROMETHEUS=$(helm search repo prometheus-community/prometheus --output json | jq -r '.[0].version')
           LATEST_GRAFANA=$(helm search repo grafana/grafana --output json | jq -r '.[0].version')
-          
+
           # Update Chart.yaml
           sed -i "s/version: .* # prometheus/version: $LATEST_PROMETHEUS # prometheus/" Chart.yaml
           sed -i "s/version: .* # grafana/version: $LATEST_GRAFANA # grafana/" Chart.yaml
-          
+
           # Update dependencies
           helm dependency update
 
@@ -329,19 +329,19 @@ jobs:
           title: "⚓ Update Helm chart dependencies"
           body: |
             ## Helm Dependency Updates
-            
+
             Automated update for Helm chart dependencies.
-            
+
             ### Changes
             - Updated Prometheus chart dependency
             - Updated Grafana chart dependency
             - Regenerated Chart.lock file
-            
+
             ### Testing
             - [x] Helm lint passed ✅
             - [x] Template validation passed ✅
             - [ ] Manual testing completed
-            
+
             This PR was created automatically by the dependency update workflow.
           branch: dependency-updates/helm-${{ github.run_number }}
           labels: |
@@ -354,7 +354,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: [update-npm-dependencies, update-python-dependencies, update-helm-dependencies]
     if: always() && (needs.update-npm-dependencies.result == 'success' || needs.update-python-dependencies.result == 'success' || needs.update-helm-dependencies.result == 'success')
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -363,7 +363,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
+          cache: "npm"
 
       - name: Setup Python
         uses: actions/setup-python@v4
@@ -378,13 +378,13 @@ jobs:
       - name: Run security audit
         run: |
           echo "Running security checks after dependency updates..."
-          
+
           # npm audit
           npm audit --audit-level high || echo "npm audit issues found - review required"
-          
+
           # Python safety check
           safety check || echo "Python safety issues found - review required"
-          
+
           # Basic vulnerability scan
           curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin
           trivy fs . --severity HIGH,CRITICAL --no-progress || echo "Trivy scan issues found - review required"
@@ -406,22 +406,29 @@ jobs:
   notify-completion:
     name: Notify Completion
     runs-on: ubuntu-latest
-    needs: [check-dependencies, update-npm-dependencies, update-python-dependencies, update-helm-dependencies, security-check]
+    needs:
+      [
+        check-dependencies,
+        update-npm-dependencies,
+        update-python-dependencies,
+        update-helm-dependencies,
+        security-check,
+      ]
     if: always()
-    
+
     steps:
       - name: Create completion summary
         run: |
           echo "# Dependency Update Summary" > summary.md
           echo "Completed on: $(date)" >> summary.md
           echo "" >> summary.md
-          
+
           if [ "${{ needs.check-dependencies.result }}" == "success" ]; then
             echo "✅ Dependency check completed" >> summary.md
           else
             echo "❌ Dependency check failed" >> summary.md
           fi
-          
+
           if [ "${{ needs.update-npm-dependencies.result }}" == "success" ]; then
             echo "✅ npm dependencies updated" >> summary.md
           elif [ "${{ needs.update-npm-dependencies.result }}" == "skipped" ]; then
@@ -429,7 +436,7 @@ jobs:
           else
             echo "❌ npm dependency update failed" >> summary.md
           fi
-          
+
           if [ "${{ needs.update-python-dependencies.result }}" == "success" ]; then
             echo "✅ Python dependencies updated" >> summary.md
           elif [ "${{ needs.update-python-dependencies.result }}" == "skipped" ]; then
@@ -437,7 +444,7 @@ jobs:
           else
             echo "❌ Python dependency update failed" >> summary.md
           fi
-          
+
           if [ "${{ needs.update-helm-dependencies.result }}" == "success" ]; then
             echo "✅ Helm dependencies updated" >> summary.md
           elif [ "${{ needs.update-helm-dependencies.result }}" == "skipped" ]; then
@@ -445,7 +452,7 @@ jobs:
           else
             echo "❌ Helm dependency update failed" >> summary.md
           fi
-          
+
           if [ "${{ needs.security-check.result }}" == "success" ]; then
             echo "✅ Security check completed" >> summary.md
           elif [ "${{ needs.security-check.result }}" == "skipped" ]; then
