@@ -8,6 +8,8 @@ const { OpenLITCollector } = require('./services/openlitService');
 const { MetricsManager } = require('./services/metricsService');
 const { QuantumTaskPlanner } = require('./quantum/quantumTaskPlanner');
 const { AdaptiveScheduler } = require('./quantum/adaptiveScheduler');
+const { PhotonProcessor } = require('./neuromorphic/photonProcessor');
+const { NeuromorphicLLMInterface } = require('./neuromorphic/neuromorphicLLMInterface');
 const { ConfigManager } = require('./utils/config');
 const { Logger } = require('./utils/logger');
 
@@ -25,6 +27,13 @@ class LangObservatory {
         this.quantumPlanner = new QuantumTaskPlanner(this.config.get('quantum', {}));
         this.adaptiveScheduler = new AdaptiveScheduler(this.config.get('adaptive', {}));
         
+        // Initialize neuromorphic components
+        this.photonProcessor = new PhotonProcessor(this.config.get('photon', {}));
+        this.neuromorphicInterface = new NeuromorphicLLMInterface({
+            photon: this.config.get('photon', {}),
+            ...this.config.get('neuromorphic', {})
+        });
+        
         this.initialized = false;
     }
 
@@ -38,6 +47,10 @@ class LangObservatory {
             await this.metrics.initialize();
             await this.quantumPlanner.initialize();
             await this.adaptiveScheduler.initialize();
+            
+            // Initialize neuromorphic components
+            await this.photonProcessor.initialize();
+            await this.neuromorphicInterface.initialize();
             
             this.initialized = true;
             this.logger.info('Lang Observatory initialized successfully');
@@ -100,8 +113,14 @@ class LangObservatory {
             this.collector.recordLLMMetrics(callData),
             this.metrics.recordLLMUsage(callData)
         ]);
-
-        return callData;
+        
+        // Process through neuromorphic system
+        const neuromorphicInsights = await this.neuromorphicInterface.processLLMCall(callData);
+        
+        return {
+            ...callData,
+            neuromorphicInsights
+        };
     }
 
     async planTasks(tasks, constraints = {}) {
@@ -238,7 +257,9 @@ class LangObservatory {
             this.collector.getHealth(),
             this.metrics.getHealth(),
             this.quantumPlanner.getHealth(),
-            this.adaptiveScheduler.getHealth()
+            this.adaptiveScheduler.getHealth(),
+            this.photonProcessor.getHealth(),
+            this.neuromorphicInterface.getHealth()
         ]);
 
         return {
@@ -248,7 +269,9 @@ class LangObservatory {
                 collector: services[1].status === 'fulfilled' ? services[1].value : { healthy: false, error: services[1].reason },
                 metrics: services[2].status === 'fulfilled' ? services[2].value : { healthy: false, error: services[2].reason },
                 quantumPlanner: services[3].status === 'fulfilled' ? services[3].value : { healthy: false, error: services[3].reason },
-                adaptiveScheduler: services[4].status === 'fulfilled' ? services[4].value : { healthy: false, error: services[4].reason }
+                adaptiveScheduler: services[4].status === 'fulfilled' ? services[4].value : { healthy: false, error: services[4].reason },
+                photonProcessor: services[5].status === 'fulfilled' ? services[5].value : { healthy: false, error: services[5].reason },
+                neuromorphicInterface: services[6].status === 'fulfilled' ? services[6].value : { healthy: false, error: services[6].reason }
             },
             timestamp: new Date().toISOString()
         };
@@ -266,7 +289,9 @@ class LangObservatory {
             this.collector.shutdown(),
             this.metrics.shutdown(),
             this.quantumPlanner.shutdown(),
-            this.adaptiveScheduler.shutdown()
+            this.adaptiveScheduler.shutdown(),
+            this.photonProcessor.shutdown(),
+            this.neuromorphicInterface.shutdown()
         ]);
         
         this.initialized = false;
@@ -274,4 +299,33 @@ class LangObservatory {
     }
 }
 
-module.exports = { LangObservatory };
+// Additional neuromorphic methods for the main class
+LangObservatory.prototype.getNeuromorphicInsights = async function(callId) {
+    if (!this.initialized) {
+        throw new Error('Lang Observatory not initialized');
+    }
+    return await this.neuromorphicInterface.getLLMInsights(callId);
+};
+
+LangObservatory.prototype.getProviderNeuromorphicAnalysis = async function(provider, limit = 10) {
+    if (!this.initialized) {
+        throw new Error('Lang Observatory not initialized');
+    }
+    return await this.neuromorphicInterface.getProviderInsights(provider, limit);
+};
+
+LangObservatory.prototype.getNeuromorphicMetrics = async function() {
+    if (!this.initialized) {
+        throw new Error('Lang Observatory not initialized');
+    }
+    return await this.neuromorphicInterface.getNeuromorphicMetrics();
+};
+
+LangObservatory.prototype.getPhotonProcessorStats = function() {
+    if (!this.initialized) {
+        throw new Error('Lang Observatory not initialized');
+    }
+    return this.photonProcessor.getProcessingStats();
+};
+
+module.exports = { LangObservatory, PhotonProcessor, NeuromorphicLLMInterface };

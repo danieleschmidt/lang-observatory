@@ -33,7 +33,8 @@ class LangfuseTracer {
         }
 
         if (!this.config.publicKey || !this.config.secretKey) {
-            throw new Error('Langfuse public key and secret key are required');
+            this.logger.warn('Langfuse credentials not provided, running in mock mode');
+            this.config.enabled = false;
         }
 
         try {
