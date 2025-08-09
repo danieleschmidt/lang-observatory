@@ -364,8 +364,8 @@ class QuantumI18nManager {
         };
 
         // Load translations into memory
-        for (const [locale, translations] of Object.entries(translations)) {
-            this.translations.set(locale, translations);
+        for (const [locale, localeTranslations] of Object.entries(translations)) {
+            this.translations.set(locale, localeTranslations);
         }
         
         this.logger.info(`Loaded translations for ${Object.keys(translations).length} locales`);

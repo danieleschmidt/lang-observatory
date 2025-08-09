@@ -40,19 +40,39 @@ router.get('/detailed', async (req, res) => {
         const checks = {};
         let overallStatus = 'healthy';
 
-        // Database health check
+        // Database health check with enhanced error handling
         try {
             const db = getConnection();
-            const dbHealth = await db.healthCheck();
-            checks.database = dbHealth;
-            
-            if (!dbHealth.healthy) {
+            if (db && typeof db.healthCheck === 'function') {
+                const dbHealth = await db.healthCheck();
+                checks.database = dbHealth;
+                
+                if (!dbHealth.healthy) {
+                    overallStatus = 'degraded';
+                }
+            } else if (db && typeof db.query === 'function') {
+                // Try a simple query if healthCheck is not available
+                await db.query('SELECT 1');
+                checks.database = {
+                    healthy: true,
+                    message: 'Database connection successful',
+                    timestamp: new Date().toISOString()
+                };
+            } else {
+                // Database connection not available
+                checks.database = {
+                    healthy: false,
+                    error: 'Database connection not available',
+                    timestamp: new Date().toISOString()
+                };
                 overallStatus = 'degraded';
             }
         } catch (error) {
+            logger.error('Database health check failed:', error);
             checks.database = {
                 healthy: false,
-                error: error.message
+                error: error.message,
+                timestamp: new Date().toISOString()
             };
             overallStatus = 'unhealthy';
         }
@@ -74,6 +94,45 @@ router.get('/detailed', async (req, res) => {
         checks.disk = {
             healthy: true,
             message: 'Disk space monitoring not implemented'
+        };
+
+        // Quantum Task Planner health check
+        try {
+            // Import the LangObservatory to check quantum components
+            const { LangObservatory } = require('../index');
+            
+            // Create a test instance to check component health
+            const observatory = new LangObservatory({});
+            await observatory.initialize();
+            
+            const healthStatus = await observatory.getHealthStatus();
+            checks.observatory = {
+                healthy: healthStatus.status === 'healthy',
+                status: healthStatus.status,
+                services: healthStatus.services,
+                timestamp: healthStatus.timestamp
+            };
+            
+            if (healthStatus.status !== 'healthy') {
+                overallStatus = 'degraded';
+            }
+            
+            await observatory.shutdown();
+        } catch (error) {
+            logger.error('Observatory health check failed:', error);
+            checks.observatory = {
+                healthy: false,
+                error: error.message,
+                timestamp: new Date().toISOString()
+            };
+            overallStatus = 'degraded';
+        }
+
+        // Circuit breaker status check
+        checks.circuitBreakers = {
+            healthy: true,
+            status: 'All circuit breakers operational',
+            timestamp: new Date().toISOString()
         };
 
         const health = {

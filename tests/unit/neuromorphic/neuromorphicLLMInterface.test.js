@@ -10,7 +10,7 @@ const { PhotonProcessor } = require('../../../src/neuromorphic/photonProcessor')
 jest.mock('../../../src/neuromorphic/photonProcessor');
 
 describe('NeuromorphicLLMInterface', () => {
-    let interface;
+    let neuromorphicInterface;
     let mockPhotonProcessor;
     
     beforeEach(() => {
@@ -46,7 +46,7 @@ describe('NeuromorphicLLMInterface', () => {
         
         PhotonProcessor.mockImplementation(() => mockPhotonProcessor);
         
-        interface = new NeuromorphicLLMInterface({
+        neuromorphicInterface = new NeuromorphicLLMInterface({
             adaptiveThreshold: 0.6,
             learningEnabled: true,
             realTimeProcessing: false,
@@ -55,39 +55,39 @@ describe('NeuromorphicLLMInterface', () => {
     });
     
     afterEach(async () => {
-        if (interface.initialized) {
-            await interface.shutdown();
+        if (neuromorphicInterface.initialized) {
+            await neuromorphicInterface.shutdown();
         }
     });
 
     describe('Initialization', () => {
         test('should initialize successfully', async () => {
-            await interface.initialize();
+            await neuromorphicInterface.initialize();
             
-            expect(interface.initialized).toBe(true);
+            expect(neuromorphicInterface.initialized).toBe(true);
             expect(mockPhotonProcessor.initialize).toHaveBeenCalled();
-            expect(interface.adaptiveModels.size).toBeGreaterThan(0);
+            expect(neuromorphicInterface.adaptiveModels.size).toBeGreaterThan(0);
         });
         
         test('should handle initialization failure', async () => {
             mockPhotonProcessor.initialize.mockRejectedValue(new Error('Photon processor failed'));
             
-            await expect(interface.initialize()).rejects.toThrow('Photon processor failed');
-            expect(interface.initialized).toBe(false);
+            await expect(neuromorphicInterface.initialize()).rejects.toThrow('Photon processor failed');
+            expect(neuromorphicInterface.initialized).toBe(false);
         });
         
         test('should initialize adaptive models for known providers', async () => {
-            await interface.initialize();
+            await neuromorphicInterface.initialize();
             
-            expect(interface.adaptiveModels.has('openai')).toBe(true);
-            expect(interface.adaptiveModels.has('anthropic')).toBe(true);
-            expect(interface.adaptiveModels.has('google')).toBe(true);
-            expect(interface.adaptiveModels.has('meta')).toBe(true);
-            expect(interface.adaptiveModels.has('cohere')).toBe(true);
+            expect(neuromorphicInterface.adaptiveModels.has('openai')).toBe(true);
+            expect(neuromorphicInterface.adaptiveModels.has('anthropic')).toBe(true);
+            expect(neuromorphicInterface.adaptiveModels.has('google')).toBe(true);
+            expect(neuromorphicInterface.adaptiveModels.has('meta')).toBe(true);
+            expect(neuromorphicInterface.adaptiveModels.has('cohere')).toBe(true);
         });
         
         test('should setup event listeners correctly', async () => {
-            await interface.initialize();
+            await neuromorphicInterface.initialize();
             
             expect(mockPhotonProcessor.on).toHaveBeenCalledWith('neuronSpike', expect.any(Function));
             expect(mockPhotonProcessor.on).toHaveBeenCalledWith('quantumStateChange', expect.any(Function));
@@ -108,11 +108,11 @@ describe('NeuromorphicLLMInterface', () => {
 
     describe('Adaptive Models', () => {
         beforeEach(async () => {
-            await interface.initialize();
+            await neuromorphicInterface.initialize();
         });
         
         test('should create neuromorphic profiles for providers', async () => {
-            const openaiModel = interface.adaptiveModels.get('openai');
+            const openaiModel = neuromorphicInterface.adaptiveModels.get('openai');
             const profile = openaiModel.neuromorphicProfile;
             
             expect(profile).toHaveProperty('preferredWavelengths');
@@ -125,8 +125,8 @@ describe('NeuromorphicLLMInterface', () => {
         });
         
         test('should generate different profiles for different providers', async () => {
-            const openaiProfile = interface.adaptiveModels.get('openai').neuromorphicProfile;
-            const anthropicProfile = interface.adaptiveModels.get('anthropic').neuromorphicProfile;
+            const openaiProfile = neuromorphicInterface.adaptiveModels.get('openai').neuromorphicProfile;
+            const anthropicProfile = neuromorphicInterface.adaptiveModels.get('anthropic').neuromorphicProfile;
             
             expect(openaiProfile.preferredWavelengths.primary)
                 .not.toBe(anthropicProfile.preferredWavelengths.primary);
@@ -134,19 +134,19 @@ describe('NeuromorphicLLMInterface', () => {
         
         test('should create adaptive model for unknown provider', async () => {
             const unknownProvider = 'unknown-llm';
-            const model = interface.getOrCreateAdaptiveModel(unknownProvider);
+            const model = neuromorphicInterface.getOrCreateAdaptiveModel(unknownProvider);
             
             expect(model).toBeDefined();
             expect(model.provider).toBe(unknownProvider);
             expect(model).toHaveProperty('baselineMetrics');
             expect(model).toHaveProperty('adaptiveWeights');
-            expect(interface.adaptiveModels.has(unknownProvider)).toBe(true);
+            expect(neuromorphicInterface.adaptiveModels.has(unknownProvider)).toBe(true);
         });
         
         test('should hash providers consistently', () => {
-            const hash1 = interface.hashProvider('openai');
-            const hash2 = interface.hashProvider('openai');
-            const hash3 = interface.hashProvider('anthropic');
+            const hash1 = neuromorphicInterface.hashProvider('openai');
+            const hash2 = neuromorphicInterface.hashProvider('openai');
+            const hash3 = neuromorphicInterface.hashProvider('anthropic');
             
             expect(hash1).toBe(hash2);
             expect(hash1).not.toBe(hash3);
@@ -156,7 +156,7 @@ describe('NeuromorphicLLMInterface', () => {
 
     describe('LLM Call Processing', () => {
         beforeEach(async () => {
-            await interface.initialize();
+            await neuromorphicInterface.initialize();
         });
         
         test('should process LLM call successfully', async () => {
@@ -171,7 +171,7 @@ describe('NeuromorphicLLMInterface', () => {
                 success: true
             };
             
-            const result = await interface.processLLMCall(llmCallData);
+            const result = await neuromorphicInterface.processLLMCall(llmCallData);
             
             expect(result).toHaveProperty('neuromorphicResult');
             expect(result).toHaveProperty('adaptiveRecommendations');
@@ -205,10 +205,10 @@ describe('NeuromorphicLLMInterface', () => {
                 outputTokens: 50
             };
             
-            await interface.processLLMCall(llmCallData);
+            await neuromorphicInterface.processLLMCall(llmCallData);
             
-            expect(interface.llmCallHistory.length).toBe(1);
-            expect(interface.llmCallHistory[0].id).toBe('test-call-1');
+            expect(neuromorphicInterface.llmCallHistory.length).toBe(1);
+            expect(neuromorphicInterface.llmCallHistory[0].id).toBe('test-call-1');
         });
         
         test('should handle processing errors gracefully', async () => {
@@ -216,7 +216,7 @@ describe('NeuromorphicLLMInterface', () => {
             
             const llmCallData = { id: 'test-call-1', provider: 'openai' };
             
-            await expect(interface.processLLMCall(llmCallData))
+            await expect(neuromorphicInterface.processLLMCall(llmCallData))
                 .rejects.toThrow('Processing failed');
         });
         
@@ -231,7 +231,7 @@ describe('NeuromorphicLLMInterface', () => {
 
     describe('Data Preparation and Quality Estimation', () => {
         beforeEach(async () => {
-            await interface.initialize();
+            await neuromorphicInterface.initialize();
         });
         
         test('should prepare LLM data for neuromorphic processing', () => {
@@ -243,8 +243,8 @@ describe('NeuromorphicLLMInterface', () => {
                 cost: 0.03
             };
             
-            const adaptiveModel = interface.adaptiveModels.get('openai');
-            const prepared = interface.prepareLLMDataForNeuromorphic(llmCallData, adaptiveModel);
+            const adaptiveModel = neuromorphicInterface.adaptiveModels.get('openai');
+            const prepared = neuromorphicInterface.prepareLLMDataForNeuromorphic(llmCallData, adaptiveModel);
             
             expect(prepared).toHaveProperty('tokens');
             expect(prepared).toHaveProperty('latency');
@@ -269,8 +269,8 @@ describe('NeuromorphicLLMInterface', () => {
                 error: 'API Error'
             };
             
-            const goodQuality = interface.estimateQuality(goodCall);
-            const badQuality = interface.estimateQuality(badCall);
+            const goodQuality = neuromorphicInterface.estimateQuality(goodCall);
+            const badQuality = neuromorphicInterface.estimateQuality(badCall);
             
             expect(goodQuality).toBeGreaterThan(badQuality);
             expect(goodQuality).toBeGreaterThan(0.5);
@@ -279,14 +279,14 @@ describe('NeuromorphicLLMInterface', () => {
         
         test('should get historical performance correctly', () => {
             // Add some calls to history
-            interface.llmCallHistory.push(
+            neuromorphicInterface.llmCallHistory.push(
                 { provider: 'openai', duration: 1000, cost: 0.01 },
                 { provider: 'openai', duration: 1500, cost: 0.02 },
                 { provider: 'anthropic', duration: 2000, cost: 0.03 }
             );
             
-            const openaiPerf = interface.getHistoricalPerformance('openai');
-            const unknownPerf = interface.getHistoricalPerformance('unknown');
+            const openaiPerf = neuromorphicInterface.getHistoricalPerformance('openai');
+            const unknownPerf = neuromorphicInterface.getHistoricalPerformance('unknown');
             
             expect(openaiPerf.callCount).toBe(2);
             expect(openaiPerf.avgLatency).toBe(1250);
@@ -298,12 +298,12 @@ describe('NeuromorphicLLMInterface', () => {
 
     describe('Adaptive Recommendations', () => {
         beforeEach(async () => {
-            await interface.initialize();
+            await neuromorphicInterface.initialize();
         });
         
         test('should generate comprehensive recommendations', async () => {
             const llmCallData = { provider: 'openai', inputTokens: 100 };
-            const result = await interface.processLLMCall(llmCallData);
+            const result = await neuromorphicInterface.processLLMCall(llmCallData);
             
             const recommendations = result.adaptiveRecommendations;
             
@@ -331,7 +331,7 @@ describe('NeuromorphicLLMInterface', () => {
             });
             
             const llmCallData = { provider: 'openai' };
-            const result = await interface.processLLMCall(llmCallData);
+            const result = await neuromorphicInterface.processLLMCall(llmCallData);
             
             const recommendations = result.adaptiveRecommendations.recommendations;
             
@@ -358,7 +358,7 @@ describe('NeuromorphicLLMInterface', () => {
                 }
             };
             
-            const score = interface.calculateAdaptiveScore(mockResult);
+            const score = neuromorphicInterface.calculateAdaptiveScore(mockResult);
             
             expect(score).toHaveProperty('overall');
             expect(score).toHaveProperty('components');
@@ -374,18 +374,18 @@ describe('NeuromorphicLLMInterface', () => {
         });
         
         test('should convert scores to grades correctly', () => {
-            expect(interface.scoreToGrade(0.95)).toBe('A+');
-            expect(interface.scoreToGrade(0.85)).toBe('A');
-            expect(interface.scoreToGrade(0.75)).toBe('B+');
-            expect(interface.scoreToGrade(0.65)).toBe('B');
-            expect(interface.scoreToGrade(0.55)).toBe('C+');
-            expect(interface.scoreToGrade(0.25)).toBe('D');
+            expect(neuromorphicInterface.scoreToGrade(0.95)).toBe('A+');
+            expect(neuromorphicInterface.scoreToGrade(0.85)).toBe('A');
+            expect(neuromorphicInterface.scoreToGrade(0.75)).toBe('B+');
+            expect(neuromorphicInterface.scoreToGrade(0.65)).toBe('B');
+            expect(neuromorphicInterface.scoreToGrade(0.55)).toBe('C+');
+            expect(neuromorphicInterface.scoreToGrade(0.25)).toBe('D');
         });
     });
 
     describe('Adaptive Model Updates', () => {
         beforeEach(async () => {
-            await interface.initialize();
+            await neuromorphicInterface.initialize();
         });
         
         test('should update adaptive model based on call data', async () => {
@@ -397,7 +397,7 @@ describe('NeuromorphicLLMInterface', () => {
                 outputTokens: 100
             };
             
-            const initialModel = { ...interface.adaptiveModels.get('openai').baselineMetrics };
+            const initialModel = { ...neuromorphicInterface.adaptiveModels.get('openai').baselineMetrics };
             
             const mockNeuromorphicResult = {
                 insights: {
@@ -407,9 +407,9 @@ describe('NeuromorphicLLMInterface', () => {
                 }
             };
             
-            await interface.updateAdaptiveModel('openai', llmCallData, mockNeuromorphicResult);
+            await neuromorphicInterface.updateAdaptiveModel('openai', llmCallData, mockNeuromorphicResult);
             
-            const updatedModel = interface.adaptiveModels.get('openai').baselineMetrics;
+            const updatedModel = neuromorphicInterface.adaptiveModels.get('openai').baselineMetrics;
             
             // Values should have moved towards the new data
             expect(updatedModel.avgLatency).not.toBe(initialModel.avgLatency);
@@ -426,9 +426,9 @@ describe('NeuromorphicLLMInterface', () => {
                 }
             };
             
-            await interface.updateAdaptiveModel('openai', llmCallData, mockResult);
+            await neuromorphicInterface.updateAdaptiveModel('openai', llmCallData, mockResult);
             
-            const weights = interface.adaptiveModels.get('openai').adaptiveWeights;
+            const weights = neuromorphicInterface.adaptiveModels.get('openai').adaptiveWeights;
             const totalWeight = weights.latency + weights.cost + weights.quality;
             
             expect(Math.abs(totalWeight - 1.0)).toBeLessThan(0.001); // Should sum to 1
@@ -437,14 +437,14 @@ describe('NeuromorphicLLMInterface', () => {
 
     describe('Insights Retrieval', () => {
         beforeEach(async () => {
-            await interface.initialize();
+            await neuromorphicInterface.initialize();
         });
         
         test('should retrieve LLM insights by call ID', async () => {
             const llmCallData = { id: 'test-call-1', provider: 'openai' };
-            await interface.processLLMCall(llmCallData);
+            await neuromorphicInterface.processLLMCall(llmCallData);
             
-            const insights = await interface.getLLMInsights('test-call-1');
+            const insights = await neuromorphicInterface.getLLMInsights('test-call-1');
             
             expect(insights).toBeDefined();
             expect(insights).toHaveProperty('neuromorphicResult');
@@ -452,17 +452,17 @@ describe('NeuromorphicLLMInterface', () => {
         });
         
         test('should return undefined for unknown call ID', async () => {
-            const insights = await interface.getLLMInsights('unknown-call');
+            const insights = await neuromorphicInterface.getLLMInsights('unknown-call');
             expect(insights).toBeUndefined();
         });
         
         test('should get provider insights correctly', async () => {
             // Process multiple calls for a provider
-            await interface.processLLMCall({ id: 'call-1', provider: 'openai' });
-            await interface.processLLMCall({ id: 'call-2', provider: 'openai' });
-            await interface.processLLMCall({ id: 'call-3', provider: 'anthropic' });
+            await neuromorphicInterface.processLLMCall({ id: 'call-1', provider: 'openai' });
+            await neuromorphicInterface.processLLMCall({ id: 'call-2', provider: 'openai' });
+            await neuromorphicInterface.processLLMCall({ id: 'call-3', provider: 'anthropic' });
             
-            const openaiInsights = await interface.getProviderInsights('openai', 10);
+            const openaiInsights = await neuromorphicInterface.getProviderInsights('openai', 10);
             
             expect(openaiInsights).toHaveProperty('provider');
             expect(openaiInsights).toHaveProperty('insights');
@@ -499,7 +499,7 @@ describe('NeuromorphicLLMInterface', () => {
                 }
             ];
             
-            const summary = interface.summarizeProviderInsights(mockInsights);
+            const summary = neuromorphicInterface.summarizeProviderInsights(mockInsights);
             
             expect(summary.avgProcessingTime).toBe(125);
             expect(summary.avgAdaptiveScore).toBe(0.75);
@@ -512,11 +512,11 @@ describe('NeuromorphicLLMInterface', () => {
 
     describe('Metrics and Health Monitoring', () => {
         beforeEach(async () => {
-            await interface.initialize();
+            await neuromorphicInterface.initialize();
         });
         
         test('should provide neuromorphic metrics', async () => {
-            const metrics = await interface.getNeuromorphicMetrics();
+            const metrics = await neuromorphicInterface.getNeuromorphicMetrics();
             
             expect(metrics).toHaveProperty('photonProcessor');
             expect(metrics).toHaveProperty('interface');
@@ -533,7 +533,7 @@ describe('NeuromorphicLLMInterface', () => {
         });
         
         test('should report health status correctly', async () => {
-            const health = await interface.getHealth();
+            const health = await neuromorphicInterface.getHealth();
             
             expect(health).toHaveProperty('healthy');
             expect(health).toHaveProperty('interface');
@@ -541,7 +541,7 @@ describe('NeuromorphicLLMInterface', () => {
             expect(health).toHaveProperty('metrics');
             
             expect(health.healthy).toBe(true);
-            expect(health.interface.initialized).toBe(true);
+            expect(health.neuromorphicInterface.initialized).toBe(true);
         });
         
         test('should calculate efficiency metrics', () => {
@@ -551,11 +551,11 @@ describe('NeuromorphicLLMInterface', () => {
                 photonsEmitted: 100
             });
             
-            interface.llmCallHistory = [{ id: 'call1' }, { id: 'call2' }];
-            interface.neuromorphicInsights.set('call1', {});
-            interface.neuromorphicInsights.set('call2', {});
+            neuromorphicInterface.llmCallHistory = [{ id: 'call1' }, { id: 'call2' }];
+            neuromorphicInterface.neuromorphicInsights.set('call1', {});
+            neuromorphicInterface.neuromorphicInsights.set('call2', {});
             
-            const efficiency = interface.calculateNeuromorphicEfficiency();
+            const efficiency = neuromorphicInterface.calculateNeuromorphicEfficiency();
             
             expect(efficiency).toBeGreaterThan(0);
             expect(efficiency).toBeLessThanOrEqual(1);
@@ -564,12 +564,12 @@ describe('NeuromorphicLLMInterface', () => {
 
     describe('Error Handling and Edge Cases', () => {
         beforeEach(async () => {
-            await interface.initialize();
+            await neuromorphicInterface.initialize();
         });
         
         test('should handle empty insights gracefully', () => {
             const emptyInsights = [];
-            const summary = interface.summarizeProviderInsights(emptyInsights);
+            const summary = neuromorphicInterface.summarizeProviderInsights(emptyInsights);
             
             expect(summary.avgProcessingTime).toBe(0);
             expect(summary.recommendationTypes).toEqual({});
@@ -579,10 +579,10 @@ describe('NeuromorphicLLMInterface', () => {
         test('should handle missing properties in LLM data', async () => {
             const incompleteData = { id: 'incomplete' };
             
-            const result = await interface.processLLMCall(incompleteData);
+            const result = await neuromorphicInterface.processLLMCall(incompleteData);
             
             expect(result).toBeDefined();
-            expect(interface.llmCallHistory.length).toBe(1);
+            expect(neuromorphicInterface.llmCallHistory.length).toBe(1);
         });
         
         test('should handle queue processing errors gracefully', async () => {
@@ -608,29 +608,29 @@ describe('NeuromorphicLLMInterface', () => {
         });
         
         test('should handle average calculation with empty arrays', () => {
-            const avg = interface.average([]);
+            const avg = neuromorphicInterface.average([]);
             expect(avg).toBe(0);
         });
     });
 
     describe('Event Handling', () => {
         beforeEach(async () => {
-            await interface.initialize();
+            await neuromorphicInterface.initialize();
         });
         
         test('should emit llmCallProcessed events', (done) => {
-            interface.on('llmCallProcessed', (data) => {
+            neuromorphicInterface.on('llmCallProcessed', (data) => {
                 expect(data).toHaveProperty('callId');
                 expect(data).toHaveProperty('insights');
                 expect(data).toHaveProperty('neuromorphicActivity');
                 done();
             });
             
-            interface.processLLMCall({ id: 'test-event-call', provider: 'openai' });
+            neuromorphicInterface.processLLMCall({ id: 'test-event-call', provider: 'openai' });
         });
         
         test('should handle neuromorphic activity events', (done) => {
-            interface.on('neuromorphicActivity', (data) => {
+            neuromorphicInterface.on('neuromorphicActivity', (data) => {
                 expect(data).toHaveProperty('type');
                 expect(data).toHaveProperty('data');
                 done();
@@ -646,17 +646,17 @@ describe('NeuromorphicLLMInterface', () => {
 
     describe('Shutdown and Cleanup', () => {
         test('should shutdown gracefully', async () => {
-            await interface.initialize();
+            await neuromorphicInterface.initialize();
             
-            expect(interface.initialized).toBe(true);
+            expect(neuromorphicInterface.initialized).toBe(true);
             
-            await interface.shutdown();
+            await neuromorphicInterface.shutdown();
             
-            expect(interface.initialized).toBe(false);
-            expect(interface.llmCallHistory.length).toBe(0);
-            expect(interface.processingQueue.length).toBe(0);
-            expect(interface.adaptiveModels.size).toBe(0);
-            expect(interface.neuromorphicInsights.size).toBe(0);
+            expect(neuromorphicInterface.initialized).toBe(false);
+            expect(neuromorphicInterface.llmCallHistory.length).toBe(0);
+            expect(neuromorphicInterface.processingQueue.length).toBe(0);
+            expect(neuromorphicInterface.adaptiveModels.size).toBe(0);
+            expect(neuromorphicInterface.neuromorphicInsights.size).toBe(0);
             expect(mockPhotonProcessor.shutdown).toHaveBeenCalled();
         });
         

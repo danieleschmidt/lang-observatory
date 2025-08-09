@@ -10,6 +10,9 @@ const { QuantumTaskPlanner } = require('./quantum/quantumTaskPlanner');
 const { AdaptiveScheduler } = require('./quantum/adaptiveScheduler');
 const { PhotonProcessor } = require('./neuromorphic/photonProcessor');
 const { NeuromorphicLLMInterface } = require('./neuromorphic/neuromorphicLLMInterface');
+const { ReliabilityManager } = require('./reliability/reliabilityManager');
+const { PerformanceManager } = require('./performance/performanceManager');
+const { AutoScalingManager } = require('./performance/autoScalingManager');
 const { ConfigManager } = require('./utils/config');
 const { Logger } = require('./utils/logger');
 
@@ -34,6 +37,15 @@ class LangObservatory {
             ...this.config.get('neuromorphic', {})
         });
         
+        // Initialize reliability manager
+        this.reliabilityManager = new ReliabilityManager(this.config.get('reliability', {}));
+        
+        // Initialize performance manager
+        this.performanceManager = new PerformanceManager(this.config.get('performance', {}));
+        
+        // Initialize auto-scaling manager
+        this.autoScalingManager = new AutoScalingManager(this.config.get('autoScaling', {}));
+        
         this.initialized = false;
     }
 
@@ -41,16 +53,47 @@ class LangObservatory {
         try {
             this.logger.info('Initializing Lang Observatory...');
             
-            // Initialize services in dependency order
-            await this.tracer.initialize();
-            await this.collector.initialize();
-            await this.metrics.initialize();
-            await this.quantumPlanner.initialize();
-            await this.adaptiveScheduler.initialize();
+            // Initialize performance and reliability managers first
+            await this.performanceManager.initialize();
+            await this.autoScalingManager.initialize();
+            await this.reliabilityManager.initialize();
             
-            // Initialize neuromorphic components
-            await this.photonProcessor.initialize();
-            await this.neuromorphicInterface.initialize();
+            // Initialize services in dependency order with reliability and performance
+            await this.reliabilityManager.executeWithReliability(
+                () => this.tracer.initialize(),
+                { name: 'langfuse', retryPolicy: 'external-api' }
+            );
+            
+            await this.reliabilityManager.executeWithReliability(
+                () => this.collector.initialize(),
+                { name: 'openlit', retryPolicy: 'external-api' }
+            );
+            
+            await this.reliabilityManager.executeWithReliability(
+                () => this.metrics.initialize(),
+                { name: 'database', retryPolicy: 'database' }
+            );
+            
+            await this.reliabilityManager.executeWithReliability(
+                () => this.quantumPlanner.initialize(),
+                { name: 'quantum-planner', retryPolicy: 'quantum-operation' }
+            );
+            
+            await this.reliabilityManager.executeWithReliability(
+                () => this.adaptiveScheduler.initialize(),
+                { name: 'quantum-planner', retryPolicy: 'quantum-operation' }
+            );
+            
+            // Initialize neuromorphic components with reliability
+            await this.reliabilityManager.executeWithReliability(
+                () => this.photonProcessor.initialize(),
+                { name: 'quantum-planner', retryPolicy: 'quantum-operation' }
+            );
+            
+            await this.reliabilityManager.executeWithReliability(
+                () => this.neuromorphicInterface.initialize(),
+                { name: 'quantum-planner', retryPolicy: 'quantum-operation' }
+            );
             
             this.initialized = true;
             this.logger.info('Lang Observatory initialized successfully');
@@ -107,12 +150,46 @@ class LangObservatory {
             ...metadata
         };
 
-        // Record in multiple systems
-        await Promise.all([
-            this.tracer.recordLLMCall(callData),
-            this.collector.recordLLMMetrics(callData),
-            this.metrics.recordLLMUsage(callData)
+        // Record in multiple systems with reliability and performance optimization
+        const recordings = await Promise.allSettled([
+            this.performanceManager.optimizeOperation(
+                () => this.reliabilityManager.executeWithReliability(
+                    () => this.tracer.recordLLMCall(callData),
+                    { name: 'langfuse', retryPolicy: 'external-api', circuitBreaker: true }
+                ),
+                { 
+                    cacheName: 'llm-responses', 
+                    cacheKey: `${provider}-${model}-${JSON.stringify(input).slice(0, 100)}`,
+                    timeout: 15000 
+                }
+            ),
+            this.performanceManager.optimizeOperation(
+                () => this.reliabilityManager.executeWithReliability(
+                    () => this.collector.recordLLMMetrics(callData),
+                    { name: 'openlit', retryPolicy: 'external-api', circuitBreaker: true }
+                ),
+                { timeout: 10000 }
+            ),
+            this.performanceManager.optimizeOperation(
+                () => this.reliabilityManager.executeWithReliability(
+                    () => this.metrics.recordLLMUsage(callData),
+                    { name: 'database', retryPolicy: 'database', circuitBreaker: true }
+                ),
+                { 
+                    cacheName: 'database-queries',
+                    cacheKey: `llm-usage-${provider}-${model}`,
+                    timeout: 5000 
+                }
+            )
         ]);
+        
+        // Log any failures but don't stop processing
+        recordings.forEach((result, index) => {
+            if (result.status === 'rejected') {
+                const services = ['langfuse', 'openlit', 'metrics'];
+                this.logger.warn(`Failed to record LLM call in ${services[index]}:`, result.reason);
+            }
+        });
         
         // Process through neuromorphic system
         const neuromorphicInsights = await this.neuromorphicInterface.processLLMCall(callData);
@@ -131,8 +208,15 @@ class LangObservatory {
         this.logger.info(`Planning ${tasks.length} tasks using quantum optimization`);
 
         try {
-            // Use quantum planner for task optimization
-            const quantumPlan = await this.quantumPlanner.planTasks(tasks, constraints);
+            // Use quantum planner for task optimization with performance caching
+            const quantumPlan = await this.performanceManager.optimizeOperation(
+                () => this.quantumPlanner.planTasks(tasks, constraints),
+                {
+                    cacheName: 'quantum-plans',
+                    cacheKey: `${JSON.stringify(tasks)}-${JSON.stringify(constraints)}`,
+                    timeout: 30000
+                }
+            );
             
             // Apply adaptive scheduling to each task
             const adaptiveSchedules = await Promise.all(
@@ -262,8 +346,22 @@ class LangObservatory {
             this.neuromorphicInterface.getHealth()
         ]);
 
+        // Get reliability status
+        const reliabilityStatus = this.reliabilityManager.getAllCircuitBreakerStatus();
+        const reliabilityMetrics = this.reliabilityManager.getMetrics();
+        
+        // Get performance metrics
+        const performanceMetrics = this.performanceManager.getPerformanceMetrics();
+        const autoScalingStatus = this.autoScalingManager.getScalingStatus();
+        
+        // Determine overall health including reliability and performance
+        const serviceHealthy = services.every(s => s.status === 'fulfilled' && s.value.healthy);
+        const circuitsHealthy = Object.values(reliabilityStatus).every(cb => cb.healthy);
+        const performanceHealthy = performanceMetrics.currentLoad < 0.9; // Under 90% load
+        const overallStatus = serviceHealthy && circuitsHealthy && performanceHealthy ? 'healthy' : 'degraded';
+
         return {
-            status: services.every(s => s.status === 'fulfilled' && s.value.healthy) ? 'healthy' : 'degraded',
+            status: overallStatus,
             services: {
                 tracer: services[0].status === 'fulfilled' ? services[0].value : { healthy: false, error: services[0].reason },
                 collector: services[1].status === 'fulfilled' ? services[1].value : { healthy: false, error: services[1].reason },
@@ -272,6 +370,16 @@ class LangObservatory {
                 adaptiveScheduler: services[4].status === 'fulfilled' ? services[4].value : { healthy: false, error: services[4].reason },
                 photonProcessor: services[5].status === 'fulfilled' ? services[5].value : { healthy: false, error: services[5].reason },
                 neuromorphicInterface: services[6].status === 'fulfilled' ? services[6].value : { healthy: false, error: services[6].reason }
+            },
+            reliability: {
+                circuitBreakers: reliabilityStatus,
+                metrics: reliabilityMetrics,
+                overallHealthy: circuitsHealthy
+            },
+            performance: {
+                metrics: performanceMetrics,
+                autoScaling: autoScalingStatus,
+                overallHealthy: performanceHealthy
             },
             timestamp: new Date().toISOString()
         };
@@ -291,7 +399,10 @@ class LangObservatory {
             this.quantumPlanner.shutdown(),
             this.adaptiveScheduler.shutdown(),
             this.photonProcessor.shutdown(),
-            this.neuromorphicInterface.shutdown()
+            this.neuromorphicInterface.shutdown(),
+            this.reliabilityManager.shutdown(),
+            this.performanceManager.shutdown(),
+            this.autoScalingManager.shutdown()
         ]);
         
         this.initialized = false;
