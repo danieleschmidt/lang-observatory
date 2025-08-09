@@ -68,6 +68,7 @@ class QuantumComplianceManager {
         this.processingRecords = [];
         this.consentRecords = new Map();
         this.dataSubjects = new Map();
+        this.privacyRequests = [];
         
         // Audit trail
         this.auditTrail = [];
@@ -614,17 +615,29 @@ class QuantumComplianceManager {
                 byClassification: this.groupBy(recentProcessing, 'dataClassification')
             },
             privacyRequests: {
-                total: this.getPrivacyRequestCount(),
-                pending: this.getPendingPrivacyRequests(),
-                avgResponseTime: this.getAverageResponseTime()
+                total: this.privacyRequests.length,
+                pending: this.privacyRequests.filter(req => req.status === 'pending').length,
+                avgResponseTime: this.calculateAverageResponseTime()
             },
             dataRetention: {
-                expiringSoon: this.getExpiringData(),
-                deletionBacklog: this.getDeletionBacklog()
+                expiringSoon: this.dataSubjects.filter(subject => {
+                    const retentionDate = new Date(subject.retentionUntil);
+                    const warningDate = new Date();
+                    warningDate.setDate(warningDate.getDate() + 30);
+                    return retentionDate <= warningDate;
+                }).length,
+                deletionBacklog: this.dataSubjects.filter(subject => 
+                    new Date(subject.retentionUntil) <= new Date()
+                ).length
             },
             auditTrail: {
                 entries: this.auditTrail.length,
-                recentAlerts: this.getRecentAlerts(),
+                recentAlerts: this.auditTrail.filter(entry => {
+                    const entryDate = new Date(entry.timestamp);
+                    const sevenDaysAgo = new Date();
+                    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+                    return entryDate >= sevenDaysAgo && entry.severity === 'alert';
+                }).length,
                 complianceScore: this.calculateComplianceScore()
             },
             risks: {
@@ -713,6 +726,21 @@ class QuantumComplianceManager {
         
         this.initialized = false;
         this.logger.info('Quantum Compliance Manager shutdown complete');
+    }
+
+    /**
+     * Calculate average response time for privacy requests
+     */
+    calculateAverageResponseTime() {
+        const completedRequests = this.privacyRequests.filter(req => req.status === 'completed');
+        if (completedRequests.length === 0) return 0;
+        
+        const totalTime = completedRequests.reduce((sum, req) => {
+            const responseTime = new Date(req.completedAt) - new Date(req.requestedAt);
+            return sum + responseTime;
+        }, 0);
+        
+        return totalTime / completedRequests.length / (1000 * 60 * 60 * 24); // Convert to days
     }
 }
 
