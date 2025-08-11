@@ -148,6 +148,9 @@ class NeuromorphicLLMInterface extends EventEmitter {
     }
 
     hashProvider(provider) {
+        if (!provider || typeof provider !== 'string') {
+            provider = 'default';
+        }
         let hash = 0;
         for (let i = 0; i < provider.length; i++) {
             const char = provider.charCodeAt(i);
