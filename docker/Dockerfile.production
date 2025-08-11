@@ -1,0 +1,85 @@
+# Production Dockerfile for Lang Observatory
+# Multi-stage build for optimized production image
+
+# Stage 1: Build stage
+FROM node:20-alpine AS builder
+
+# Set working directory
+WORKDIR /app
+
+# Copy package files
+COPY package*.json ./
+COPY .nvmrc ./
+
+# Install dependencies (including dev dependencies for building)
+RUN npm ci --include=dev
+
+# Copy source code
+COPY src/ ./src/
+COPY charts/ ./charts/
+COPY config/ ./config/
+COPY dashboards/ ./dashboards/
+COPY monitoring/ ./monitoring/
+COPY security/ ./security/
+
+# Run build steps
+RUN npm run build || echo "No build script defined"
+RUN npm prune --omit=dev
+
+# Stage 2: Production stage
+FROM node:20-alpine AS production
+
+# Security: Create non-root user
+RUN addgroup -g 1001 -S nodejs
+RUN adduser -S langobs -u 1001
+
+# Set working directory
+WORKDIR /app
+
+# Install runtime dependencies
+RUN apk add --no-cache \
+    dumb-init \
+    curl \
+    ca-certificates \
+    tzdata
+
+# Copy built application from builder stage
+COPY --from=builder --chown=langobs:nodejs /app/node_modules ./node_modules
+COPY --from=builder --chown=langobs:nodejs /app/src ./src
+COPY --from=builder --chown=langobs:nodejs /app/package*.json ./
+
+# Copy configuration files
+COPY --chown=langobs:nodejs config/ ./config/
+COPY --chown=langobs:nodejs monitoring/ ./monitoring/
+COPY --chown=langobs:nodejs dashboards/ ./dashboards/
+
+# Create directories for logs and data
+RUN mkdir -p /app/logs /app/data && \
+    chown -R langobs:nodejs /app/logs /app/data
+
+# Set environment variables
+ENV NODE_ENV=production
+ENV LOG_LEVEL=info
+ENV PORT=3000
+ENV HOST=0.0.0.0
+
+# Security: Set file permissions
+RUN chmod 755 /app && \
+    chmod -R 644 /app/src && \
+    chmod -R 755 /app/logs /app/data
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
+    CMD curl -f http://localhost:3000/api/health || exit 1
+
+# Expose port
+EXPOSE 3000
+
+# Switch to non-root user
+USER langobs
+
+# Use dumb-init to handle signals properly
+ENTRYPOINT ["dumb-init", "--"]
+
+# Start the application
+CMD ["node", "src/cli/index.js", "start", "--port", "3000", "--host", "0.0.0.0"]

@@ -2,17 +2,23 @@
 
 ## Overview
 
-The Quantum-Inspired Task Planner is a revolutionary approach to task scheduling and optimization that leverages principles from quantum computing to achieve superior performance in complex task planning scenarios. Built as part of the Lang Observatory platform, it provides intelligent, adaptive, and globally-aware task orchestration.
+The Quantum-Inspired Task Planner is a revolutionary approach to task scheduling
+and optimization that leverages principles from quantum computing to achieve
+superior performance in complex task planning scenarios. Built as part of the
+Lang Observatory platform, it provides intelligent, adaptive, and globally-aware
+task orchestration.
 
 ## Key Features
 
 ### 🔬 Quantum-Inspired Algorithms
+
 - **Superposition**: Explores multiple task execution states simultaneously
 - **Entanglement**: Identifies and optimizes complex task dependencies
 - **Coherence Management**: Maintains system stability and predictability
 - **State Collapse**: Converges to optimal execution plans
 
 ### 🛡️ Enterprise Security
+
 - **Multi-layered Authentication**: JWT with refresh token rotation
 - **Role-based Access Control**: Granular permissions system
 - **Rate Limiting**: Protection against abuse and DoS attacks
@@ -20,12 +26,14 @@ The Quantum-Inspired Task Planner is a revolutionary approach to task scheduling
 - **Data Encryption**: End-to-end encryption for sensitive data
 
 ### ⚡ Performance Optimization
+
 - **Multi-level Caching**: L1 memory cache + L2 compressed storage
 - **Intelligent Batching**: Automatic request aggregation
 - **Worker Pool Management**: Dynamic resource allocation
 - **Auto-scaling**: Horizontal scaling based on load metrics
 
 ### 🌍 Global-First Architecture
+
 - **Multi-region Deployment**: Automatic region selection and failover
 - **Data Sovereignty**: GDPR, CCPA, PDPA compliance built-in
 - **Internationalization**: Support for 10+ languages
@@ -37,19 +45,19 @@ The Quantum-Inspired Task Planner is a revolutionary approach to task scheduling
 graph TB
     subgraph "Quantum Task Planner"
         QTP[Quantum Task Planner Core]
-        
+
         subgraph "Planning Engine"
             QE[Quantum Engine]
             AS[Adaptive Scheduler]
             PO[Performance Optimizer]
         end
-        
+
         subgraph "Security & Validation"
             SM[Security Manager]
             VL[Validator]
             EH[Error Handler]
         end
-        
+
         subgraph "Global Infrastructure"
             I18N[I18n Manager]
             CM[Compliance Manager]
@@ -57,7 +65,7 @@ graph TB
             SCM[Scaling Manager]
         end
     end
-    
+
     QTP --> QE
     QTP --> AS
     QTP --> PO
@@ -89,21 +97,21 @@ const planner = new QuantumTaskPlanner({
     maxStates: 16,
     adaptiveThresholds: {
       priority: 0.7,
-      efficiency: 0.8
-    }
+      efficiency: 0.8,
+    },
   },
   security: {
     encryptionKey: process.env.ENCRYPTION_KEY,
-    maxRequestsPerMinute: 100
+    maxRequestsPerMinute: 100,
   },
   compliance: {
     frameworks: ['GDPR', 'CCPA'],
-    dataResidency: 'EU'
+    dataResidency: 'EU',
   },
   multiRegion: {
     regions: ['us-east-1', 'eu-west-1', 'ap-southeast-1'],
-    primaryRegion: 'us-east-1'
-  }
+    primaryRegion: 'us-east-1',
+  },
 });
 
 // Initialize the planner
@@ -116,15 +124,15 @@ const tasks = [
     priority: 0.9,
     estimatedDuration: 120,
     requiredResources: ['cpu', 'memory'],
-    type: 'data_processing'
+    type: 'data_processing',
   },
   {
     id: 'model-training',
     priority: 0.95,
     estimatedDuration: 300,
     requiredResources: ['gpu', 'memory'],
-    dependencies: ['data-processing']
-  }
+    dependencies: ['data-processing'],
+  },
 ];
 
 // Plan tasks with user context
@@ -132,13 +140,17 @@ const user = {
   userId: 'user123',
   role: 'planner',
   locale: 'en',
-  location: 'EU'
+  location: 'EU',
 };
 
-const plan = await planner.planTasks(tasks, {
-  maxConcurrency: 3,
-  deadline: new Date(Date.now() + 24 * 60 * 60 * 1000)
-}, user);
+const plan = await planner.planTasks(
+  tasks,
+  {
+    maxConcurrency: 3,
+    deadline: new Date(Date.now() + 24 * 60 * 60 * 1000),
+  },
+  user
+);
 
 console.log('Optimized Plan:', plan);
 ```
@@ -241,6 +253,7 @@ console.log('Optimized Plan:', plan);
 ### QuantumTaskPlanner Methods
 
 #### `initialize()`
+
 Initializes all planner components and dependencies.
 
 ```javascript
@@ -248,9 +261,11 @@ await planner.initialize();
 ```
 
 #### `planTasks(tasks, constraints, user)`
+
 Plans task execution using quantum-inspired optimization.
 
 **Parameters:**
+
 - `tasks` (Array): Array of task objects
 - `constraints` (Object): Planning constraints
 - `user` (Object): User context for security and localization
@@ -262,16 +277,18 @@ const plan = await planner.planTasks(tasks, constraints, user);
 ```
 
 #### `executeTask(taskId, options)`
+
 Executes a planned task with monitoring and metrics collection.
 
 ```javascript
 const result = await planner.executeTask('task-123', {
   timeout: 30000,
-  retryCount: 3
+  retryCount: 3,
 });
 ```
 
 #### `getQuantumMetrics(user)`
+
 Retrieves quantum planner metrics and performance data.
 
 ```javascript
@@ -373,8 +390,8 @@ Dynamic scaling based on metrics:
 ```javascript
 // Generate auth token
 const authResult = await securityManager.generateAuthToken(
-  'user123', 
-  'planner', 
+  'user123',
+  'planner',
   ['PLAN_TASKS', 'VIEW_METRICS']
 );
 
@@ -382,7 +399,7 @@ const authResult = await securityManager.generateAuthToken(
 const user = {
   userId: 'user123',
   sessionId: authResult.sessionId,
-  token: authResult.token
+  token: authResult.token,
 };
 ```
 
@@ -427,7 +444,7 @@ const privacyResult = await complianceManager.handlePrivacyRequest({
   type: 'access',
   dataSubject: 'user123',
   framework: 'GDPR',
-  anonymizationLevel: 'partial'
+  anonymizationLevel: 'partial',
 });
 ```
 
@@ -456,7 +473,7 @@ Automatic region selection based on:
 const request = {
   userLocation: 'EU',
   dataClassification: 'RESTRICTED',
-  complianceRequired: ['GDPR']
+  complianceRequired: ['GDPR'],
 };
 
 const result = await multiRegionManager.routeRequest(request);
@@ -494,7 +511,7 @@ console.log('System Health:', {
   efficiency: dashboard.avgEfficiency,
   throughput: dashboard.performanceMetrics.throughput,
   cacheHitRate: dashboard.performanceMetrics.cacheHitRate,
-  complianceScore: dashboard.complianceMetrics.complianceScore
+  complianceScore: dashboard.complianceMetrics.complianceScore,
 });
 ```
 
@@ -503,18 +520,22 @@ console.log('System Health:', {
 ### Common Issues
 
 #### Low Planning Efficiency
+
 - **Cause**: Complex task dependencies or resource conflicts
 - **Solution**: Simplify dependencies or increase resource allocation
 
 #### High Memory Usage
+
 - **Cause**: Large task sets or cache bloat
 - **Solution**: Enable compression or increase cache eviction
 
 #### Authentication Failures
+
 - **Cause**: Expired tokens or incorrect permissions
 - **Solution**: Refresh tokens or update user roles
 
 #### Regional Routing Issues
+
 - **Cause**: Data sovereignty conflicts or region unavailability
 - **Solution**: Review compliance settings or check region health
 
@@ -526,8 +547,8 @@ Enable debug logging:
 const planner = new QuantumTaskPlanner({
   logging: {
     level: 'debug',
-    enableMetrics: true
-  }
+    enableMetrics: true,
+  },
 });
 ```
 
@@ -547,14 +568,14 @@ if (health.status !== 'healthy') {
 
 ```javascript
 // Extend validator with custom rules
-planner.validator.addCustomRule('businessHours', (task) => {
+planner.validator.addCustomRule('businessHours', task => {
   const now = new Date();
   const hour = now.getHours();
-  
+
   if (task.type === 'critical' && (hour < 9 || hour > 17)) {
     return { valid: false, error: 'Critical tasks only during business hours' };
   }
-  
+
   return { valid: true };
 });
 ```
@@ -565,7 +586,7 @@ planner.validator.addCustomRule('businessHours', (task) => {
 // Add custom performance metrics
 await planner.metrics.recordCustomMetric('business_metric', {
   value: 42,
-  tags: { department: 'engineering', project: 'quantum' }
+  tags: { department: 'engineering', project: 'quantum' },
 });
 ```
 
@@ -573,10 +594,13 @@ await planner.metrics.recordCustomMetric('business_metric', {
 
 ```javascript
 // Register custom plugins
-planner.use('customOptimizer', new CustomOptimizationPlugin({
-  algorithm: 'genetic',
-  generations: 100
-}));
+planner.use(
+  'customOptimizer',
+  new CustomOptimizationPlugin({
+    algorithm: 'genetic',
+    generations: 100,
+  })
+);
 ```
 
 ## API Examples
@@ -590,7 +614,7 @@ const mlPipeline = [
     type: 'data_processing',
     priority: 0.9,
     estimatedDuration: 60,
-    requiredResources: ['network', 'storage']
+    requiredResources: ['network', 'storage'],
   },
   {
     id: 'feature-extraction',
@@ -598,7 +622,7 @@ const mlPipeline = [
     priority: 0.8,
     estimatedDuration: 120,
     requiredResources: ['cpu', 'memory'],
-    dependencies: ['data-ingestion']
+    dependencies: ['data-ingestion'],
   },
   {
     id: 'model-training',
@@ -606,14 +630,14 @@ const mlPipeline = [
     priority: 0.95,
     estimatedDuration: 300,
     requiredResources: ['gpu', 'memory'],
-    dependencies: ['feature-extraction']
-  }
+    dependencies: ['feature-extraction'],
+  },
 ];
 
 const plan = await planner.planTasks(mlPipeline, {
   maxConcurrency: 2,
   deadline: new Date(Date.now() + 8 * 60 * 60 * 1000), // 8 hours
-  optimizeFor: 'efficiency'
+  optimizeFor: 'efficiency',
 });
 ```
 
@@ -622,10 +646,10 @@ const plan = await planner.planTasks(mlPipeline, {
 ```javascript
 // Execute multiple tasks
 const results = await Promise.all(
-  plan.adaptiveSchedules.map(schedule => 
+  plan.adaptiveSchedules.map(schedule =>
     planner.executeTask(schedule.task.id, {
       priority: schedule.task.priority,
-      timeout: schedule.estimatedDuration * 1000 * 1.5
+      timeout: schedule.estimatedDuration * 1000 * 1.5,
     })
   )
 );
@@ -641,7 +665,7 @@ const deletionResult = await planner.complianceManager.handlePrivacyRequest({
   type: 'erasure',
   dataSubject: 'user123',
   hardDelete: false, // Use anonymization
-  framework: 'GDPR'
+  framework: 'GDPR',
 });
 
 console.log('Data deletion completed:', deletionResult);
@@ -659,14 +683,19 @@ console.log('Data deletion completed:', deletionResult);
 
 ### Version Upgrades
 
-Follow semantic versioning guidelines and check the [CHANGELOG.md](../CHANGELOG.md) for breaking changes.
+Follow semantic versioning guidelines and check the
+[CHANGELOG.md](../CHANGELOG.md) for breaking changes.
 
 ## Support and Community
 
-- **Documentation**: [https://docs.terragon-labs.com](https://docs.terragon-labs.com)
-- **GitHub Issues**: [https://github.com/terragon-labs/lang-observatory/issues](https://github.com/terragon-labs/lang-observatory/issues)
-- **Community Forum**: [https://community.terragon-labs.com](https://community.terragon-labs.com)
-- **Commercial Support**: [https://terragon-labs.com/support](https://terragon-labs.com/support)
+- **Documentation**:
+  [https://docs.terragon-labs.com](https://docs.terragon-labs.com)
+- **GitHub Issues**:
+  [https://github.com/terragon-labs/lang-observatory/issues](https://github.com/terragon-labs/lang-observatory/issues)
+- **Community Forum**:
+  [https://community.terragon-labs.com](https://community.terragon-labs.com)
+- **Commercial Support**:
+  [https://terragon-labs.com/support](https://terragon-labs.com/support)
 
 ## License
 
@@ -674,4 +703,5 @@ Licensed under the Apache-2.0 License. See [LICENSE](../LICENSE) for details.
 
 ## Contributing
 
-We welcome contributions! Please see [CONTRIBUTING.md](../CONTRIBUTING.md) for guidelines.
+We welcome contributions! Please see [CONTRIBUTING.md](../CONTRIBUTING.md) for
+guidelines.
