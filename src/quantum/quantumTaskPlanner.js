@@ -215,7 +215,7 @@ class QuantumTaskPlanner {
         
         tasks.forEach((task, index) => {
             const amplitude = this.calculateQuantumAmplitude(task, constraints);
-            const phase = this.calculateQuantumPhase(task, index);
+            const phase = this.calculateQuantumPhase(task, index, tasks);
             
             superposition.set(task.id, {
                 task,
@@ -244,8 +244,8 @@ class QuantumTaskPlanner {
     /**
      * Calculate quantum phase for task interference patterns
      */
-    calculateQuantumPhase(task, index) {
-        const basePhase = (index * Math.PI) / tasks.length;
+    calculateQuantumPhase(task, index, tasks) {
+        const basePhase = (index * Math.PI) / (tasks?.length || 1);
         const priorityPhase = (task.priority || 0.5) * Math.PI;
         
         return (basePhase + priorityPhase) % (2 * Math.PI);

@@ -1,0 +1,51 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+# Base Kubernetes manifests for Lang Observatory
+resources:
+  - namespace.yaml
+  - configmap.yaml
+  - secret.yaml
+  - deployment.yaml
+  - service.yaml
+  - ingress.yaml
+  - serviceaccount.yaml
+  - rbac.yaml
+  - networkpolicy.yaml
+  - poddisruptionbudget.yaml
+  - horizontalpodautoscaler.yaml
+
+# Common labels
+commonLabels:
+  app: lang-observatory
+  version: v0.1.0
+  component: observability
+
+# Image configurations
+images:
+  - name: lang-observatory
+    newName: lang-observatory
+    newTag: latest
+
+# Configuration patches
+patchesStrategicMerge:
+  - patches/resource-limits.yaml
+  - patches/security-context.yaml
+
+# ConfigMap generator
+configMapGenerator:
+  - name: app-config
+    files:
+      - config/app.properties
+      - config/logging.properties
+  - name: prometheus-config
+    files:
+      - config/prometheus.yml
+  - name: grafana-config
+    files:
+      - config/grafana-datasources.yml
+
+# Secret generator
+secretGenerator:
+  - name: app-secrets
+    env: secrets/.env.production
