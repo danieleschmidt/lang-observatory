@@ -10,7 +10,7 @@ export const options = {
     { duration: '5m', target: 10 }, // Stay at 10 users
     { duration: '2m', target: 20 }, // Ramp up to 20 users
     { duration: '5m', target: 20 }, // Stay at 20 users
-    { duration: '2m', target: 0 },  // Ramp down to 0 users
+    { duration: '2m', target: 0 }, // Ramp down to 0 users
   ],
   thresholds: {
     http_req_duration: ['p(95)<500'], // 95% of requests must complete below 500ms
@@ -31,14 +31,15 @@ export default function () {
   endpoints.forEach(endpoint => {
     const response = http.get(`${BASE_URL}${endpoint}`, {
       headers: {
-        'Accept': 'application/json',
+        Accept: 'application/json',
         'User-Agent': 'k6-load-test',
       },
     });
 
     const result = check(response, {
-      [`${endpoint} status is 200 or 404`]: (r) => r.status === 200 || r.status === 404,
-      [`${endpoint} response time < 500ms`]: (r) => r.timings.duration < 500,
+      [`${endpoint} status is 200 or 404`]: r =>
+        r.status === 200 || r.status === 404,
+      [`${endpoint} response time < 500ms`]: r => r.timings.duration < 500,
     });
 
     errorRate.add(!result);

@@ -1,16 +1,19 @@
 # 🚀 Lang Observatory Deployment Guide
 
-Complete guide for deploying Lang Observatory in production environments with comprehensive automation, monitoring, and scaling capabilities.
+Complete guide for deploying Lang Observatory in production environments with
+comprehensive automation, monitoring, and scaling capabilities.
 
 ## 📋 Prerequisites
 
 ### System Requirements
+
 - **CPU**: 4+ cores recommended
 - **Memory**: 8GB+ RAM for production
 - **Storage**: 50GB+ available space
 - **Network**: Internet connectivity for external dependencies
 
 ### Software Requirements
+
 - Docker 24.0+ and Docker Compose 2.0+
 - Kubernetes 1.28+ (for K8s deployment)
 - Helm 3.12+ (for Helm deployment)
@@ -43,6 +46,7 @@ Complete guide for deploying Lang Observatory in production environments with co
 ## 🐳 Docker Deployment (Recommended for Development/Testing)
 
 ### Quick Start
+
 ```bash
 # Clone repository
 git clone https://github.com/terragon-labs/lang-observatory.git
@@ -56,6 +60,7 @@ docker-compose -f docker/docker-compose.production.yml up -d
 ```
 
 ### Environment Configuration
+
 ```bash
 # Generate secure environment file
 ./scripts/deploy.sh --type docker --dry-run
@@ -68,6 +73,7 @@ docker-compose -f docker/docker-compose.production.yml --env-file .env.productio
 ```
 
 ### Service Endpoints
+
 - **Main API**: http://localhost:3000
 - **Langfuse UI**: http://localhost:3001
 - **Grafana Dashboard**: http://localhost:3002
@@ -76,6 +82,7 @@ docker-compose -f docker/docker-compose.production.yml --env-file .env.productio
 ## ☸️ Kubernetes Deployment (Recommended for Production)
 
 ### Prerequisites Setup
+
 ```bash
 # Ensure kubectl is configured
 kubectl cluster-info
@@ -88,6 +95,7 @@ kubectl apply -f deployment/kubernetes/base/rbac.yaml
 ```
 
 ### Automated Deployment
+
 ```bash
 # Deploy to Kubernetes
 ./scripts/deploy.sh --type kubernetes --namespace lang-observatory
@@ -97,6 +105,7 @@ kubectl get pods -n lang-observatory -w
 ```
 
 ### Manual Deployment
+
 ```bash
 # Apply all manifests
 kubectl apply -f deployment/kubernetes/base/ -n lang-observatory
@@ -109,6 +118,7 @@ kubectl port-forward svc/lang-observatory 3000:3000 -n lang-observatory
 ```
 
 ### Scaling
+
 ```bash
 # Horizontal scaling
 kubectl scale deployment lang-observatory --replicas=5 -n lang-observatory
@@ -120,6 +130,7 @@ kubectl apply -f deployment/kubernetes/base/horizontalpodautoscaler.yaml -n lang
 ## 🎯 Helm Deployment (Recommended for Production)
 
 ### Installation
+
 ```bash
 # Add Terragon Helm repository
 helm repo add terragon-charts https://terragon-labs.github.io/lang-observatory
@@ -133,6 +144,7 @@ helm install lang-observatory terragon-charts/lang-observatory
 ```
 
 ### Custom Configuration
+
 ```bash
 # Generate custom values file
 helm show values terragon-charts/lang-observatory > values-custom.yaml
@@ -148,13 +160,14 @@ helm upgrade --install lang-observatory terragon-charts/lang-observatory \
 ```
 
 ### Production Values Example
+
 ```yaml
 # values-production.yaml
 replicaCount: 3
 
 image:
   repository: terragon-labs/lang-observatory
-  tag: "0.1.0"
+  tag: '0.1.0'
   pullPolicy: Always
 
 resources:
@@ -206,6 +219,7 @@ security:
 ## 🔧 Configuration Management
 
 ### Environment Variables
+
 ```bash
 # Core Application
 NODE_ENV=production
@@ -236,6 +250,7 @@ MAX_REQUEST_SIZE=10mb
 ```
 
 ### Database Initialization
+
 ```sql
 -- Initialize PostgreSQL database
 CREATE DATABASE langfuse;
@@ -250,6 +265,7 @@ CREATE EXTENSION IF NOT EXISTS "pg_stat_statements";
 ## 📊 Monitoring & Observability
 
 ### Health Checks
+
 ```bash
 # Application health
 curl http://localhost:3000/api/health
@@ -262,12 +278,14 @@ curl http://localhost:3000/api/metrics
 ```
 
 ### Monitoring Stack
+
 1. **Prometheus**: Metrics collection and alerting
 2. **Grafana**: Visualization dashboards
 3. **Langfuse**: LLM trace analysis
 4. **OpenLIT**: OpenTelemetry collection
 
 ### Key Metrics to Monitor
+
 - **Request Rate**: Requests per second
 - **Error Rate**: Error percentage
 - **Response Time**: P95, P99 latencies
@@ -276,33 +294,35 @@ curl http://localhost:3000/api/metrics
 - **Cache Hit Rate**: Performance optimization
 
 ### Alerts Configuration
+
 ```yaml
 # alerts.yaml
 groups:
-- name: lang-observatory
-  rules:
-  - alert: HighErrorRate
-    expr: rate(http_requests_total{status=~"5.."}[5m]) > 0.1
-    for: 2m
-    annotations:
-      summary: High error rate detected
-      
-  - alert: HighResponseTime
-    expr: histogram_quantile(0.95, http_request_duration_seconds) > 2
-    for: 5m
-    annotations:
-      summary: High response time detected
-      
-  - alert: DatabaseConnectionFailed
-    expr: up{job="postgres"} == 0
-    for: 1m
-    annotations:
-      summary: Database connection failed
+  - name: lang-observatory
+    rules:
+      - alert: HighErrorRate
+        expr: rate(http_requests_total{status=~"5.."}[5m]) > 0.1
+        for: 2m
+        annotations:
+          summary: High error rate detected
+
+      - alert: HighResponseTime
+        expr: histogram_quantile(0.95, http_request_duration_seconds) > 2
+        for: 5m
+        annotations:
+          summary: High response time detected
+
+      - alert: DatabaseConnectionFailed
+        expr: up{job="postgres"} == 0
+        for: 1m
+        annotations:
+          summary: Database connection failed
 ```
 
 ## 🔐 Security Configuration
 
 ### TLS/SSL Setup
+
 ```bash
 # Generate certificates (production should use proper CA)
 openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
@@ -314,6 +334,7 @@ kubectl create secret tls lang-observatory-tls \
 ```
 
 ### Security Headers
+
 ```nginx
 # nginx.conf security headers
 add_header X-Frame-Options "DENY" always;
@@ -324,6 +345,7 @@ add_header Referrer-Policy "strict-origin-when-cross-origin" always;
 ```
 
 ### Network Policies
+
 ```yaml
 # networkpolicy.yaml
 apiVersion: networking.k8s.io/v1
@@ -335,33 +357,35 @@ spec:
     matchLabels:
       app: lang-observatory
   policyTypes:
-  - Ingress
-  - Egress
+    - Ingress
+    - Egress
   ingress:
-  - from:
-    - podSelector:
-        matchLabels:
-          app: nginx-ingress
-    ports:
-    - protocol: TCP
-      port: 3000
+    - from:
+        - podSelector:
+            matchLabels:
+              app: nginx-ingress
+      ports:
+        - protocol: TCP
+          port: 3000
 ```
 
 ## 🚀 Performance Optimization
 
 ### Resource Limits
+
 ```yaml
 # Kubernetes resource configuration
 resources:
   requests:
-    cpu: "100m"
-    memory: "256Mi"
+    cpu: '100m'
+    memory: '256Mi'
   limits:
-    cpu: "500m"
-    memory: "512Mi"
+    cpu: '500m'
+    memory: '512Mi'
 ```
 
 ### Caching Strategy
+
 ```yaml
 # Redis configuration
 redis:
@@ -375,20 +399,22 @@ redis:
 ```
 
 ### Load Balancing
+
 ```yaml
 # Service configuration
 spec:
   type: LoadBalancer
   sessionAffinity: ClientIP
   ports:
-  - port: 80
-    targetPort: 3000
-    protocol: TCP
+    - port: 80
+      targetPort: 3000
+      protocol: TCP
 ```
 
 ## 🔄 Backup & Recovery
 
 ### Database Backup
+
 ```bash
 # Automated PostgreSQL backup
 #!/bin/bash
@@ -401,6 +427,7 @@ aws s3 cp "backup_${DATE}.sql.gz" s3://backups/lang-observatory/
 ```
 
 ### Configuration Backup
+
 ```bash
 # Backup Kubernetes configurations
 kubectl get all,cm,secrets -n lang-observatory -o yaml > \
@@ -416,6 +443,7 @@ helm get values lang-observatory -n lang-observatory > \
 ### Common Issues
 
 #### Application Won't Start
+
 ```bash
 # Check logs
 docker-compose logs lang-observatory
@@ -430,6 +458,7 @@ kubectl logs -f deployment/lang-observatory -n lang-observatory
 ```
 
 #### Database Connection Issues
+
 ```bash
 # Test database connectivity
 docker exec -it lang-observatory-postgres psql -U langfuse -d langfuse -c "SELECT 1;"
@@ -439,6 +468,7 @@ echo $DATABASE_URL
 ```
 
 #### Performance Issues
+
 ```bash
 # Check resource utilization
 kubectl top pods -n lang-observatory
@@ -452,6 +482,7 @@ kubectl exec -it deployment/lang-observatory -n lang-observatory -- \
 ```
 
 ### Log Analysis
+
 ```bash
 # Structured log queries
 # Application logs
@@ -466,6 +497,7 @@ kubectl logs -f deployment/postgres -n lang-observatory | \
 ## 📈 Scaling Guidelines
 
 ### Horizontal Scaling
+
 ```bash
 # Scale based on CPU utilization
 kubectl autoscale deployment lang-observatory \
@@ -476,6 +508,7 @@ kubectl autoscale deployment lang-observatory \
 ```
 
 ### Vertical Scaling
+
 ```bash
 # Increase resource limits
 kubectl patch deployment lang-observatory -n lang-observatory -p \
@@ -483,6 +516,7 @@ kubectl patch deployment lang-observatory -n lang-observatory -p \
 ```
 
 ### Database Scaling
+
 ```sql
 -- PostgreSQL optimization
 -- Connection pooling
@@ -498,6 +532,7 @@ CREATE INDEX CONCURRENTLY idx_traces_session ON traces(session_id);
 ## 🔄 Maintenance
 
 ### Regular Maintenance Tasks
+
 ```bash
 # Weekly maintenance script
 #!/bin/bash
@@ -520,6 +555,7 @@ kubectl rollout restart deployment/lang-observatory -n lang-observatory
 ```
 
 ### Security Updates
+
 ```bash
 # Check for vulnerabilities
 trivy image lang-observatory:latest
@@ -542,6 +578,7 @@ kubectl apply -f security/pod-security-standards.yaml -n lang-observatory
 ## 🆘 Support
 
 For deployment issues or questions:
+
 - GitHub Issues: https://github.com/terragon-labs/lang-observatory/issues
 - Documentation: https://docs.terragon-labs.com/lang-observatory
 - Community: https://discord.gg/terragon-labs
@@ -549,6 +586,7 @@ For deployment issues or questions:
 ---
 
 **Production Deployment Checklist:**
+
 - [ ] Environment variables configured
 - [ ] TLS certificates installed
 - [ ] Database initialized and secured

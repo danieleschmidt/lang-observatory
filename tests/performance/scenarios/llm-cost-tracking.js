@@ -23,7 +23,7 @@ export const options = {
       ],
       gracefulRampDown: '30s',
     },
-    
+
     // Burst traffic simulation for cost calculations
     cost_calculation_burst: {
       executor: 'ramping-arrival-rate',
@@ -39,7 +39,7 @@ export const options = {
       ],
     },
   },
-  
+
   thresholds: {
     http_req_duration: ['p(95)<500', 'p(99)<1000'],
     http_req_failed: ['rate<0.01'],
@@ -47,7 +47,7 @@ export const options = {
     cost_aggregation_latency_ms: ['p(95)<200'],
     token_counting_latency_ms: ['p(99)<100'],
   },
-  
+
   ext: {
     loadimpact: {
       projectID: parseInt(__ENV.K6_PROJECT_ID) || 3000000,
@@ -89,16 +89,18 @@ const llmProviders = [
 
 // Generate realistic LLM trace data with cost information
 function generateLLMTrace() {
-  const provider = llmProviders[Math.floor(Math.random() * llmProviders.length)];
-  const model = provider.models[Math.floor(Math.random() * provider.models.length)];
+  const provider =
+    llmProviders[Math.floor(Math.random() * llmProviders.length)];
+  const model =
+    provider.models[Math.floor(Math.random() * provider.models.length)];
   const inputTokens = Math.floor(Math.random() * 4000) + 100;
   const outputTokens = Math.floor(Math.random() * 2000) + 50;
-  
+
   const pricing = provider.pricing[model];
-  const expectedCost = 
-    (inputTokens / 1000) * pricing.input + 
+  const expectedCost =
+    (inputTokens / 1000) * pricing.input +
     (outputTokens / 1000) * pricing.output;
-  
+
   return {
     trace_id: `trace_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
     span_id: `span_${Math.random().toString(36).substr(2, 9)}`,
@@ -120,60 +122,104 @@ function generateLLMTrace() {
 export function testCostIngestion() {
   const trace = generateLLMTrace();
   const startTime = Date.now();
-  
+
   const response = http.post(
     `${__ENV.OPENLIT_ENDPOINT || 'http://localhost:3001'}/v1/traces`,
     JSON.stringify({
-      resourceSpans: [{
-        resource: {
-          attributes: [
-            { key: 'service.name', value: { stringValue: 'llm-cost-tracker' } },
-            { key: 'llm.provider', value: { stringValue: trace.provider } },
-            { key: 'llm.model', value: { stringValue: trace.model } },
+      resourceSpans: [
+        {
+          resource: {
+            attributes: [
+              {
+                key: 'service.name',
+                value: { stringValue: 'llm-cost-tracker' },
+              },
+              { key: 'llm.provider', value: { stringValue: trace.provider } },
+              { key: 'llm.model', value: { stringValue: trace.model } },
+            ],
+          },
+          instrumentationLibrarySpans: [
+            {
+              spans: [
+                {
+                  traceId: trace.trace_id,
+                  spanId: trace.span_id,
+                  name: `llm.${trace.provider}.${trace.model}`,
+                  kind: 'SPAN_KIND_CLIENT',
+                  startTimeUnixNano: (Date.now() - trace.duration_ms) * 1000000,
+                  endTimeUnixNano: Date.now() * 1000000,
+                  attributes: [
+                    {
+                      key: 'llm.input_tokens',
+                      value: { intValue: trace.input_tokens },
+                    },
+                    {
+                      key: 'llm.output_tokens',
+                      value: { intValue: trace.output_tokens },
+                    },
+                    {
+                      key: 'llm.total_tokens',
+                      value: { intValue: trace.total_tokens },
+                    },
+                    {
+                      key: 'llm.cost.input',
+                      value: {
+                        doubleValue:
+                          (((trace.input_tokens / 1000) * trace.expected_cost) /
+                            trace.total_tokens) *
+                          1000,
+                      },
+                    },
+                    {
+                      key: 'llm.cost.output',
+                      value: {
+                        doubleValue:
+                          (((trace.output_tokens / 1000) *
+                            trace.expected_cost) /
+                            trace.total_tokens) *
+                          1000,
+                      },
+                    },
+                    {
+                      key: 'llm.cost.total',
+                      value: { doubleValue: trace.expected_cost },
+                    },
+                    {
+                      key: 'llm.request_type',
+                      value: { stringValue: trace.request_type },
+                    },
+                    { key: 'user.id', value: { stringValue: trace.user_id } },
+                    {
+                      key: 'project.id',
+                      value: { stringValue: trace.project_id },
+                    },
+                  ],
+                },
+              ],
+            },
           ],
         },
-        instrumentationLibrarySpans: [{
-          spans: [{
-            traceId: trace.trace_id,
-            spanId: trace.span_id,
-            name: `llm.${trace.provider}.${trace.model}`,
-            kind: 'SPAN_KIND_CLIENT',
-            startTimeUnixNano: (Date.now() - trace.duration_ms) * 1000000,
-            endTimeUnixNano: Date.now() * 1000000,
-            attributes: [
-              { key: 'llm.input_tokens', value: { intValue: trace.input_tokens } },
-              { key: 'llm.output_tokens', value: { intValue: trace.output_tokens } },
-              { key: 'llm.total_tokens', value: { intValue: trace.total_tokens } },
-              { key: 'llm.cost.input', value: { doubleValue: (trace.input_tokens / 1000) * trace.expected_cost / trace.total_tokens * 1000 } },
-              { key: 'llm.cost.output', value: { doubleValue: (trace.output_tokens / 1000) * trace.expected_cost / trace.total_tokens * 1000 } },
-              { key: 'llm.cost.total', value: { doubleValue: trace.expected_cost } },
-              { key: 'llm.request_type', value: { stringValue: trace.request_type } },
-              { key: 'user.id', value: { stringValue: trace.user_id } },
-              { key: 'project.id', value: { stringValue: trace.project_id } },
-            ],
-          }],
-        }],
-      }],
+      ],
     }),
     {
       headers: { 'Content-Type': 'application/json' },
       timeout: '30s',
     }
   );
-  
+
   const ingestionLatency = Date.now() - startTime;
   tokenCountingLatency.add(ingestionLatency);
-  
+
   const success = check(response, {
-    'cost ingestion successful': (r) => r.status === 200 || r.status === 202,
-    'response time acceptable': (r) => r.timings.duration < 1000,
-    'no server errors': (r) => r.status < 500,
+    'cost ingestion successful': r => r.status === 200 || r.status === 202,
+    'response time acceptable': r => r.timings.duration < 1000,
+    'no server errors': r => r.status < 500,
   });
-  
+
   if (!success) {
     costTrackingErrors.add(1);
   }
-  
+
   return { trace, response, ingestionLatency };
 }
 
@@ -205,24 +251,24 @@ export function testCostAggregation() {
       endpoint: '/api/v1/query',
     },
   ];
-  
-  queries.forEach((queryConfig) => {
+
+  queries.forEach(queryConfig => {
     const startTime = Date.now();
-    
+
     const response = http.get(
       `${__ENV.PROMETHEUS_ENDPOINT || 'http://localhost:9090'}${queryConfig.endpoint}?query=${encodeURIComponent(queryConfig.query)}`,
       {
-        headers: { 'Accept': 'application/json' },
+        headers: { Accept: 'application/json' },
         timeout: '10s',
       }
     );
-    
+
     const aggregationLatency = Date.now() - startTime;
     costAggregationLatency.add(aggregationLatency);
-    
+
     const success = check(response, {
-      [`${queryConfig.name} query successful`]: (r) => r.status === 200,
-      [`${queryConfig.name} has data`]: (r) => {
+      [`${queryConfig.name} query successful`]: r => r.status === 200,
+      [`${queryConfig.name} has data`]: r => {
         try {
           const data = JSON.parse(r.body);
           return data.data && data.data.result && data.data.result.length > 0;
@@ -230,9 +276,10 @@ export function testCostAggregation() {
           return false;
         }
       },
-      [`${queryConfig.name} response time acceptable`]: (r) => r.timings.duration < 2000,
+      [`${queryConfig.name} response time acceptable`]: r =>
+        r.timings.duration < 2000,
     });
-    
+
     if (success) {
       costCalculationAccuracy.add(1);
     } else {
@@ -253,7 +300,8 @@ export function testCostAlerting() {
     {
       name: 'unusual_cost_spike',
       threshold: 2, // 2x normal rate
-      query: 'rate(llm_cost_total[5m]) > 2 * rate(llm_cost_total[1h] offset 1h)',
+      query:
+        'rate(llm_cost_total[5m]) > 2 * rate(llm_cost_total[1h] offset 1h)',
     },
     {
       name: 'cost_budget_exceeded',
@@ -261,16 +309,16 @@ export function testCostAlerting() {
       query: 'sum(increase(llm_cost_total[24h])) > 1000',
     },
   ];
-  
-  alertTests.forEach((alert) => {
+
+  alertTests.forEach(alert => {
     const response = http.get(
       `${__ENV.PROMETHEUS_ENDPOINT || 'http://localhost:9090'}/api/v1/query?query=${encodeURIComponent(alert.query)}`,
       { timeout: '5s' }
     );
-    
+
     check(response, {
-      [`${alert.name} alert query works`]: (r) => r.status === 200,
-      [`${alert.name} returns valid data`]: (r) => {
+      [`${alert.name} alert query works`]: r => r.status === 200,
+      [`${alert.name} returns valid data`]: r => {
         try {
           const data = JSON.parse(r.body);
           return data.status === 'success' && data.data;
@@ -286,7 +334,7 @@ export function testCostAlerting() {
 export default function () {
   // Weight different test types based on realistic usage patterns
   const testType = Math.random();
-  
+
   if (testType < 0.7) {
     // 70% cost ingestion (most common)
     testCostIngestion();
@@ -297,7 +345,7 @@ export default function () {
     // 10% cost alerting checks
     testCostAlerting();
   }
-  
+
   // Realistic delay between requests
   sleep(Math.random() * 2 + 0.5);
 }
@@ -305,15 +353,19 @@ export default function () {
 // Setup function to verify endpoints are available
 export function setup() {
   console.log('Setting up LLM cost tracking performance test...');
-  
+
   // Verify OpenLIT endpoint
-  const openlitHealth = http.get(`${__ENV.OPENLIT_ENDPOINT || 'http://localhost:3001'}/health`);
+  const openlitHealth = http.get(
+    `${__ENV.OPENLIT_ENDPOINT || 'http://localhost:3001'}/health`
+  );
   console.log(`OpenLIT health check: ${openlitHealth.status}`);
-  
+
   // Verify Prometheus endpoint
-  const prometheusHealth = http.get(`${__ENV.PROMETHEUS_ENDPOINT || 'http://localhost:9090'}/-/healthy`);
+  const prometheusHealth = http.get(
+    `${__ENV.PROMETHEUS_ENDPOINT || 'http://localhost:9090'}/-/healthy`
+  );
   console.log(`Prometheus health check: ${prometheusHealth.status}`);
-  
+
   return {
     openlit_ready: openlitHealth.status === 200,
     prometheus_ready: prometheusHealth.status === 200,

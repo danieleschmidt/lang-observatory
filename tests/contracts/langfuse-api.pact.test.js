@@ -1,10 +1,10 @@
-const { Pact } = require('@pact-foundation/pact')
-const { like, term } = require('@pact-foundation/pact').Matchers
-const path = require('path')
-const axios = require('axios')
+const { Pact } = require('@pact-foundation/pact');
+const { like, term } = require('@pact-foundation/pact').Matchers;
+const path = require('path');
+const axios = require('axios');
 
 describe('Langfuse API Contract Tests', () => {
-  let provider
+  let provider;
 
   beforeAll(async () => {
     provider = new Pact({
@@ -15,18 +15,18 @@ describe('Langfuse API Contract Tests', () => {
       dir: path.resolve(process.cwd(), 'pacts'),
       logLevel: 'INFO',
       spec: 3,
-    })
+    });
 
-    await provider.setup()
-  })
+    await provider.setup();
+  });
 
   afterAll(async () => {
-    await provider.finalize()
-  })
+    await provider.finalize();
+  });
 
   afterEach(async () => {
-    await provider.verify()
-  })
+    await provider.verify();
+  });
 
   describe('Health Check', () => {
     test('should return health status', async () => {
@@ -54,16 +54,16 @@ describe('Langfuse API Contract Tests', () => {
             version: like('0.1.0'),
           },
         },
-      })
+      });
 
       const response = await axios.get('http://localhost:1234/api/health', {
         headers: { Accept: 'application/json' },
-      })
+      });
 
-      expect(response.status).toBe(200)
-      expect(response.data.status).toBe('healthy')
-    })
-  })
+      expect(response.status).toBe(200);
+      expect(response.data.status).toBe('healthy');
+    });
+  });
 
   describe('Trace Creation', () => {
     test('should create a new trace', async () => {
@@ -91,7 +91,8 @@ describe('Langfuse API Contract Tests', () => {
           },
           body: {
             id: term({
-              matcher: '[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}',
+              matcher:
+                '[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}',
               generate: '12345678-1234-1234-1234-123456789012',
             }),
             name: like('test-trace'),
@@ -101,7 +102,7 @@ describe('Langfuse API Contract Tests', () => {
             }),
           },
         },
-      })
+      });
 
       const response = await axios.post(
         'http://localhost:1234/api/traces',
@@ -117,12 +118,14 @@ describe('Langfuse API Contract Tests', () => {
             Authorization: 'Bearer token',
           },
         }
-      )
+      );
 
-      expect(response.status).toBe(201)
-      expect(response.data.id).toMatch(/[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}/)
-    })
-  })
+      expect(response.status).toBe(201);
+      expect(response.data.id).toMatch(
+        /[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}/
+      );
+    });
+  });
 
   describe('Metrics Retrieval', () => {
     test('should retrieve metrics data', async () => {
@@ -159,7 +162,7 @@ describe('Langfuse API Contract Tests', () => {
             total: like(1),
           },
         },
-      })
+      });
 
       const response = await axios.get(
         'http://localhost:1234/api/metrics?from=2024-01-01&to=2024-01-02',
@@ -169,11 +172,11 @@ describe('Langfuse API Contract Tests', () => {
             Authorization: 'Bearer token',
           },
         }
-      )
+      );
 
-      expect(response.status).toBe(200)
-      expect(response.data.metrics).toHaveLength(1)
-      expect(response.data.total).toBe(1)
-    })
-  })
-})
+      expect(response.status).toBe(200);
+      expect(response.data.metrics).toHaveLength(1);
+      expect(response.data.total).toBe(1);
+    });
+  });
+});

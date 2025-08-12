@@ -29,7 +29,7 @@
     "format": "prettier --check \"**/*.{yaml,yml,json,md}\"",
     "clean": "rm -rf charts/lang-observatory/charts/ charts/lang-observatory/Chart.lock *.tgz",
     "deps": "helm dependency update ./charts/lang-observatory",
-    "install": "helm install lang-observatory ./charts/lang-observatory",
+    "helm:install": "helm install lang-observatory ./charts/lang-observatory",
     "upgrade": "helm upgrade lang-observatory ./charts/lang-observatory",
     "uninstall": "helm uninstall lang-observatory",
     "status": "helm status lang-observatory",
