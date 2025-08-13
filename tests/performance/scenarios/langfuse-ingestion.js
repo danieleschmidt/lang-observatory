@@ -9,11 +9,11 @@ export const options = {
   stages: [
     { duration: '2m', target: 10 }, // Ramp up
     { duration: '5m', target: 10 }, // Stay at 10 users
-    { duration: '2m', target: 0 },  // Ramp down
+    { duration: '2m', target: 0 }, // Ramp down
   ],
   thresholds: {
     http_req_duration: ['p(95)<500'], // 95% of requests must complete below 500ms
-    http_req_failed: ['rate<0.1'],    // Error rate must be below 10%
+    http_req_failed: ['rate<0.1'], // Error rate must be below 10%
   },
 };
 
@@ -31,7 +31,7 @@ export function setup() {
 export default function (data) {
   const headers = {
     'Content-Type': 'application/json',
-    'Authorization': `Bearer ${data.apiKey}`,
+    Authorization: `Bearer ${data.apiKey}`,
   };
 
   // Test trace ingestion
@@ -68,17 +68,19 @@ export default function (data) {
   );
 
   const success = check(response, {
-    'status is 200': (r) => r.status === 200,
-    'response time < 500ms': (r) => r.timings.duration < 500,
-    'response has id': (r) => JSON.parse(r.body).id !== undefined,
+    'status is 200': r => r.status === 200,
+    'response time < 500ms': r => r.timings.duration < 500,
+    'response has id': r => JSON.parse(r.body).id !== undefined,
   });
 
   errorRate.add(!success);
 
   // Test metrics endpoint
-  const metricsResponse = http.get(`${data.baseUrl}/api/public/metrics`, { headers });
+  const metricsResponse = http.get(`${data.baseUrl}/api/public/metrics`, {
+    headers,
+  });
   check(metricsResponse, {
-    'metrics endpoint responds': (r) => r.status === 200,
+    'metrics endpoint responds': r => r.status === 200,
   });
 }
 

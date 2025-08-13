@@ -6,13 +6,13 @@ export const errorRate = new Rate('errors');
 
 export const options = {
   stages: [
-    { duration: '1m', target: 5 },  // Ramp up
-    { duration: '3m', target: 5 },  // Stay at 5 concurrent users
-    { duration: '1m', target: 0 },  // Ramp down
+    { duration: '1m', target: 5 }, // Ramp up
+    { duration: '3m', target: 5 }, // Stay at 5 concurrent users
+    { duration: '1m', target: 0 }, // Ramp down
   ],
   thresholds: {
     http_req_duration: ['p(95)<2000'], // Dashboard queries can be slower
-    http_req_failed: ['rate<0.05'],     // Lower error tolerance
+    http_req_failed: ['rate<0.05'], // Lower error tolerance
   },
 };
 
@@ -33,12 +33,14 @@ const QUERIES = [
   },
   // Request Latency
   {
-    query: 'histogram_quantile(0.95, rate(llm_request_duration_seconds_bucket[5m]))',
+    query:
+      'histogram_quantile(0.95, rate(llm_request_duration_seconds_bucket[5m]))',
     name: 'request_latency_p95',
   },
   // Error Rate
   {
-    query: 'sum(rate(llm_requests_failed[5m])) / sum(rate(llm_requests_total[5m]))',
+    query:
+      'sum(rate(llm_requests_failed[5m])) / sum(rate(llm_requests_total[5m]))',
     name: 'error_rate',
   },
   // Active Users
@@ -58,7 +60,7 @@ export function setup() {
 
 export default function (data) {
   const headers = {
-    'Authorization': `Bearer ${data.apiKey}`,
+    Authorization: `Bearer ${data.apiKey}`,
     'Content-Type': 'application/json',
   };
 
@@ -69,15 +71,15 @@ export default function (data) {
   );
 
   check(dashboardResponse, {
-    'dashboard loads': (r) => r.status === 200,
-    'dashboard response time < 1s': (r) => r.timings.duration < 1000,
+    'dashboard loads': r => r.status === 200,
+    'dashboard response time < 1s': r => r.timings.duration < 1000,
   });
 
   // Test individual queries
   const query = data.queries[Math.floor(Math.random() * data.queries.length)];
   const now = Math.floor(Date.now() / 1000);
   const queryUrl = `${data.baseUrl}/api/datasources/proxy/1/api/v1/query_range`;
-  
+
   const queryPayload = {
     query: query.query,
     start: now - 3600, // 1 hour ago
@@ -85,16 +87,14 @@ export default function (data) {
     step: 60, // 1 minute steps
   };
 
-  const queryResponse = http.post(
-    queryUrl,
-    JSON.stringify(queryPayload),
-    { headers }
-  );
+  const queryResponse = http.post(queryUrl, JSON.stringify(queryPayload), {
+    headers,
+  });
 
   const querySuccess = check(queryResponse, {
-    'query executes': (r) => r.status === 200,
-    'query response time acceptable': (r) => r.timings.duration < 2000,
-    'query returns data': (r) => {
+    'query executes': r => r.status === 200,
+    'query response time acceptable': r => r.timings.duration < 2000,
+    'query returns data': r => {
       try {
         const data = JSON.parse(r.body);
         return data.status === 'success';
@@ -109,6 +109,6 @@ export default function (data) {
   // Test alerting endpoint
   const alertsResponse = http.get(`${data.baseUrl}/api/alerts`, { headers });
   check(alertsResponse, {
-    'alerts endpoint responds': (r) => r.status === 200,
+    'alerts endpoint responds': r => r.status === 200,
   });
 }
