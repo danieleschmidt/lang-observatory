@@ -7,9 +7,13 @@ const express = require('express');
 const { Logger } = require('../utils/logger');
 const { Helpers } = require('../utils/helpers');
 const { authMiddleware } = require('../middleware/auth');
+const { LLMCallRepository } = require('../repositories/llmCallRepository');
 
 const router = express.Router();
 const logger = new Logger({ service: 'TracesRoutes' });
+const llmCallRepo = new LLMCallRepository();
+
+const traceStore = new Map();
 
 // Create a new trace
 router.post('/', authMiddleware, async (req, res) => {
@@ -33,7 +37,6 @@ router.post('/', authMiddleware, async (req, res) => {
 
     const traceId = Helpers.generateTraceId();
 
-    // TODO: Store trace in database
     const trace = {
       id: traceId,
       operation,
@@ -44,7 +47,10 @@ router.post('/', authMiddleware, async (req, res) => {
       startedAt: new Date().toISOString(),
       metadata,
       tags,
+      llmCalls: [],
     };
+
+    traceStore.set(traceId, trace);
 
     logger.info('Trace created', { traceId, operation, sessionId });
 
@@ -67,16 +73,29 @@ router.get('/:traceId', authMiddleware, async (req, res) => {
   try {
     const { traceId } = req.params;
 
-    // TODO: Fetch trace from database with associated LLM calls
-    const trace = {
-      id: traceId,
-      operation: 'chat_completion',
-      status: 'completed',
-      startedAt: new Date(Date.now() - 5000).toISOString(),
-      completedAt: new Date().toISOString(),
-      duration: 5000,
-      llmCalls: [],
-    };
+    const trace = traceStore.get(traceId);
+
+    if (!trace) {
+      return res.status(404).json({
+        success: false,
+        error: 'Not Found',
+        message: 'Trace not found',
+      });
+    }
+
+    const llmCalls = await llmCallRepo.findByTraceId(traceId);
+    trace.llmCalls = llmCalls;
+
+    if (trace.status === 'active' && llmCalls.length > 0) {
+      const lastCall = llmCalls[llmCalls.length - 1];
+      if (lastCall.completed_at) {
+        trace.status = 'completed';
+        trace.completedAt = lastCall.completed_at;
+        trace.duration =
+          new Date(lastCall.completed_at) - new Date(trace.startedAt);
+        traceStore.set(traceId, trace);
+      }
+    }
 
     res.json({
       success: true,

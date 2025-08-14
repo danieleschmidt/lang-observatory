@@ -1,0 +1,79 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+metadata:
+  name: lang-observatory-production
+
+# Base configurations
+resources:
+  - ../base
+  - namespace.yaml
+  - configmap.yaml
+  - secrets.yaml
+  - deployment.yaml
+  - service.yaml
+  - ingress.yaml
+  - hpa.yaml
+  - pdb.yaml
+  - networkpolicy.yaml
+  - servicemonitor.yaml
+  - prometheusrule.yaml
+
+# Production-specific patches
+patchesStrategicMerge:
+  - deployment-patch.yaml
+  - service-patch.yaml
+
+# Resource transformations
+replicas:
+  - name: lang-observatory-api
+    count: 3
+  - name: langfuse
+    count: 2
+  - name: openlit-collector
+    count: 2
+
+# Image tags for production
+images:
+  - name: lang-observatory
+    newTag: v1.0.0
+  - name: langfuse/langfuse
+    newTag: 2.54.0
+  - name: otel/opentelemetry-collector-contrib
+    newTag: 0.91.0
+
+# Labels and annotations
+commonLabels:
+  app.kubernetes.io/instance: lang-observatory
+  app.kubernetes.io/version: v1.0.0
+  environment: production
+
+commonAnnotations:
+  deployment.kubernetes.io/revision: "1"
+  meta.helm.sh/release-name: lang-observatory
+  meta.helm.sh/release-namespace: lang-observatory-prod
+
+# Namespace
+namespace: lang-observatory-prod
+
+# Configuration generators
+configMapGenerator:
+  - name: app-config
+    files:
+      - configs/app.yaml
+      - configs/logging.yaml
+  - name: monitoring-config
+    files:
+      - configs/prometheus.yml
+      - configs/grafana-datasources.yml
+
+secretGenerator:
+  - name: app-secrets
+    files:
+      - secrets/database-credentials
+      - secrets/api-keys
+    type: Opaque
+
+# Resource limits and requests
+replaceTransformer:
+  - path: resource-limits.yaml

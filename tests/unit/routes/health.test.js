@@ -5,7 +5,10 @@
 const request = require('supertest');
 const express = require('express');
 const healthRoutes = require('../../../src/routes/health');
-const { createConnection, getConnection } = require('../../../src/database/connection');
+const {
+  createConnection,
+  getConnection,
+} = require('../../../src/database/connection');
 
 // Mock database connection
 jest.mock('../../../src/database/connection');
@@ -17,10 +20,10 @@ jest.mock('../../../src/index', () => ({
     getHealthStatus: jest.fn().mockResolvedValue({
       status: 'healthy',
       services: {},
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     }),
-    shutdown: jest.fn().mockResolvedValue()
-  }))
+    shutdown: jest.fn().mockResolvedValue(),
+  })),
 }));
 
 describe('Health Routes', () => {
@@ -33,11 +36,11 @@ describe('Health Routes', () => {
 
     // Reset mocks
     jest.clearAllMocks();
-    
+
     // Set up default mock for getConnection
     getConnection.mockReturnValue({
       healthCheck: jest.fn().mockResolvedValue({ healthy: true }),
-      query: jest.fn().mockResolvedValue({ rows: [{ '?column?': 1 }] })
+      query: jest.fn().mockResolvedValue({ rows: [{ '?column?': 1 }] }),
     });
   });
 

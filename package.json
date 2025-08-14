@@ -49,9 +49,6 @@
     ],
     "*.{yaml,yml,json,md}": [
       "prettier --write"
-    ],
-    "*.{yaml,yml}": [
-      "yamllint"
     ]
   },
   "repository": {

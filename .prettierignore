@@ -121,4 +121,6 @@ charts/*/charts/
 *.tfstate.*
 .terraform/
 .terraformrc
-terraform.rc
+terraform.rccharts/
+charts/**/*.yaml
+charts/**/*.yml

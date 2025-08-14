@@ -183,7 +183,9 @@ class MetricsManager {
 
     metric.lastUpdated = timestamp;
 
-    this.logger.debug(`Recorded custom metric ${name}: ${JSON.stringify(value)}`);
+    this.logger.debug(
+      `Recorded custom metric ${name}: ${JSON.stringify(value)}`
+    );
   }
 
   getOperationMetrics(operation) {
@@ -282,7 +284,8 @@ class MetricsManager {
       name: m.name,
       type: m.type,
       recordCount: m.records.length,
-      lastValue: m.records.length > 0 ? m.records[m.records.length - 1].value : null,
+      lastValue:
+        m.records.length > 0 ? m.records[m.records.length - 1].value : null,
       lastUpdated: m.lastUpdated,
       records: m.records.slice(-100), // Return last 100 records
     }));
@@ -457,7 +460,9 @@ class MetricsManager {
 
     // Clean custom metrics data
     for (const metrics of this.customMetrics.values()) {
-      metrics.records = metrics.records.filter(record => record.timestamp > cutoff);
+      metrics.records = metrics.records.filter(
+        record => record.timestamp > cutoff
+      );
     }
   }
 

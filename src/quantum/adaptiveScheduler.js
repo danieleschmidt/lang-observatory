@@ -245,11 +245,11 @@ class AdaptiveScheduler {
    */
   predictOptimalStartTime(task, context) {
     const now = new Date();
-    
+
     // Get current system load and resource availability
     const systemLoad = this.getCurrentSystemLoad();
     const resourceUtilization = this.getCurrentResourceUtilization();
-    
+
     // Calculate base delay based on system load
     let baseDelay = 0;
     if (systemLoad > 0.8) {
@@ -257,24 +257,24 @@ class AdaptiveScheduler {
     } else if (systemLoad > 0.6) {
       baseDelay = 10; // 10 minutes delay for medium load
     }
-    
+
     // Adjust for deadline constraints
     if (task.deadline) {
       const deadline = new Date(task.deadline);
       const timeUntilDeadline = deadline.getTime() - now.getTime();
       const requiredTime = (task.estimatedDuration || 60) * 60000; // Convert to milliseconds
-      
+
       // If deadline is tight, reduce delay
       if (timeUntilDeadline < requiredTime * 2) {
         baseDelay = Math.min(baseDelay, 5); // Maximum 5 minutes delay
       }
-      
+
       // If deadline is very tight, start immediately
       if (timeUntilDeadline < requiredTime * 1.2) {
         baseDelay = 0;
       }
     }
-    
+
     // Consider task priority
     const priority = task.priority || 0.5;
     if (priority > 0.8) {
@@ -282,23 +282,30 @@ class AdaptiveScheduler {
     } else if (priority < 0.3) {
       baseDelay += 15; // Low priority tasks can wait longer
     }
-    
+
     // Calculate optimal start time
     const optimalStartTime = new Date(now.getTime() + baseDelay * 60000);
-    
+
     // Calculate confidence based on system predictability
-    const confidence = this.calculateStartTimeConfidence(systemLoad, task, context);
-    
+    const confidence = this.calculateStartTimeConfidence(
+      systemLoad,
+      task,
+      context
+    );
+
     return {
       startTime: optimalStartTime,
       earliestStart: now,
-      latestStart: task.deadline 
-        ? new Date(new Date(task.deadline).getTime() - (task.estimatedDuration || 60) * 60000)
+      latestStart: task.deadline
+        ? new Date(
+            new Date(task.deadline).getTime() -
+              (task.estimatedDuration || 60) * 60000
+          )
         : new Date(now.getTime() + 24 * 60 * 60000), // 24 hours from now if no deadline
       confidence,
       delayMinutes: baseDelay,
       systemLoad,
-      reasoning: this.generateStartTimeReasoning(baseDelay, systemLoad, task)
+      reasoning: this.generateStartTimeReasoning(baseDelay, systemLoad, task),
     };
   }
 
@@ -546,7 +553,7 @@ class AdaptiveScheduler {
   predictResourceAvailability(task, context) {
     const currentUtilization = this.getCurrentResourceUtilization();
     const systemLoad = this.getCurrentSystemLoad();
-    
+
     // Predict future resource availability based on current trends
     const predictions = {
       cpu: Math.max(0.1, 1.0 - currentUtilization.cpu),
@@ -554,24 +561,29 @@ class AdaptiveScheduler {
       io: Math.max(0.1, 1.0 - currentUtilization.io),
       network: Math.max(0.1, 1.0 - currentUtilization.network),
     };
-    
+
     // Adjust predictions based on historical patterns
     const timeOfDay = new Date().getHours();
     const isBusinessHours = timeOfDay >= 9 && timeOfDay <= 17;
-    
+
     if (isBusinessHours) {
       // Typically higher load during business hours
       Object.keys(predictions).forEach(resource => {
         predictions[resource] *= 0.8;
       });
     }
-    
+
     return {
       ...predictions,
-      overall: (predictions.cpu + predictions.memory + predictions.io + predictions.network) / 4,
+      overall:
+        (predictions.cpu +
+          predictions.memory +
+          predictions.io +
+          predictions.network) /
+        4,
       confidence: systemLoad < 0.7 ? 0.8 : 0.4,
       predictedAt: new Date(),
-      timeWindow: 60 // minutes
+      timeWindow: 60, // minutes
     };
   }
 
@@ -580,53 +592,60 @@ class AdaptiveScheduler {
    */
   predictDependencyCompletionTimes(task, context) {
     const dependencies = task.dependencies || [];
-    
+
     if (dependencies.length === 0) {
       return {
         dependencies: [],
         earliestStart: new Date(),
-        confidence: 1.0
+        confidence: 1.0,
       };
     }
-    
+
     const completionPredictions = dependencies.map(depId => {
       // Check if dependency is already completed
       const activeSchedule = this.activeSchedules.get(depId);
-      
+
       if (!activeSchedule) {
         // Dependency not scheduled or already completed
         return {
           dependencyId: depId,
           estimatedCompletion: new Date(),
-          confidence: 0.9
+          confidence: 0.9,
         };
       }
-      
+
       // Predict completion based on schedule
       const schedule = activeSchedule.schedule;
-      const estimatedCompletion = schedule.estimatedCompletion || 
+      const estimatedCompletion =
+        schedule.estimatedCompletion ||
         new Date(Date.now() + (schedule.estimatedDuration || 60) * 60000);
-      
+
       return {
         dependencyId: depId,
         estimatedCompletion,
-        confidence: schedule.adaptations?.confidence || 0.5
+        confidence: schedule.adaptations?.confidence || 0.5,
       };
     });
-    
+
     // Find the latest completion time among all dependencies
     const latestCompletion = completionPredictions.reduce((latest, pred) => {
-      return pred.estimatedCompletion > latest ? pred.estimatedCompletion : latest;
+      return pred.estimatedCompletion > latest
+        ? pred.estimatedCompletion
+        : latest;
     }, new Date());
-    
-    const averageConfidence = completionPredictions.length > 0
-      ? completionPredictions.reduce((sum, pred) => sum + pred.confidence, 0) / completionPredictions.length
-      : 1.0;
-    
+
+    const averageConfidence =
+      completionPredictions.length > 0
+        ? completionPredictions.reduce(
+            (sum, pred) => sum + pred.confidence,
+            0
+          ) / completionPredictions.length
+        : 1.0;
+
     return {
       dependencies: completionPredictions,
       earliestStart: latestCompletion,
-      confidence: averageConfidence
+      confidence: averageConfidence,
     };
   }
 
@@ -635,30 +654,30 @@ class AdaptiveScheduler {
    */
   calculateStartTimeConfidence(systemLoad, task, context) {
     let confidence = 0.7; // Base confidence
-    
+
     // Adjust based on system stability
     if (systemLoad < 0.4) {
       confidence += 0.2; // Very stable system
     } else if (systemLoad > 0.8) {
       confidence -= 0.3; // Unstable system
     }
-    
+
     // Adjust based on task characteristics
     if (task.deadline) {
       confidence += 0.1; // Deadline provides constraint clarity
     }
-    
+
     if (task.priority !== undefined) {
       confidence += 0.05; // Priority provides scheduling clarity
     }
-    
+
     // Adjust based on historical data availability
     const taskSignature = this.generateTaskSignature(task);
     const historicalData = this.getHistoricalData(taskSignature);
     if (historicalData.length > 10) {
       confidence += 0.1; // More data = better prediction
     }
-    
+
     return Math.max(0.1, Math.min(1.0, confidence));
   }
 
@@ -667,38 +686,51 @@ class AdaptiveScheduler {
    */
   generateStartTimeReasoning(delayMinutes, systemLoad, task) {
     const reasons = [];
-    
+
     if (delayMinutes === 0) {
-      if (task.deadline && this.isDeadlineTight(task, { executionTime: { mean: task.estimatedDuration || 60 } })) {
-        reasons.push("Starting immediately due to tight deadline");
+      if (
+        task.deadline &&
+        this.isDeadlineTight(task, {
+          executionTime: { mean: task.estimatedDuration || 60 },
+        })
+      ) {
+        reasons.push('Starting immediately due to tight deadline');
       } else if (systemLoad < 0.4) {
-        reasons.push("Starting immediately due to low system load");
+        reasons.push('Starting immediately due to low system load');
       } else {
-        reasons.push("Starting immediately");
+        reasons.push('Starting immediately');
       }
     } else {
       if (systemLoad > 0.8) {
-        reasons.push(`Delaying ${delayMinutes} minutes due to high system load (${Math.round(systemLoad * 100)}%)`);
+        reasons.push(
+          `Delaying ${delayMinutes} minutes due to high system load (${Math.round(systemLoad * 100)}%)`
+        );
       } else if (systemLoad > 0.6) {
-        reasons.push(`Delaying ${delayMinutes} minutes due to moderate system load (${Math.round(systemLoad * 100)}%)`);
+        reasons.push(
+          `Delaying ${delayMinutes} minutes due to moderate system load (${Math.round(systemLoad * 100)}%)`
+        );
       }
-      
+
       const priority = task.priority || 0.5;
       if (priority < 0.3) {
-        reasons.push("Lower priority task - can wait for better resource availability");
+        reasons.push(
+          'Lower priority task - can wait for better resource availability'
+        );
       } else if (priority > 0.8) {
-        reasons.push("High priority task - minimizing delay");
+        reasons.push('High priority task - minimizing delay');
       }
     }
-    
+
     if (task.deadline) {
       const deadline = new Date(task.deadline);
       const timeUntilDeadline = deadline.getTime() - Date.now();
-      const hoursUntilDeadline = Math.round(timeUntilDeadline / (60 * 60 * 1000));
+      const hoursUntilDeadline = Math.round(
+        timeUntilDeadline / (60 * 60 * 1000)
+      );
       reasons.push(`Deadline in ${hoursUntilDeadline} hours`);
     }
-    
-    return reasons.join("; ");
+
+    return reasons.join('; ');
   }
 
   /**

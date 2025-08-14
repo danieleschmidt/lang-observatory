@@ -10,9 +10,13 @@ const {
   optionalAuthMiddleware,
 } = require('../middleware/auth');
 const { validationMiddleware } = require('../middleware/validation');
+const { MetricsManager } = require('../services/metricsService');
+const { LLMCallRepository } = require('../repositories/llmCallRepository');
 
 const router = express.Router();
 const logger = new Logger({ service: 'MetricsRoutes' });
+const metricsManager = new MetricsManager();
+const llmCallRepo = new LLMCallRepository();
 
 // Record a custom metric
 router.post(
@@ -23,7 +27,7 @@ router.post(
     try {
       const { name, value, type = 'gauge', labels = {}, timestamp } = req.body;
 
-      // TODO: Implement metric recording logic
+      await metricsManager.recordCustomMetric(name, value, type, labels);
       logger.info('Custom metric recorded', { name, value, type, labels });
 
       res.status(201).json({
@@ -43,21 +47,51 @@ router.post(
 );
 
 // Get metrics in Prometheus format
-router.get('/prometheus', optionalAuthMiddleware, (req, res) => {
+router.get('/prometheus', optionalAuthMiddleware, async (req, res) => {
   try {
-    // TODO: Generate Prometheus metrics format
-    const metrics = [
-      '# HELP lang_observatory_llm_calls_total Total number of LLM calls',
-      '# TYPE lang_observatory_llm_calls_total counter',
-      'lang_observatory_llm_calls_total{provider="openai",model="gpt-4"} 150',
-      'lang_observatory_llm_calls_total{provider="anthropic",model="claude-3"} 85',
-      '',
-      '# HELP lang_observatory_llm_cost_usd_total Total cost of LLM calls in USD',
-      '# TYPE lang_observatory_llm_cost_usd_total counter',
-      'lang_observatory_llm_cost_usd_total{provider="openai",model="gpt-4"} 12.45',
-      'lang_observatory_llm_cost_usd_total{provider="anthropic",model="claude-3"} 8.92',
-      '',
-    ].join('\n');
+    const startDate = new Date(Date.now() - 24 * 60 * 60 * 1000);
+    const [costAnalysis, usageStats, performanceMetrics] = await Promise.all([
+      llmCallRepo.getCostAnalysis({ startDate, groupBy: 'model' }),
+      llmCallRepo.getUsageStats({ startDate, groupBy: 'hour' }),
+      llmCallRepo.getPerformanceMetrics({ startDate })
+    ]);
+    
+    const lines = [];
+    
+    lines.push('# HELP lang_observatory_llm_calls_total Total number of LLM calls');
+    lines.push('# TYPE lang_observatory_llm_calls_total counter');
+    
+    for (const model of costAnalysis) {
+      const provider = model.provider_name || 'unknown';
+      const modelName = model.model_name || 'unknown';
+      const calls = model.total_calls || 0;
+      lines.push(`lang_observatory_llm_calls_total{provider="${provider}",model="${modelName}"} ${calls}`);
+    }
+    
+    lines.push('');
+    lines.push('# HELP lang_observatory_llm_cost_usd_total Total cost of LLM calls in USD');
+    lines.push('# TYPE lang_observatory_llm_cost_usd_total counter');
+    
+    for (const model of costAnalysis) {
+      const provider = model.provider_name || 'unknown';
+      const modelName = model.model_name || 'unknown';
+      const cost = model.total_cost || 0;
+      lines.push(`lang_observatory_llm_cost_usd_total{provider="${provider}",model="${modelName}"} ${cost}`);
+    }
+    
+    lines.push('');
+    lines.push('# HELP lang_observatory_llm_latency_ms_avg Average latency of LLM calls in milliseconds');
+    lines.push('# TYPE lang_observatory_llm_latency_ms_avg gauge');
+    
+    for (const perf of performanceMetrics) {
+      const provider = perf.provider_name || 'unknown';
+      const modelName = perf.model_name || 'unknown';
+      const latency = perf.avg_latency_ms || 0;
+      lines.push(`lang_observatory_llm_latency_ms_avg{provider="${provider}",model="${modelName}"} ${latency}`);
+    }
+    
+    lines.push('');
+    const metrics = lines.join('\n');
 
     res.set('Content-Type', 'text/plain; version=0.0.4; charset=utf-8');
     res.send(metrics);
