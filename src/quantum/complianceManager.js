@@ -780,16 +780,19 @@ class QuantumComplianceManager {
 
   getDPIARequiredActivities() {
     return this.processingRecords.filter(
-      r => r.requiresDPIA === true || 
-          (r.dataProtectionImpact && r.dataProtectionImpact.level === 'high') ||
-          (r.dataCategories && r.dataCategories.includes('special_category'))
+      r =>
+        r.requiresDPIA === true ||
+        (r.dataProtectionImpact && r.dataProtectionImpact.level === 'high') ||
+        (r.dataCategories && r.dataCategories.includes('special_category'))
     ).length;
   }
 
   getCrossBorderTransferCount() {
     return this.processingRecords.filter(
-      r => r.crossBorderTransfer === true || 
-          (r.dataLocation && r.dataLocation.region !== r.processingLocation?.region)
+      r =>
+        r.crossBorderTransfer === true ||
+        (r.dataLocation &&
+          r.dataLocation.region !== r.processingLocation?.region)
     ).length;
   }
 

@@ -259,7 +259,9 @@ describe('NeuromorphicLLMInterface', () => {
     test('should handle processing errors gracefully', async () => {
       // Mock error handler to always fail recovery so the original error is thrown
       const mockErrorHandler = {
-        handleError: jest.fn().mockRejectedValue(new Error('Processing failed')),
+        handleError: jest
+          .fn()
+          .mockRejectedValue(new Error('Processing failed')),
         initialize: jest.fn().mockResolvedValue(true),
         getErrorStatistics: jest.fn().mockReturnValue({
           totalErrors: 0,
@@ -270,26 +272,26 @@ describe('NeuromorphicLLMInterface', () => {
           errorsByComponent: {},
           patterns: {},
           circuitBreakers: {},
-          healingInProgress: []
+          healingInProgress: [],
         }),
-        getHealth: jest.fn().mockResolvedValue({ 
-          healthy: true, 
+        getHealth: jest.fn().mockResolvedValue({
+          healthy: true,
           initialized: true,
           criticalErrors: 0,
           openCircuitBreakers: 0,
           healingCapability: {
             enabled: true,
             strategiesAvailable: 5,
-            activeHealing: 0
-          }
+            activeHealing: 0,
+          },
         }),
         shutdown: jest.fn().mockResolvedValue(true),
-        on: jest.fn()
+        on: jest.fn(),
       };
-      
+
       // Replace the error handler in the neuromorphic interface
       neuromorphicInterface.errorHandler = mockErrorHandler;
-      
+
       mockPhotonProcessor.processLLMData.mockRejectedValue(
         new Error('Processing failed')
       );

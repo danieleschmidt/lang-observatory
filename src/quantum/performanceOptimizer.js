@@ -195,9 +195,7 @@ class QuantumPerformanceOptimizer {
       const entry = this.l2Cache.get(cacheKey);
       if (this.isCacheEntryValid(entry)) {
         this.logger.debug('L2 cache hit - decompressing');
-        const decompressedData = this.decompressDataSync(
-          entry.compressedData
-        );
+        const decompressedData = this.decompressDataSync(entry.compressedData);
 
         // Promote to L1 cache
         this.l1Cache.set(cacheKey, {
@@ -636,7 +634,7 @@ class QuantumPerformanceOptimizer {
     const taskKey = this.fastHashTasks(tasks);
     const constraintKey = this.fastHashObject(constraints);
     const optionKey = this.fastHashObject(options);
-    
+
     return `${taskKey}|${constraintKey}|${optionKey}`;
   }
 
@@ -662,17 +660,24 @@ class QuantumPerformanceOptimizer {
   // Faster hash methods for cache key generation
   fastHashTasks(tasks) {
     // Use a simple string-based hash for better performance
-    return tasks.map(t => 
-      `${t.id}:${t.priority || 0.5}:${t.estimatedDuration || 60}:${(t.requiredResources || []).join(',')}:${(t.dependencies || []).join(',')}`
-    ).join('|');
+    return tasks
+      .map(
+        t =>
+          `${t.id}:${t.priority || 0.5}:${t.estimatedDuration || 60}:${(t.requiredResources || []).join(',')}:${(t.dependencies || []).join(',')}`
+      )
+      .join('|');
   }
 
   fastHashObject(obj) {
     if (!obj || typeof obj !== 'object') return String(obj || '');
-    
-    return Object.keys(obj).sort().map(key => 
-      `${key}=${typeof obj[key] === 'object' ? JSON.stringify(obj[key]) : obj[key]}`
-    ).join('&');
+
+    return Object.keys(obj)
+      .sort()
+      .map(
+        key =>
+          `${key}=${typeof obj[key] === 'object' ? JSON.stringify(obj[key]) : obj[key]}`
+      )
+      .join('&');
   }
 
   isCacheEntryValid(entry) {

@@ -88,12 +88,13 @@ class QuantumTaskPlanner {
     }
 
     const startTime = Date.now();
-    
+
     // Quick cache check for identical requests (before any processing)
     const quickCacheKey = this.generateQuickCacheKey(tasks, constraints, user);
     if (this.quickCache && this.quickCache.has(quickCacheKey)) {
       const cached = this.quickCache.get(quickCacheKey);
-      if (Date.now() - cached.timestamp < 300000) { // 5 minute TTL
+      if (Date.now() - cached.timestamp < 300000) {
+        // 5 minute TTL
         // Record cache hit in execution history
         const duration = Date.now() - startTime;
         this.executionHistory.push({
@@ -147,17 +148,18 @@ class QuantumTaskPlanner {
       const validation = await this.validator.validateTasks(tasks, constraints);
       if (!validation.valid) {
         // Check if this is a sanitizable error (like too many tasks)
-        const oversizedTasksError = validation.errors.some(error => 
-          error.includes('Too many tasks') || 
-          error.includes('exceeds limit') ||
-          error.includes('exceeds security limit')
+        const oversizedTasksError = validation.errors.some(
+          error =>
+            error.includes('Too many tasks') ||
+            error.includes('exceeds limit') ||
+            error.includes('exceeds security limit')
         );
-        
+
         if (oversizedTasksError) {
           // Return sanitized result with truncated tasks
           const maxTasks = this.config.get('validation.maxTasksPerBatch', 100);
           const truncatedTasks = tasks.slice(0, maxTasks);
-          
+
           return {
             action: 'sanitized',
             sanitizedTasks: truncatedTasks,
@@ -175,10 +177,10 @@ class QuantumTaskPlanner {
               ),
               efficiency: 0.7,
               parallelism: 0,
-            }
+            },
           };
         }
-        
+
         const errorMsg = this.i18nManager.t(
           'error.validation.failed',
           {
@@ -258,15 +260,15 @@ class QuantumTaskPlanner {
       this.logger.info(
         this.i18nManager.t('status.completed', { taskId: 'planning' }, locale)
       );
-      
+
       // Cache the result for future identical requests
       if (this.quickCache) {
         this.quickCache.set(quickCacheKey, {
           result: localizedResult,
-          timestamp: Date.now()
+          timestamp: Date.now(),
         });
       }
-      
+
       return localizedResult;
     } catch (error) {
       this.logger.error('Quantum planning failed:', error);
@@ -546,7 +548,13 @@ class QuantumTaskPlanner {
   /**
    * Check if a task can be added to the current execution phase
    */
-  canAddToPhase(taskInfo, currentPhase, entanglements, maxConcurrency, assignedTasks) {
+  canAddToPhase(
+    taskInfo,
+    currentPhase,
+    entanglements,
+    maxConcurrency,
+    assignedTasks
+  ) {
     // Check concurrency limit
     if (currentPhase.tasks.length >= maxConcurrency) {
       return false;
@@ -823,12 +831,15 @@ class QuantumTaskPlanner {
    * Generate quick cache key for top-level caching
    */
   generateQuickCacheKey(tasks, constraints, user) {
-    const taskKey = tasks.map(t => 
-      `${t.id}:${t.priority || 0.5}:${t.estimatedDuration || 60}:${(t.dependencies || []).join(',')}`
-    ).join('|');
+    const taskKey = tasks
+      .map(
+        t =>
+          `${t.id}:${t.priority || 0.5}:${t.estimatedDuration || 60}:${(t.dependencies || []).join(',')}`
+      )
+      .join('|');
     const constraintKey = JSON.stringify(constraints);
     const userKey = user ? `${user.userId}:${user.role}` : 'anonymous';
-    
+
     return `${taskKey}#${constraintKey}#${userKey}`;
   }
 }
