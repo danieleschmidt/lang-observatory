@@ -1,0 +1,576 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: lang-observatory-prod
+  labels:
+    app.kubernetes.io/name: lang-observatory
+    app.kubernetes.io/instance: production
+    environment: production
+    terragon.ai/managed-by: autonomous-sdlc
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: lang-observatory-app
+  namespace: lang-observatory-prod
+  labels:
+    app.kubernetes.io/name: lang-observatory
+    app.kubernetes.io/component: application
+    app.kubernetes.io/instance: production
+spec:
+  replicas: 3
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: lang-observatory
+      app.kubernetes.io/component: application
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: lang-observatory
+        app.kubernetes.io/component: application
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "9090"
+        prometheus.io/path: "/metrics"
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        fsGroup: 2000
+      containers:
+      - name: lang-observatory
+        image: terragon/lang-observatory:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8080
+          name: http
+          protocol: TCP
+        - containerPort: 9090
+          name: metrics
+          protocol: TCP
+        env:
+        - name: NODE_ENV
+          value: "production"
+        - name: LOG_LEVEL
+          value: "info"
+        - name: METRICS_ENABLED
+          value: "true"
+        - name: SECURITY_ENHANCED
+          value: "true"
+        - name: MULTI_REGION_ENABLED
+          value: "true"
+        - name: I18N_ENABLED
+          value: "true"
+        - name: EXPERIMENTAL_FRAMEWORK_ENABLED
+          value: "true"
+        - name: ADVANCED_MONITORING_ENABLED
+          value: "true"
+        envFrom:
+        - secretRef:
+            name: lang-observatory-secrets
+        - configMapRef:
+            name: lang-observatory-config
+        resources:
+          requests:
+            cpu: "500m"
+            memory: "1Gi"
+          limits:
+            cpu: "2000m"
+            memory: "4Gi"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: http
+          initialDelaySeconds: 30
+          periodSeconds: 30
+          timeoutSeconds: 10
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /ready
+            port: http
+          initialDelaySeconds: 15
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        startupProbe:
+          httpGet:
+            path: /startup
+            port: http
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 30
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          capabilities:
+            drop:
+            - ALL
+        volumeMounts:
+        - name: tmp
+          mountPath: /tmp
+        - name: cache
+          mountPath: /app/cache
+        - name: logs
+          mountPath: /app/logs
+      volumes:
+      - name: tmp
+        emptyDir: {}
+      - name: cache
+        emptyDir: {}
+      - name: logs
+        emptyDir: {}
+      serviceAccountName: lang-observatory-sa
+      automountServiceAccountToken: false
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: lang-observatory-service
+  namespace: lang-observatory-prod
+  labels:
+    app.kubernetes.io/name: lang-observatory
+    app.kubernetes.io/component: service
+spec:
+  type: ClusterIP
+  ports:
+  - port: 80
+    targetPort: http
+    protocol: TCP
+    name: http
+  - port: 9090
+    targetPort: metrics
+    protocol: TCP
+    name: metrics
+  selector:
+    app.kubernetes.io/name: lang-observatory
+    app.kubernetes.io/component: application
+
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: lang-observatory-sa
+  namespace: lang-observatory-prod
+  labels:
+    app.kubernetes.io/name: lang-observatory
+    app.kubernetes.io/component: serviceaccount
+automountServiceAccountToken: false
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  namespace: lang-observatory-prod
+  name: lang-observatory-role
+rules:
+- apiGroups: [""]
+  resources: ["configmaps", "secrets"]
+  verbs: ["get", "list", "watch"]
+- apiGroups: [""]
+  resources: ["pods"]
+  verbs: ["get", "list", "watch"]
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: lang-observatory-rolebinding
+  namespace: lang-observatory-prod
+subjects:
+- kind: ServiceAccount
+  name: lang-observatory-sa
+  namespace: lang-observatory-prod
+roleRef:
+  kind: Role
+  name: lang-observatory-role
+  apiGroup: rbac.authorization.k8s.io
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: lang-observatory-config
+  namespace: lang-observatory-prod
+  labels:
+    app.kubernetes.io/name: lang-observatory
+    app.kubernetes.io/component: configuration
+data:
+  # Security Configuration
+  RATE_LIMIT_MAX_REQUESTS_PER_MINUTE: "1000"
+  RATE_LIMIT_MAX_REQUESTS_PER_HOUR: "10000"
+  ENCRYPTION_KEY_ROTATION_INTERVAL: "86400000"
+  COMPLIANCE_GDPR_ENABLED: "true"
+  COMPLIANCE_CCPA_ENABLED: "true"
+  
+  # Multi-Region Configuration
+  REGIONS_PRIMARY: "us-east-1"
+  REGIONS_SECONDARY: "eu-west-1,ap-southeast-1,us-west-2"
+  LOAD_BALANCING_STRATEGY: "latency"
+  REPLICATION_SYNC_MODE: "async"
+  FAILOVER_AUTO_ENABLED: "true"
+  
+  # I18n Configuration
+  I18N_DEFAULT_LOCALE: "en-US"
+  I18N_SUPPORTED_LOCALES: "en-US,en-GB,es-ES,es-MX,fr-FR,fr-CA,de-DE,ja-JP,zh-CN,zh-TW,ko-KR,pt-BR,it-IT,ru-RU,ar-SA,hi-IN,th-TH,vi-VN,tr-TR,pl-PL,nl-NL"
+  I18N_CACHING_ENABLED: "true"
+  I18N_AUTO_DETECTION: "true"
+  
+  # Experimental Framework Configuration
+  EXPERIMENTS_MAX_CONCURRENT: "10"
+  EXPERIMENTS_MIN_SAMPLE_SIZE: "1000"
+  EXPERIMENTS_SIGNIFICANCE_LEVEL: "0.05"
+  EXPERIMENTS_POWER_LEVEL: "0.8"
+  RESEARCH_AUTO_DOCUMENTATION: "true"
+  RESEARCH_PEER_REVIEW_WORKFLOW: "true"
+  
+  # Monitoring Configuration
+  MONITORING_COLLECTION_INTERVAL: "30000"
+  MONITORING_RETENTION_PERIOD: "2592000000"
+  MONITORING_ANOMALY_DETECTION: "true"
+  MONITORING_SLO_AVAILABILITY_TARGET: "99.9"
+  MONITORING_SLO_LATENCY_P95_TARGET: "500"
+  MONITORING_SLO_ERROR_RATE_TARGET: "0.1"
+  
+  # Integration Configuration
+  PROMETHEUS_ENABLED: "true"
+  GRAFANA_ENABLED: "true"
+  JAEGER_ENABLED: "true"
+  ALERTMANAGER_ENABLED: "true"
+
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: lang-observatory-secrets
+  namespace: lang-observatory-prod
+  labels:
+    app.kubernetes.io/name: lang-observatory
+    app.kubernetes.io/component: secrets
+type: Opaque
+stringData:
+  # Database Configuration
+  DATABASE_URL: "postgresql://user:password@postgres:5432/lang_observatory"
+  REDIS_URL: "redis://redis:6379"
+  
+  # External Service API Keys
+  LANGFUSE_PUBLIC_KEY: "pk-lf-production-key"
+  LANGFUSE_SECRET_KEY: "sk-lf-production-secret"
+  OPENLIT_ENDPOINT: "https://openlit.production.com/v1/traces"
+  OPENLIT_API_KEY: "openlit-production-api-key"
+  
+  # Notification Configuration
+  SLACK_WEBHOOK_URL: "https://hooks.slack.com/services/production/webhook"
+  PAGERDUTY_API_KEY: "pagerduty-production-key"
+  
+  # Security Keys
+  JWT_SECRET: "your-production-jwt-secret"
+  ENCRYPTION_MASTER_KEY: "your-production-encryption-key"
+  
+  # Regional Configuration
+  AWS_ACCESS_KEY_ID: "your-aws-access-key"
+  AWS_SECRET_ACCESS_KEY: "your-aws-secret-key"
+  
+  # Research Platform Integration
+  ARXIV_API_KEY: "arxiv-production-api-key"
+  RESEARCH_DB_URL: "postgresql://research:password@research-db:5432/experiments"
+
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: lang-observatory-ingress
+  namespace: lang-observatory-prod
+  labels:
+    app.kubernetes.io/name: lang-observatory
+    app.kubernetes.io/component: ingress
+  annotations:
+    kubernetes.io/ingress.class: "nginx"
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/rate-limit: "100"
+    nginx.ingress.kubernetes.io/rate-limit-window: "1m"
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    nginx.ingress.kubernetes.io/enable-cors: "true"
+    nginx.ingress.kubernetes.io/cors-allow-origin: "https://app.lang-observatory.com"
+    nginx.ingress.kubernetes.io/cors-allow-methods: "GET, POST, PUT, DELETE, OPTIONS"
+    nginx.ingress.kubernetes.io/cors-allow-headers: "DNT,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Range,Authorization"
+spec:
+  tls:
+  - hosts:
+    - api.lang-observatory.com
+    secretName: lang-observatory-tls
+  rules:
+  - host: api.lang-observatory.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: lang-observatory-service
+            port:
+              number: 80
+
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: lang-observatory-hpa
+  namespace: lang-observatory-prod
+  labels:
+    app.kubernetes.io/name: lang-observatory
+    app.kubernetes.io/component: autoscaler
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: lang-observatory-app
+  minReplicas: 3
+  maxReplicas: 50
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 70
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: 80
+  - type: Pods
+    pods:
+      metric:
+        name: http_requests_per_second
+      target:
+        type: AverageValue
+        averageValue: "1000"
+  behavior:
+    scaleDown:
+      stabilizationWindowSeconds: 300
+      policies:
+      - type: Percent
+        value: 10
+        periodSeconds: 60
+    scaleUp:
+      stabilizationWindowSeconds: 60
+      policies:
+      - type: Percent
+        value: 50
+        periodSeconds: 60
+      - type: Pods
+        value: 5
+        periodSeconds: 60
+      selectPolicy: Max
+
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: lang-observatory-pdb
+  namespace: lang-observatory-prod
+  labels:
+    app.kubernetes.io/name: lang-observatory
+    app.kubernetes.io/component: disruption-budget
+spec:
+  maxUnavailable: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: lang-observatory
+      app.kubernetes.io/component: application
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: lang-observatory-data
+  namespace: lang-observatory-prod
+  labels:
+    app.kubernetes.io/name: lang-observatory
+    app.kubernetes.io/component: storage
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 100Gi
+  storageClassName: fast-ssd
+
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: lang-observatory-metrics
+  namespace: lang-observatory-prod
+  labels:
+    app.kubernetes.io/name: lang-observatory
+    app.kubernetes.io/component: monitoring
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: lang-observatory
+      app.kubernetes.io/component: service
+  endpoints:
+  - port: metrics
+    interval: 30s
+    path: /metrics
+    scheme: http
+
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: lang-observatory-alerts
+  namespace: lang-observatory-prod
+  labels:
+    app.kubernetes.io/name: lang-observatory
+    app.kubernetes.io/component: alerting
+spec:
+  groups:
+  - name: lang-observatory.rules
+    interval: 30s
+    rules:
+    - alert: LangObservatoryHighCPU
+      expr: rate(container_cpu_usage_seconds_total{container="lang-observatory"}[5m]) > 0.8
+      for: 5m
+      labels:
+        severity: warning
+        service: lang-observatory
+      annotations:
+        summary: "High CPU usage detected"
+        description: "CPU usage is above 80% for more than 5 minutes"
+    
+    - alert: LangObservatoryHighMemory
+      expr: container_memory_usage_bytes{container="lang-observatory"} / container_spec_memory_limit_bytes > 0.9
+      for: 5m
+      labels:
+        severity: critical
+        service: lang-observatory
+      annotations:
+        summary: "High memory usage detected"
+        description: "Memory usage is above 90% for more than 5 minutes"
+    
+    - alert: LangObservatoryHighErrorRate
+      expr: rate(http_requests_total{status=~"5.."}[5m]) / rate(http_requests_total[5m]) > 0.05
+      for: 2m
+      labels:
+        severity: critical
+        service: lang-observatory
+      annotations:
+        summary: "High error rate detected"
+        description: "Error rate is above 5% for more than 2 minutes"
+    
+    - alert: LangObservatoryHighLatency
+      expr: histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[5m])) > 0.5
+      for: 5m
+      labels:
+        severity: warning
+        service: lang-observatory
+      annotations:
+        summary: "High latency detected"
+        description: "95th percentile latency is above 500ms for more than 5 minutes"
+    
+    - alert: LangObservatoryPodDown
+      expr: up{job="lang-observatory"} == 0
+      for: 1m
+      labels:
+        severity: critical
+        service: lang-observatory
+      annotations:
+        summary: "Lang Observatory pod is down"
+        description: "Lang Observatory pod has been down for more than 1 minute"
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-dashboards
+  namespace: lang-observatory-prod
+  labels:
+    app.kubernetes.io/name: lang-observatory
+    app.kubernetes.io/component: dashboards
+    grafana_dashboard: "1"
+data:
+  lang-observatory-overview.json: |
+    {
+      "dashboard": {
+        "id": null,
+        "title": "Lang Observatory - Production Overview",
+        "tags": ["lang-observatory", "production"],
+        "timezone": "browser",
+        "panels": [
+          {
+            "id": 1,
+            "title": "Request Rate",
+            "type": "graph",
+            "targets": [
+              {
+                "expr": "rate(http_requests_total[5m])",
+                "legendFormat": "{{method}} {{status}}"
+              }
+            ]
+          },
+          {
+            "id": 2,
+            "title": "Response Time",
+            "type": "graph",
+            "targets": [
+              {
+                "expr": "histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[5m]))",
+                "legendFormat": "95th percentile"
+              },
+              {
+                "expr": "histogram_quantile(0.50, rate(http_request_duration_seconds_bucket[5m]))",
+                "legendFormat": "50th percentile"
+              }
+            ]
+          },
+          {
+            "id": 3,
+            "title": "Error Rate",
+            "type": "graph",
+            "targets": [
+              {
+                "expr": "rate(http_requests_total{status=~\"5..\"}[5m]) / rate(http_requests_total[5m])",
+                "legendFormat": "Error Rate"
+              }
+            ]
+          },
+          {
+            "id": 4,
+            "title": "LLM Metrics",
+            "type": "graph",
+            "targets": [
+              {
+                "expr": "rate(llm_calls_total[5m])",
+                "legendFormat": "LLM Calls/sec"
+              },
+              {
+                "expr": "rate(llm_tokens_total[5m])",
+                "legendFormat": "Tokens/sec"
+              },
+              {
+                "expr": "rate(llm_cost_total[5m])",
+                "legendFormat": "Cost/sec"
+              }
+            ]
+          }
+        ],
+        "time": {
+          "from": "now-1h",
+          "to": "now"
+        },
+        "refresh": "30s"
+      }
+    }
