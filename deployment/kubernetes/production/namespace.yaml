@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: llm-observatory
+  labels:
+    name: llm-observatory
+    environment: production
+    app.kubernetes.io/name: llm-observatory
+    app.kubernetes.io/version: "3.0.0"
+    app.kubernetes.io/component: namespace
+  annotations:
+    description: "Production namespace for LLM Observatory with quantum-enhanced features"
