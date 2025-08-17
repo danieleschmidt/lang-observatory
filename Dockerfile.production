@@ -1,0 +1,73 @@
+# Multi-stage production Dockerfile for LLM Observatory
+# Optimized for security, performance, and minimal attack surface
+
+# Build stage
+FROM node:20-alpine AS builder
+
+# Set working directory
+WORKDIR /app
+
+# Install build dependencies
+RUN apk add --no-cache \
+    python3 \
+    make \
+    g++ \
+    linux-headers
+
+# Copy package files
+COPY package*.json ./
+
+# Install dependencies (including dev dependencies for build)
+RUN npm ci --only=production && npm cache clean --force
+
+# Copy source code
+COPY . .
+
+# Build the application (if there are build steps)
+RUN if [ -f "build.js" ]; then npm run build; fi
+
+# Remove development dependencies and clean up
+RUN npm prune --production && \
+    rm -rf node_modules/.cache && \
+    rm -rf /tmp/* && \
+    rm -rf /var/cache/apk/*
+
+# Production stage
+FROM node:20-alpine AS production
+
+# Create non-root user for security
+RUN addgroup -g 1001 -S nodeuser && \
+    adduser -S nodeuser -u 1001 -G nodeuser
+
+# Install runtime dependencies
+RUN apk add --no-cache \
+    dumb-init \
+    curl \
+    ca-certificates && \
+    rm -rf /var/cache/apk/*
+
+# Set working directory
+WORKDIR /app
+
+# Copy built application from builder stage
+COPY --from=builder --chown=nodeuser:nodeuser /app /app
+
+# Create necessary directories with proper permissions
+RUN mkdir -p /app/logs /app/data /app/cache && \
+    chown -R nodeuser:nodeuser /app
+
+# Switch to non-root user
+USER nodeuser
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
+    CMD curl -f http://localhost:3000/health || exit 1
+
+# Expose port
+EXPOSE 3000
+
+# Use dumb-init to handle signals properly
+ENTRYPOINT ["dumb-init", "--"]
+
+# Start the application
+CMD ["node", "src/index.js"]
