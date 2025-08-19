@@ -15,6 +15,12 @@ const {
 const { ReliabilityManager } = require('./reliability/reliabilityManager');
 const { PerformanceManager } = require('./performance/performanceManager');
 const { AutoScalingManager } = require('./performance/autoScalingManager');
+const {
+  ProductionScaleManager,
+} = require('./performance/productionScaleManager');
+const {
+  GlobalComplianceManager,
+} = require('./compliance/globalComplianceManager');
 const { ConfigManager } = require('./utils/config');
 const { Logger } = require('./utils/logger');
 
@@ -58,6 +64,15 @@ class LangObservatory {
       this.config.get('autoScaling', {})
     );
 
+    // Initialize Generation 3 enhancements
+    this.productionScaleManager = new ProductionScaleManager(
+      this.config.get('productionScale', {})
+    );
+
+    this.globalComplianceManager = new GlobalComplianceManager(
+      this.config.get('compliance', {})
+    );
+
     this.initialized = false;
   }
 
@@ -68,7 +83,9 @@ class LangObservatory {
       // Initialize performance and reliability managers first
       await this.performanceManager.initialize();
       await this.autoScalingManager.initialize();
+      await this.productionScaleManager.initialize();
       await this.reliabilityManager.initialize();
+      await this.globalComplianceManager.initialize();
 
       // Initialize services in dependency order with reliability and performance
       await this.reliabilityManager.executeWithReliability(
@@ -336,7 +353,7 @@ class LangObservatory {
     }
   }
 
-  async recordPlanningMetrics(quantumPlan, adaptiveSchedules) {
+  async recordPlanningMetrics(quantumPlan, _adaptiveSchedules) {
     const planningMetrics = {
       quantumMetrics: this.quantumPlanner.getQuantumMetrics(),
       adaptiveMetrics: this.adaptiveScheduler.getAdaptiveMetrics(),
@@ -353,7 +370,7 @@ class LangObservatory {
     await this.metrics.recordCustomMetric('quantum-planning', planningMetrics);
   }
 
-  async executeWithMonitoring(taskId, options, traceId) {
+  async executeWithMonitoring(taskId, _options, _traceId) {
     // Simplified execution simulation
     const startTime = Date.now();
 

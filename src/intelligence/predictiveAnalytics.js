@@ -15,25 +15,25 @@ class PredictiveAnalyticsEngine extends EventEmitter {
       modelAccuracyThreshold: 0.7,
       updateInterval: 1800000, // 30 minutes
       enableRealTimePredictions: true,
-      ...config
+      ...config,
     };
-    
+
     this.logger = new Logger({ service: 'PredictiveAnalytics' });
-    
+
     // Prediction models
     this.models = {
       latency: new LatencyPredictor(),
       cost: new CostPredictor(),
       throughput: new ThroughputPredictor(),
       errors: new ErrorPredictor(),
-      capacity: new CapacityPredictor()
+      capacity: new CapacityPredictor(),
     };
-    
+
     this.trainingData = [];
     this.predictions = new Map();
     this.modelMetrics = new Map();
     this.initialized = false;
-    
+
     if (this.config.enableRealTimePredictions) {
       this.setupRealTimePredictions();
     }
@@ -42,33 +42,36 @@ class PredictiveAnalyticsEngine extends EventEmitter {
   async initialize() {
     try {
       this.logger.info('Initializing Predictive Analytics Engine...');
-      
+
       // Initialize all prediction models
       await this.initializeModels();
-      
+
       // Load historical training data
       await this.loadTrainingData();
-      
+
       // Train initial models
       await this.trainAllModels();
-      
+
       // Start continuous prediction updates
       this.startContinuousPredictions();
-      
+
       this.initialized = true;
       this.logger.info('Predictive Analytics Engine initialized successfully');
-      
+
       return this;
     } catch (error) {
-      this.logger.error('Failed to initialize Predictive Analytics Engine:', error);
+      this.logger.error(
+        'Failed to initialize Predictive Analytics Engine:',
+        error
+      );
       throw error;
     }
   }
 
   setupRealTimePredictions() {
-    this.on('metricsUpdate', (metrics) => this.processRealTimeMetrics(metrics));
-    this.on('patternDetected', (pattern) => this.updatePredictions(pattern));
-    this.on('anomalyDetected', (anomaly) => this.adjustPredictions(anomaly));
+    this.on('metricsUpdate', metrics => this.processRealTimeMetrics(metrics));
+    this.on('patternDetected', pattern => this.updatePredictions(pattern));
+    this.on('anomalyDetected', anomaly => this.adjustPredictions(anomaly));
   }
 
   async initializeModels() {
@@ -92,12 +95,12 @@ class PredictiveAnalyticsEngine extends EventEmitter {
     const data = [];
     const providers = ['openai', 'anthropic', 'cohere'];
     const models = ['gpt-4', 'claude-3', 'command-r'];
-    
+
     for (let i = 0; i < 1000; i++) {
-      const timestamp = Date.now() - (Math.random() * 7 * 24 * 3600000); // Last 7 days
+      const timestamp = Date.now() - Math.random() * 7 * 24 * 3600000; // Last 7 days
       const provider = providers[Math.floor(Math.random() * providers.length)];
       const model = models[Math.floor(Math.random() * models.length)];
-      
+
       data.push({
         timestamp,
         provider,
@@ -111,16 +114,18 @@ class PredictiveAnalyticsEngine extends EventEmitter {
         concurrency: Math.floor(Math.random() * 50) + 1,
         cacheHitRate: Math.random() * 0.8 + 0.2,
         hour: new Date(timestamp).getHours(),
-        dayOfWeek: new Date(timestamp).getDay()
+        dayOfWeek: new Date(timestamp).getDay(),
       });
     }
-    
+
     return data.sort((a, b) => a.timestamp - b.timestamp);
   }
 
   async trainAllModels() {
     if (this.trainingData.length < this.config.minDataPoints) {
-      this.logger.warn(`Insufficient training data: ${this.trainingData.length} < ${this.config.minDataPoints}`);
+      this.logger.warn(
+        `Insufficient training data: ${this.trainingData.length} < ${this.config.minDataPoints}`
+      );
       return;
     }
 
@@ -128,7 +133,9 @@ class PredictiveAnalyticsEngine extends EventEmitter {
       try {
         const metrics = await this.trainModel(modelName, model);
         this.modelMetrics.set(modelName, metrics);
-        this.logger.info(`Trained ${modelName} model - accuracy: ${metrics.accuracy.toFixed(3)}`);
+        this.logger.info(
+          `Trained ${modelName} model - accuracy: ${metrics.accuracy.toFixed(3)}`
+        );
       } catch (error) {
         this.logger.error(`Failed to train ${modelName} model:`, error);
       }
@@ -137,64 +144,72 @@ class PredictiveAnalyticsEngine extends EventEmitter {
 
   async trainModel(modelName, model) {
     const startTime = Date.now();
-    
+
     // Prepare training data
     const features = this.extractFeatures(this.trainingData, modelName);
     const labels = this.extractLabels(this.trainingData, modelName);
-    
+
     // Split data for training and validation
     const splitIndex = Math.floor(features.length * 0.8);
     const trainFeatures = features.slice(0, splitIndex);
     const trainLabels = labels.slice(0, splitIndex);
     const testFeatures = features.slice(splitIndex);
     const testLabels = labels.slice(splitIndex);
-    
+
     // Train the model
     await model.train(trainFeatures, trainLabels);
-    
+
     // Evaluate model performance
     const predictions = await model.predict(testFeatures);
     const accuracy = this.calculateAccuracy(predictions, testLabels);
     const mse = this.calculateMSE(predictions, testLabels);
     const mae = this.calculateMAE(predictions, testLabels);
-    
+
     const trainingTime = Date.now() - startTime;
-    
+
     return {
       accuracy,
       mse,
       mae,
       trainingTime,
       dataPoints: features.length,
-      lastTrained: new Date().toISOString()
+      lastTrained: new Date().toISOString(),
     };
   }
 
   extractFeatures(data, modelType) {
     return data.map(item => {
       const baseFeatures = [
-        item.tokensIn / 1000,        // Normalized tokens in
-        item.tokensOut / 1000,       // Normalized tokens out
-        item.load,                   // Current load
-        item.concurrency / 100,      // Normalized concurrency
-        item.cacheHitRate,          // Cache hit rate
-        item.hour / 24,             // Normalized hour
-        item.dayOfWeek / 7,         // Normalized day of week
-        item.provider === 'openai' ? 1 : 0,  // Provider encoding
+        item.tokensIn / 1000, // Normalized tokens in
+        item.tokensOut / 1000, // Normalized tokens out
+        item.load, // Current load
+        item.concurrency / 100, // Normalized concurrency
+        item.cacheHitRate, // Cache hit rate
+        item.hour / 24, // Normalized hour
+        item.dayOfWeek / 7, // Normalized day of week
+        item.provider === 'openai' ? 1 : 0, // Provider encoding
         item.provider === 'anthropic' ? 1 : 0,
-        item.provider === 'cohere' ? 1 : 0
+        item.provider === 'cohere' ? 1 : 0,
       ];
 
       // Add model-specific features
       switch (modelType) {
         case 'latency':
-          return [...baseFeatures, Math.log(item.tokensIn + 1), Math.log(item.tokensOut + 1)];
+          return [
+            ...baseFeatures,
+            Math.log(item.tokensIn + 1),
+            Math.log(item.tokensOut + 1),
+          ];
         case 'cost':
           return [...baseFeatures, item.latency / 1000, item.errors];
         case 'throughput':
           return [...baseFeatures, item.latency / 1000, 1 - item.errors];
         case 'errors':
-          return [...baseFeatures, item.latency / 1000, Math.log(item.tokensIn + 1)];
+          return [
+            ...baseFeatures,
+            item.latency / 1000,
+            Math.log(item.tokensIn + 1),
+          ];
         case 'capacity':
           return [...baseFeatures, item.latency / 1000, item.errors];
         default:
@@ -224,31 +239,31 @@ class PredictiveAnalyticsEngine extends EventEmitter {
 
   calculateAccuracy(predictions, actual) {
     if (predictions.length !== actual.length) return 0;
-    
+
     const totalError = predictions.reduce((sum, pred, i) => {
       return sum + Math.abs(pred - actual[i]) / Math.max(actual[i], 0.001);
     }, 0);
-    
-    return Math.max(0, 1 - (totalError / predictions.length));
+
+    return Math.max(0, 1 - totalError / predictions.length);
   }
 
   calculateMSE(predictions, actual) {
     if (predictions.length !== actual.length) return Infinity;
-    
+
     const sumSquaredError = predictions.reduce((sum, pred, i) => {
       return sum + Math.pow(pred - actual[i], 2);
     }, 0);
-    
+
     return sumSquaredError / predictions.length;
   }
 
   calculateMAE(predictions, actual) {
     if (predictions.length !== actual.length) return Infinity;
-    
+
     const sumAbsError = predictions.reduce((sum, pred, i) => {
       return sum + Math.abs(pred - actual[i]);
     }, 0);
-    
+
     return sumAbsError / predictions.length;
   }
 
@@ -259,18 +274,21 @@ class PredictiveAnalyticsEngine extends EventEmitter {
 
     const predictions = {};
     const features = this.prepareFeatures(context);
-    
+
     for (const [modelName, model] of Object.entries(this.models)) {
       try {
         const modelFeatures = this.adjustFeaturesForModel(features, modelName);
         const prediction = await model.predict([modelFeatures]);
-        const confidence = this.calculatePredictionConfidence(modelName, prediction[0]);
-        
+        const confidence = this.calculatePredictionConfidence(
+          modelName,
+          prediction[0]
+        );
+
         predictions[modelName] = {
           value: prediction[0],
           confidence,
           model: modelName,
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
         };
       } catch (error) {
         this.logger.error(`Error generating ${modelName} prediction:`, error);
@@ -278,15 +296,20 @@ class PredictiveAnalyticsEngine extends EventEmitter {
           value: null,
           confidence: 0,
           error: error.message,
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
         };
       }
     }
 
     // Generate derived predictions
-    predictions.total_cost = this.calculateTotalCostPrediction(predictions, context);
-    predictions.sla_compliance = this.calculateSLACompliancePrediction(predictions);
-    predictions.optimization_score = this.calculateOptimizationScore(predictions);
+    predictions.total_cost = this.calculateTotalCostPrediction(
+      predictions,
+      context
+    );
+    predictions.sla_compliance =
+      this.calculateSLACompliancePrediction(predictions);
+    predictions.optimization_score =
+      this.calculateOptimizationScore(predictions);
 
     // Store predictions
     const predictionId = `${context.provider}_${context.model}_${Date.now()}`;
@@ -294,7 +317,7 @@ class PredictiveAnalyticsEngine extends EventEmitter {
       id: predictionId,
       context,
       predictions,
-      createdAt: new Date().toISOString()
+      createdAt: new Date().toISOString(),
     });
 
     return predictions;
@@ -312,21 +335,21 @@ class PredictiveAnalyticsEngine extends EventEmitter {
       now.getDay() / 7,
       context.provider === 'openai' ? 1 : 0,
       context.provider === 'anthropic' ? 1 : 0,
-      context.provider === 'cohere' ? 1 : 0
+      context.provider === 'cohere' ? 1 : 0,
     ];
   }
 
   adjustFeaturesForModel(baseFeatures, modelType) {
     const features = [...baseFeatures];
-    
+
     switch (modelType) {
       case 'latency':
-        features.push(Math.log((baseFeatures[0] * 1000) + 1));
-        features.push(Math.log((baseFeatures[1] * 1000) + 1));
+        features.push(Math.log(baseFeatures[0] * 1000 + 1));
+        features.push(Math.log(baseFeatures[1] * 1000 + 1));
         break;
       case 'cost':
         features.push(1.0); // Default latency normalization
-        features.push(0);   // Default error rate
+        features.push(0); // Default error rate
         break;
       case 'throughput':
         features.push(1.0);
@@ -334,35 +357,36 @@ class PredictiveAnalyticsEngine extends EventEmitter {
         break;
       case 'errors':
         features.push(1.0);
-        features.push(Math.log((baseFeatures[0] * 1000) + 1));
+        features.push(Math.log(baseFeatures[0] * 1000 + 1));
         break;
       case 'capacity':
         features.push(1.0);
         features.push(0);
         break;
     }
-    
+
     return features;
   }
 
   calculatePredictionConfidence(modelName, prediction) {
     const metrics = this.modelMetrics.get(modelName);
     if (!metrics) return 0.5;
-    
+
     // Base confidence on model accuracy
     let confidence = metrics.accuracy;
-    
+
     // Adjust based on prediction magnitude (less confident for extreme values)
     if (prediction < 0 || prediction > 10) {
       confidence *= 0.7;
     }
-    
+
     // Adjust based on training data recency
-    const daysSinceTraining = (Date.now() - new Date(metrics.lastTrained).getTime()) / (24 * 3600000);
+    const daysSinceTraining =
+      (Date.now() - new Date(metrics.lastTrained).getTime()) / (24 * 3600000);
     if (daysSinceTraining > 7) {
-      confidence *= Math.max(0.3, 1 - (daysSinceTraining / 30));
+      confidence *= Math.max(0.3, 1 - daysSinceTraining / 30);
     }
-    
+
     return Math.min(0.95, Math.max(0.1, confidence));
   }
 
@@ -371,34 +395,34 @@ class PredictiveAnalyticsEngine extends EventEmitter {
     if (!costPred || !costPred.value) {
       return { value: null, confidence: 0 };
     }
-    
+
     const totalTokens = (context.tokensIn || 100) + (context.tokensOut || 50);
     const totalCost = costPred.value * totalTokens;
-    
+
     return {
       value: totalCost,
       confidence: costPred.confidence,
       breakdown: {
         perToken: costPred.value,
         totalTokens,
-        totalCost
-      }
+        totalCost,
+      },
     };
   }
 
   calculateSLACompliancePrediction(predictions) {
     const latencyPred = predictions.latency;
     const errorPred = predictions.errors;
-    
+
     if (!latencyPred?.value || !errorPred?.value) {
       return { value: null, confidence: 0 };
     }
-    
+
     // SLA: 95% availability, <2s latency
-    const latencyCompliance = (latencyPred.value * 1000) < 2000 ? 1 : 0;
+    const latencyCompliance = latencyPred.value * 1000 < 2000 ? 1 : 0;
     const errorCompliance = errorPred.value < 0.05 ? 1 : 0;
     const overallCompliance = (latencyCompliance + errorCompliance) / 2;
-    
+
     return {
       value: overallCompliance,
       confidence: Math.min(latencyPred.confidence, errorPred.confidence),
@@ -407,9 +431,9 @@ class PredictiveAnalyticsEngine extends EventEmitter {
         errorCompliance,
         thresholds: {
           maxLatency: 2000,
-          maxErrorRate: 0.05
-        }
-      }
+          maxErrorRate: 0.05,
+        },
+      },
     };
   }
 
@@ -419,22 +443,22 @@ class PredictiveAnalyticsEngine extends EventEmitter {
       latency: 0.25,
       cost: 0.25,
       throughput: 0.25,
-      errors: 0.25
+      errors: 0.25,
     };
-    
+
     let score = 0;
     let totalWeight = 0;
-    
+
     Object.entries(weights).forEach(([metric, weight]) => {
       const pred = predictions[metric];
       if (pred?.value !== null && pred?.value !== undefined) {
         let normalizedScore;
         switch (metric) {
           case 'latency':
-            normalizedScore = Math.max(0, 1 - (pred.value / 5)); // 5s max
+            normalizedScore = Math.max(0, 1 - pred.value / 5); // 5s max
             break;
           case 'cost':
-            normalizedScore = Math.max(0, 1 - (pred.value / 0.1)); // $0.1 max
+            normalizedScore = Math.max(0, 1 - pred.value / 0.1); // $0.1 max
             break;
           case 'throughput':
             normalizedScore = Math.min(1, pred.value / 100); // 100 tokens/s max
@@ -445,16 +469,17 @@ class PredictiveAnalyticsEngine extends EventEmitter {
           default:
             normalizedScore = 0.5;
         }
-        
+
         score += normalizedScore * weight * pred.confidence;
         totalWeight += weight * pred.confidence;
       }
     });
-    
+
     return {
       value: totalWeight > 0 ? score / totalWeight : 0.5,
-      confidence: totalWeight / Object.values(weights).reduce((a, b) => a + b, 0),
-      weights
+      confidence:
+        totalWeight / Object.values(weights).reduce((a, b) => a + b, 0),
+      weights,
     };
   }
 
@@ -463,19 +488,18 @@ class PredictiveAnalyticsEngine extends EventEmitter {
       // Add to training data
       this.trainingData.push({
         ...metrics,
-        timestamp: Date.now()
+        timestamp: Date.now(),
       });
-      
+
       // Maintain data size limit
       if (this.trainingData.length > 10000) {
         this.trainingData = this.trainingData.slice(-8000);
       }
-      
+
       // Trigger model updates if needed
       if (this.shouldUpdateModels()) {
         await this.retrainModels();
       }
-      
     } catch (error) {
       this.logger.error('Error processing real-time metrics:', error);
     }
@@ -485,19 +509,19 @@ class PredictiveAnalyticsEngine extends EventEmitter {
     // Check if models need updating based on new data or performance drift
     const now = Date.now();
     const timeSinceLastUpdate = now - (this.lastModelUpdate || 0);
-    
+
     return timeSinceLastUpdate > this.config.updateInterval;
   }
 
   async retrainModels() {
     this.logger.info('Retraining prediction models with new data...');
-    
+
     try {
       await this.trainAllModels();
       this.lastModelUpdate = Date.now();
       this.emit('modelsRetrained', {
         dataPoints: this.trainingData.length,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
     } catch (error) {
       this.logger.error('Error retraining models:', error);
@@ -518,8 +542,13 @@ class PredictiveAnalyticsEngine extends EventEmitter {
     // Generate predictions for common scenarios
     const scenarios = [
       { provider: 'openai', model: 'gpt-4', tokensIn: 100, tokensOut: 50 },
-      { provider: 'anthropic', model: 'claude-3', tokensIn: 200, tokensOut: 100 },
-      { provider: 'cohere', model: 'command-r', tokensIn: 150, tokensOut: 75 }
+      {
+        provider: 'anthropic',
+        model: 'claude-3',
+        tokensIn: 200,
+        tokensOut: 100,
+      },
+      { provider: 'cohere', model: 'command-r', tokensIn: 150, tokensOut: 75 },
     ];
 
     for (const scenario of scenarios) {
@@ -535,9 +564,11 @@ class PredictiveAnalyticsEngine extends EventEmitter {
   async getPredictionHistory(filters = {}) {
     const filteredPredictions = Array.from(this.predictions.values())
       .filter(pred => {
-        if (filters.provider && pred.context.provider !== filters.provider) return false;
+        if (filters.provider && pred.context.provider !== filters.provider)
+          return false;
         if (filters.model && pred.context.model !== filters.model) return false;
-        if (filters.since && new Date(pred.createdAt) < new Date(filters.since)) return false;
+        if (filters.since && new Date(pred.createdAt) < new Date(filters.since))
+          return false;
         return true;
       })
       .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
@@ -556,17 +587,18 @@ class PredictiveAnalyticsEngine extends EventEmitter {
         accuracy: metrics.accuracy,
         healthy: metrics.accuracy > this.config.modelAccuracyThreshold,
         lastTrained: metrics.lastTrained,
-        dataPoints: metrics.dataPoints
+        dataPoints: metrics.dataPoints,
       };
     }
 
     return {
-      healthy: this.initialized && Object.values(modelHealth).every(m => m.healthy),
+      healthy:
+        this.initialized && Object.values(modelHealth).every(m => m.healthy),
       models: modelHealth,
       trainingDataSize: this.trainingData.length,
       predictionsCount: this.predictions.size,
       lastUpdate: this.lastModelUpdate,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     };
   }
 
@@ -615,7 +647,10 @@ class LatencyPredictor {
 
   predict(features) {
     return features.map(feature => {
-      const sum = feature.reduce((acc, val, idx) => acc + val * this.weights[idx], 0);
+      const sum = feature.reduce(
+        (acc, val, idx) => acc + val * this.weights[idx],
+        0
+      );
       return Math.max(0.1, sum + this.bias); // Minimum 0.1 second
     });
   }
@@ -651,7 +686,10 @@ class CostPredictor {
 
   predict(features) {
     return features.map(feature => {
-      const sum = feature.reduce((acc, val, idx) => acc + val * this.weights[idx], 0);
+      const sum = feature.reduce(
+        (acc, val, idx) => acc + val * this.weights[idx],
+        0
+      );
       return Math.max(0.001, sum + this.bias);
     });
   }
@@ -687,7 +725,10 @@ class ThroughputPredictor {
 
   predict(features) {
     return features.map(feature => {
-      const sum = feature.reduce((acc, val, idx) => acc + val * this.weights[idx], 0);
+      const sum = feature.reduce(
+        (acc, val, idx) => acc + val * this.weights[idx],
+        0
+      );
       return Math.max(1, sum + this.bias);
     });
   }
@@ -723,7 +764,10 @@ class ErrorPredictor {
 
   predict(features) {
     return features.map(feature => {
-      const sum = feature.reduce((acc, val, idx) => acc + val * this.weights[idx], 0);
+      const sum = feature.reduce(
+        (acc, val, idx) => acc + val * this.weights[idx],
+        0
+      );
       return Math.max(0, Math.min(1, sum + this.bias)); // Clamp between 0 and 1
     });
   }
@@ -759,7 +803,10 @@ class CapacityPredictor {
 
   predict(features) {
     return features.map(feature => {
-      const sum = feature.reduce((acc, val, idx) => acc + val * this.weights[idx], 0);
+      const sum = feature.reduce(
+        (acc, val, idx) => acc + val * this.weights[idx],
+        0
+      );
       return Math.max(0, Math.min(1, sum + this.bias));
     });
   }

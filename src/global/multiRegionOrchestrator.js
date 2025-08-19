@@ -29,7 +29,10 @@ class MultiRegionOrchestrator extends EventEmitter {
         encryptionInTransit: true,
         regionalPolicies: new Map([
           ['eu-west-1', { gdpr: true, dataResidency: true, privacy: 'strict' }],
-          ['ap-southeast-1', { pdpa: true, dataResidency: true, privacy: 'moderate' }],
+          [
+            'ap-southeast-1',
+            { pdpa: true, dataResidency: true, privacy: 'moderate' },
+          ],
           ['us-east-1', { ccpa: true, hipaa: false, privacy: 'standard' }],
           ['us-west-2', { ccpa: true, hipaa: true, privacy: 'standard' }],
         ]),
@@ -105,7 +108,10 @@ class MultiRegionOrchestrator extends EventEmitter {
   }
 
   async initializeRegions() {
-    const allRegions = [this.config.regions.primary, ...this.config.regions.secondary];
+    const allRegions = [
+      this.config.regions.primary,
+      ...this.config.regions.secondary,
+    ];
 
     for (const region of allRegions) {
       try {
@@ -187,14 +193,14 @@ class MultiRegionOrchestrator extends EventEmitter {
       if (!queue || queue.length === 0) return;
 
       const batch = queue.splice(0, this.config.replication.batchSize);
-      
+
       try {
         await this.replicateDataBatch(region, batch);
         this.updateReplicationMetrics(region, batch.length, true);
       } catch (error) {
         this.logger.error(`Replication failed for region ${region}:`, error);
         this.updateReplicationMetrics(region, batch.length, false);
-        
+
         // Re-queue failed items with retry logic
         batch.forEach(item => {
           item.retryCount = (item.retryCount || 0) + 1;
@@ -219,38 +225,54 @@ class MultiRegionOrchestrator extends EventEmitter {
     // Check compliance before replication
     for (const item of batch) {
       if (!this.validateCrossRegionCompliance(item, targetRegion)) {
-        throw new Error(`Compliance violation: Cannot replicate data to ${targetRegion}`);
+        throw new Error(
+          `Compliance violation: Cannot replicate data to ${targetRegion}`
+        );
       }
     }
 
     // Simulate replication (in production, use actual replication mechanism)
     const startTime = Date.now();
-    
+
     // Add artificial latency based on region distance
     const latencyMap = {
       'us-east-1': { 'eu-west-1': 100, 'ap-southeast-1': 200, 'us-west-2': 50 },
-      'eu-west-1': { 'us-east-1': 100, 'ap-southeast-1': 250, 'us-west-2': 150 },
-      'ap-southeast-1': { 'us-east-1': 200, 'eu-west-1': 250, 'us-west-2': 180 },
+      'eu-west-1': {
+        'us-east-1': 100,
+        'ap-southeast-1': 250,
+        'us-west-2': 150,
+      },
+      'ap-southeast-1': {
+        'us-east-1': 200,
+        'eu-west-1': 250,
+        'us-west-2': 180,
+      },
       'us-west-2': { 'us-east-1': 50, 'eu-west-1': 150, 'ap-southeast-1': 180 },
     };
 
     const sourceRegion = this.config.regions.primary;
     const latency = latencyMap[sourceRegion]?.[targetRegion] || 100;
-    
+
     await new Promise(resolve => setTimeout(resolve, latency));
 
     const replicationTime = Date.now() - startTime;
     this.metrics.replicationLag.set(targetRegion, replicationTime);
 
-    this.logger.debug(`Replicated ${batch.length} items to ${targetRegion} in ${replicationTime}ms`);
+    this.logger.debug(
+      `Replicated ${batch.length} items to ${targetRegion} in ${replicationTime}ms`
+    );
   }
 
   validateCrossRegionCompliance(data, targetRegion) {
-    const regionCompliance = this.config.compliance.regionalPolicies.get(targetRegion);
+    const regionCompliance =
+      this.config.compliance.regionalPolicies.get(targetRegion);
     if (!regionCompliance) return true;
 
     // Check data residency requirements
-    if (regionCompliance.dataResidency && data.classification === 'restricted') {
+    if (
+      regionCompliance.dataResidency &&
+      data.classification === 'restricted'
+    ) {
       this.metrics.complianceViolations++;
       return false;
     }
@@ -262,7 +284,11 @@ class MultiRegionOrchestrator extends EventEmitter {
     }
 
     // Check PDPA requirements
-    if (regionCompliance.pdpa && data.containsPersonalData && !data.pdpaConsent) {
+    if (
+      regionCompliance.pdpa &&
+      data.containsPersonalData &&
+      !data.pdpaConsent
+    ) {
       this.metrics.complianceViolations++;
       return false;
     }
@@ -274,28 +300,35 @@ class MultiRegionOrchestrator extends EventEmitter {
     this.logger.info('Setting up compliance monitoring...');
 
     // Monitor data localization
-    this.on('dataAccess', (event) => {
+    this.on('dataAccess', event => {
       this.enforceDataLocalization(event);
     });
 
     // Monitor cross-border data transfers
-    this.on('crossRegionTransfer', (event) => {
+    this.on('crossRegionTransfer', event => {
       this.validateCrossBorderTransfer(event);
     });
 
     // Regular compliance audits
-    setInterval(() => {
-      this.performComplianceAudit();
-    }, 60 * 60 * 1000); // Hourly audits
+    setInterval(
+      () => {
+        this.performComplianceAudit();
+      },
+      60 * 60 * 1000
+    ); // Hourly audits
   }
 
   enforceDataLocalization(event) {
     const { region, dataType, userLocation } = event;
-    const regionCompliance = this.config.compliance.regionalPolicies.get(region);
+    const regionCompliance =
+      this.config.compliance.regionalPolicies.get(region);
 
     if (regionCompliance?.dataResidency) {
       // Ensure sensitive data stays in the same region as the user
-      if (dataType === 'personal' && this.getRegionFromLocation(userLocation) !== region) {
+      if (
+        dataType === 'personal' &&
+        this.getRegionFromLocation(userLocation) !== region
+      ) {
         this.metrics.dataLocalizationEvents++;
         this.emit('complianceViolation', {
           type: 'data_localization',
@@ -311,10 +344,10 @@ class MultiRegionOrchestrator extends EventEmitter {
   getRegionFromLocation(location) {
     // Simplified location to region mapping
     const locationMap = {
-      'US': 'us-east-1',
-      'EU': 'eu-west-1',
-      'Asia': 'ap-southeast-1',
-      'Canada': 'us-west-2',
+      US: 'us-east-1',
+      EU: 'eu-west-1',
+      Asia: 'ap-southeast-1',
+      Canada: 'us-west-2',
     };
     return locationMap[location] || 'us-east-1';
   }
@@ -329,7 +362,10 @@ class MultiRegionOrchestrator extends EventEmitter {
           this.updateHealthStatus(region, health);
         } catch (error) {
           this.logger.error(`Health check failed for region ${region}:`, error);
-          this.updateHealthStatus(region, { healthy: false, error: error.message });
+          this.updateHealthStatus(region, {
+            healthy: false,
+            error: error.message,
+          });
         }
       }
     };
@@ -356,7 +392,7 @@ class MultiRegionOrchestrator extends EventEmitter {
 
     // Calculate health score
     const healthScore = this.calculateHealthScore(healthMetrics);
-    
+
     return {
       healthy: healthScore > 0.7,
       score: healthScore,
@@ -375,10 +411,10 @@ class MultiRegionOrchestrator extends EventEmitter {
     };
 
     let score = 1.0;
-    
+
     // Penalize high response time
     if (metrics.responseTime > 200) {
-      score -= weights.responseTime * (metrics.responseTime - 200) / 200;
+      score -= (weights.responseTime * (metrics.responseTime - 200)) / 200;
     }
 
     // Penalize high CPU usage
@@ -400,7 +436,7 @@ class MultiRegionOrchestrator extends EventEmitter {
     // Update state
     state.healthScore = health.score;
     state.lastHealthCheck = Date.now();
-    
+
     // Update status based on health
     const previousStatus = state.status;
     if (health.healthy && health.score > 0.8) {
@@ -419,8 +455,12 @@ class MultiRegionOrchestrator extends EventEmitter {
 
     // Trigger failover if needed
     if (previousStatus !== state.status) {
-      this.emit('regionStatusChange', { region, previousStatus, newStatus: state.status });
-      
+      this.emit('regionStatusChange', {
+        region,
+        previousStatus,
+        newStatus: state.status,
+      });
+
       if (state.status === 'unhealthy' && state.isPrimary) {
         this.triggerFailover(region);
       }
@@ -428,7 +468,9 @@ class MultiRegionOrchestrator extends EventEmitter {
   }
 
   setupLoadBalancing() {
-    this.logger.info(`Load balancing strategy: ${this.config.loadBalancing.strategy}`);
+    this.logger.info(
+      `Load balancing strategy: ${this.config.loadBalancing.strategy}`
+    );
   }
 
   selectOptimalRegion(userLocation, requestType) {
@@ -456,13 +498,28 @@ class MultiRegionOrchestrator extends EventEmitter {
   selectByLatency(userLocation, availableRegions) {
     // Simplified latency calculation based on user location
     const latencyMap = {
-      'US': { 'us-east-1': 50, 'us-west-2': 80, 'eu-west-1': 150, 'ap-southeast-1': 200 },
-      'EU': { 'eu-west-1': 50, 'us-east-1': 150, 'us-west-2': 180, 'ap-southeast-1': 250 },
-      'Asia': { 'ap-southeast-1': 50, 'us-west-2': 180, 'us-east-1': 200, 'eu-west-1': 250 },
+      US: {
+        'us-east-1': 50,
+        'us-west-2': 80,
+        'eu-west-1': 150,
+        'ap-southeast-1': 200,
+      },
+      EU: {
+        'eu-west-1': 50,
+        'us-east-1': 150,
+        'us-west-2': 180,
+        'ap-southeast-1': 250,
+      },
+      Asia: {
+        'ap-southeast-1': 50,
+        'us-west-2': 180,
+        'us-east-1': 200,
+        'eu-west-1': 250,
+      },
     };
 
     const userLatencies = latencyMap[userLocation] || latencyMap['US'];
-    
+
     return availableRegions.reduce((best, current) => {
       const currentLatency = userLatencies[current.region] || 200;
       const bestLatency = userLatencies[best.region] || 200;
@@ -472,13 +529,13 @@ class MultiRegionOrchestrator extends EventEmitter {
 
   selectByGeography(userLocation, availableRegions) {
     const geographyMap = {
-      'US': ['us-east-1', 'us-west-2', 'eu-west-1', 'ap-southeast-1'],
-      'EU': ['eu-west-1', 'us-east-1', 'us-west-2', 'ap-southeast-1'],
-      'Asia': ['ap-southeast-1', 'us-west-2', 'us-east-1', 'eu-west-1'],
+      US: ['us-east-1', 'us-west-2', 'eu-west-1', 'ap-southeast-1'],
+      EU: ['eu-west-1', 'us-east-1', 'us-west-2', 'ap-southeast-1'],
+      Asia: ['ap-southeast-1', 'us-west-2', 'us-east-1', 'eu-west-1'],
     };
 
     const preferences = geographyMap[userLocation] || geographyMap['US'];
-    
+
     for (const preferredRegion of preferences) {
       const found = availableRegions.find(r => r.region === preferredRegion);
       if (found) return found.region;
@@ -489,9 +546,12 @@ class MultiRegionOrchestrator extends EventEmitter {
 
   selectByWeight(availableRegions) {
     const weights = this.config.loadBalancing.weights;
-    const totalWeight = availableRegions.reduce((sum, r) => sum + (weights.get(r.region) || 0.1), 0);
+    const totalWeight = availableRegions.reduce(
+      (sum, r) => sum + (weights.get(r.region) || 0.1),
+      0
+    );
     const random = Math.random() * totalWeight;
-    
+
     let currentWeight = 0;
     for (const { region } of availableRegions) {
       currentWeight += weights.get(region) || 0.1;
@@ -502,12 +562,13 @@ class MultiRegionOrchestrator extends EventEmitter {
   }
 
   selectRoundRobin(availableRegions) {
-    this.roundRobinIndex = (this.roundRobinIndex || 0) % availableRegions.length;
+    this.roundRobinIndex =
+      (this.roundRobinIndex || 0) % availableRegions.length;
     return availableRegions[this.roundRobinIndex++].region;
   }
 
   setupFailoverMechanisms() {
-    this.on('regionStatusChange', (event) => {
+    this.on('regionStatusChange', event => {
       if (event.newStatus === 'unhealthy') {
         this.handleRegionFailure(event.region);
       } else if (event.newStatus === 'healthy') {
@@ -520,7 +581,10 @@ class MultiRegionOrchestrator extends EventEmitter {
     this.logger.warn(`Triggering failover from region: ${failedRegion}`);
 
     const availableRegions = Array.from(this.regionStates.entries())
-      .filter(([region, state]) => region !== failedRegion && state.status === 'healthy')
+      .filter(
+        ([region, state]) =>
+          region !== failedRegion && state.status === 'healthy'
+      )
       .map(([region, _]) => region);
 
     if (availableRegions.length === 0) {
@@ -531,7 +595,7 @@ class MultiRegionOrchestrator extends EventEmitter {
     // Select new primary region
     const newPrimary = availableRegions[0]; // Simplified selection
     const currentPrimary = this.regionStates.get(this.config.regions.primary);
-    
+
     if (failedRegion === this.config.regions.primary) {
       this.config.regions.primary = newPrimary;
       this.regionStates.get(newPrimary).isPrimary = true;
@@ -602,7 +666,9 @@ class MultiRegionOrchestrator extends EventEmitter {
   monitorReplicationLag() {
     for (const [region, lag] of this.metrics.replicationLag) {
       if (lag > this.config.replication.maxLatency) {
-        this.logger.warn(`High replication lag detected for region ${region}: ${lag}ms`);
+        this.logger.warn(
+          `High replication lag detected for region ${region}: ${lag}ms`
+        );
         this.emit('highReplicationLag', { region, lag, timestamp: Date.now() });
       }
     }
@@ -633,11 +699,13 @@ class MultiRegionOrchestrator extends EventEmitter {
       violations: this.metrics.complianceViolations,
       dataLocalizationEvents: this.metrics.dataLocalizationEvents,
       crossRegionTransfers: this.metrics.crossRegionQueries,
-      regions: Array.from(this.regionStates.entries()).map(([region, state]) => ({
-        region,
-        status: state.status,
-        compliance: state.compliance,
-      })),
+      regions: Array.from(this.regionStates.entries()).map(
+        ([region, state]) => ({
+          region,
+          status: state.status,
+          compliance: state.compliance,
+        })
+      ),
     };
 
     this.emit('complianceAuditCompleted', auditResults);
@@ -652,14 +720,16 @@ class MultiRegionOrchestrator extends EventEmitter {
   getGlobalMetrics() {
     return {
       ...this.metrics,
-      regions: Array.from(this.regionStates.entries()).map(([region, state]) => ({
-        region,
-        status: state.status,
-        healthScore: state.healthScore,
-        connections: state.connections,
-        replicationLag: this.metrics.replicationLag.get(region),
-        requests: this.metrics.requestsByRegion.get(region),
-      })),
+      regions: Array.from(this.regionStates.entries()).map(
+        ([region, state]) => ({
+          region,
+          status: state.status,
+          healthScore: state.healthScore,
+          connections: state.connections,
+          replicationLag: this.metrics.replicationLag.get(region),
+          requests: this.metrics.requestsByRegion.get(region),
+        })
+      ),
       failoverHistory: this.failoverHistory.slice(-10), // Last 10 failovers
       timestamp: Date.now(),
     };

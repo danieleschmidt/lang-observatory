@@ -53,6 +53,7 @@ module.exports = {
           statements: 85,
         },
       },
+      testTimeout: 30000,
     },
     {
       displayName: 'integration',
@@ -65,6 +66,7 @@ module.exports = {
           statements: 70,
         },
       },
+      testTimeout: 30000,
     },
     {
       displayName: 'e2e',

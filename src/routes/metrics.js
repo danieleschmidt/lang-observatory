@@ -53,43 +53,55 @@ router.get('/prometheus', optionalAuthMiddleware, async (req, res) => {
     const [costAnalysis, usageStats, performanceMetrics] = await Promise.all([
       llmCallRepo.getCostAnalysis({ startDate, groupBy: 'model' }),
       llmCallRepo.getUsageStats({ startDate, groupBy: 'hour' }),
-      llmCallRepo.getPerformanceMetrics({ startDate })
+      llmCallRepo.getPerformanceMetrics({ startDate }),
     ]);
-    
+
     const lines = [];
-    
-    lines.push('# HELP lang_observatory_llm_calls_total Total number of LLM calls');
+
+    lines.push(
+      '# HELP lang_observatory_llm_calls_total Total number of LLM calls'
+    );
     lines.push('# TYPE lang_observatory_llm_calls_total counter');
-    
+
     for (const model of costAnalysis) {
       const provider = model.provider_name || 'unknown';
       const modelName = model.model_name || 'unknown';
       const calls = model.total_calls || 0;
-      lines.push(`lang_observatory_llm_calls_total{provider="${provider}",model="${modelName}"} ${calls}`);
+      lines.push(
+        `lang_observatory_llm_calls_total{provider="${provider}",model="${modelName}"} ${calls}`
+      );
     }
-    
+
     lines.push('');
-    lines.push('# HELP lang_observatory_llm_cost_usd_total Total cost of LLM calls in USD');
+    lines.push(
+      '# HELP lang_observatory_llm_cost_usd_total Total cost of LLM calls in USD'
+    );
     lines.push('# TYPE lang_observatory_llm_cost_usd_total counter');
-    
+
     for (const model of costAnalysis) {
       const provider = model.provider_name || 'unknown';
       const modelName = model.model_name || 'unknown';
       const cost = model.total_cost || 0;
-      lines.push(`lang_observatory_llm_cost_usd_total{provider="${provider}",model="${modelName}"} ${cost}`);
+      lines.push(
+        `lang_observatory_llm_cost_usd_total{provider="${provider}",model="${modelName}"} ${cost}`
+      );
     }
-    
+
     lines.push('');
-    lines.push('# HELP lang_observatory_llm_latency_ms_avg Average latency of LLM calls in milliseconds');
+    lines.push(
+      '# HELP lang_observatory_llm_latency_ms_avg Average latency of LLM calls in milliseconds'
+    );
     lines.push('# TYPE lang_observatory_llm_latency_ms_avg gauge');
-    
+
     for (const perf of performanceMetrics) {
       const provider = perf.provider_name || 'unknown';
       const modelName = perf.model_name || 'unknown';
       const latency = perf.avg_latency_ms || 0;
-      lines.push(`lang_observatory_llm_latency_ms_avg{provider="${provider}",model="${modelName}"} ${latency}`);
+      lines.push(
+        `lang_observatory_llm_latency_ms_avg{provider="${provider}",model="${modelName}"} ${latency}`
+      );
     }
-    
+
     lines.push('');
     const metrics = lines.join('\n');
 

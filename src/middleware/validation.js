@@ -3,7 +3,7 @@
  * Provides request validation for API endpoints
  */
 
-const { Validators, ValidationError } = require('../utils/validators');
+// const { Validators, ValidationError } = require('../utils/validators');
 const { Logger } = require('../utils/logger');
 
 const logger = new Logger({ service: 'ValidationMiddleware' });
@@ -351,10 +351,7 @@ function sanitizeField(value, rules) {
   if (typeof value === 'string') {
     // Remove control characters and limit length
     // eslint-disable-next-line no-control-regex
-    let sanitized = value.replace(
-      /[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g,
-      ''
-    );
+    let sanitized = value.replace(/[\u0000-\u001F\u007F]/g, '');
 
     if (rules.maxLength) {
       sanitized = sanitized.substring(0, rules.maxLength);

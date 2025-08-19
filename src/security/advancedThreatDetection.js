@@ -17,17 +17,17 @@ class AdvancedThreatDetectionSystem extends EventEmitter {
       analysisWindow: 300000, // 5 minutes
       maxAnomaliesPerWindow: 10,
       enableMLDetection: true,
-      ...config
+      ...config,
     };
-    
+
     this.logger = new Logger({ service: 'ThreatDetection' });
-    
+
     // Threat detection components
     this.anomalyDetector = new AnomalyDetector(this.config);
     this.patternAnalyzer = new PatternAnalyzer(this.config);
     this.behaviorBaseline = new BehaviorBaseline(this.config);
     this.threatClassifier = new ThreatClassifier(this.config);
-    
+
     // Security state
     this.threatDatabase = new Map();
     this.activeThreats = new Map();
@@ -35,14 +35,14 @@ class AdvancedThreatDetectionSystem extends EventEmitter {
       threatsDetected: 0,
       threatsBlocked: 0,
       falsePositives: 0,
-      accuracy: 0.95
+      accuracy: 0.95,
     };
-    
+
     this.eventHistory = [];
     this.blockedIPs = new Set();
     this.suspiciousActivities = new Map();
     this.initialized = false;
-    
+
     if (this.config.enableRealTimeMonitoring) {
       this.setupRealTimeMonitoring();
     }
@@ -51,22 +51,24 @@ class AdvancedThreatDetectionSystem extends EventEmitter {
   async initialize() {
     try {
       this.logger.info('Initializing Advanced Threat Detection System...');
-      
+
       // Initialize detection components
       await this.anomalyDetector.initialize();
       await this.patternAnalyzer.initialize();
       await this.behaviorBaseline.initialize();
       await this.threatClassifier.initialize();
-      
+
       // Load threat intelligence
       await this.loadThreatIntelligence();
-      
+
       // Start monitoring services
       this.startThreatMonitoring();
-      
+
       this.initialized = true;
-      this.logger.info('Advanced Threat Detection System initialized successfully');
-      
+      this.logger.info(
+        'Advanced Threat Detection System initialized successfully'
+      );
+
       return this;
     } catch (error) {
       this.logger.error('Failed to initialize Threat Detection System:', error);
@@ -75,10 +77,10 @@ class AdvancedThreatDetectionSystem extends EventEmitter {
   }
 
   setupRealTimeMonitoring() {
-    this.on('securityEvent', (event) => this.processSecurityEvent(event));
-    this.on('apiRequest', (request) => this.analyzeAPIRequest(request));
-    this.on('llmCall', (call) => this.analyzeLLMCall(call));
-    this.on('userActivity', (activity) => this.analyzeUserActivity(activity));
+    this.on('securityEvent', event => this.processSecurityEvent(event));
+    this.on('apiRequest', request => this.analyzeAPIRequest(request));
+    this.on('llmCall', call => this.analyzeLLMCall(call));
+    this.on('userActivity', activity => this.analyzeUserActivity(activity));
   }
 
   async loadThreatIntelligence() {
@@ -91,10 +93,10 @@ class AdvancedThreatDetectionSystem extends EventEmitter {
           /(\bUNION\b.*\bSELECT\b)/i,
           /(\bDROP\b.*\bTABLE\b)/i,
           /(\bINSERT\b.*\bINTO\b)/i,
-          /'.*OR.*'.*='.*'/i
+          /'.*OR.*'.*='.*'/i,
         ],
         severity: 'high',
-        action: 'block'
+        action: 'block',
       },
       {
         id: 'xss_attack',
@@ -102,10 +104,10 @@ class AdvancedThreatDetectionSystem extends EventEmitter {
         patterns: [
           /<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi,
           /javascript:/i,
-          /on\w+\s*=/i
+          /on\w+\s*=/i,
         ],
         severity: 'medium',
-        action: 'sanitize'
+        action: 'sanitize',
       },
       {
         id: 'prompt_injection',
@@ -114,10 +116,10 @@ class AdvancedThreatDetectionSystem extends EventEmitter {
           /ignore.*previous.*instructions/i,
           /forget.*everything.*before/i,
           /you.*are.*now.*playing.*role/i,
-          /system.*prompt.*override/i
+          /system.*prompt.*override/i,
         ],
         severity: 'high',
-        action: 'block'
+        action: 'block',
       },
       {
         id: 'data_exfiltration',
@@ -125,11 +127,11 @@ class AdvancedThreatDetectionSystem extends EventEmitter {
         patterns: [
           /\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/,
           /\b\d{4}[-\s]?\d{4}[-\s]?\d{4}[-\s]?\d{4}\b/,
-          /\b\d{3}-\d{2}-\d{4}\b/
+          /\b\d{3}-\d{2}-\d{4}\b/,
         ],
         severity: 'critical',
-        action: 'alert'
-      }
+        action: 'alert',
+      },
     ];
 
     threatPatterns.forEach(pattern => {
@@ -137,35 +139,32 @@ class AdvancedThreatDetectionSystem extends EventEmitter {
     });
 
     // Load IP reputation data (simplified)
-    const maliciousIPs = [
-      '192.168.1.100',
-      '10.0.0.50',
-      '172.16.0.200'
-    ];
+    const maliciousIPs = ['192.168.1.100', '10.0.0.50', '172.16.0.200'];
 
     maliciousIPs.forEach(ip => {
       this.blockedIPs.add(ip);
     });
 
-    this.logger.info(`Loaded ${threatPatterns.length} threat patterns and ${maliciousIPs.length} blocked IPs`);
+    this.logger.info(
+      `Loaded ${threatPatterns.length} threat patterns and ${maliciousIPs.length} blocked IPs`
+    );
   }
 
   async processSecurityEvent(event) {
     try {
       // Record event
       this.recordSecurityEvent(event);
-      
+
       // Analyze threat
       const threatAnalysis = await this.analyzeThreat(event);
-      
+
       // Take action if necessary
       if (threatAnalysis.score > this.config.threatScoreThreshold) {
         await this.handleThreat(event, threatAnalysis);
       }
-      
+
       // Update security metrics
       this.updateSecurityMetrics(threatAnalysis);
-      
     } catch (error) {
       this.logger.error('Error processing security event:', error);
     }
@@ -180,11 +179,11 @@ class AdvancedThreatDetectionSystem extends EventEmitter {
       data: event.data,
       clientIP: event.clientIP,
       userAgent: event.userAgent,
-      sessionId: event.sessionId
+      sessionId: event.sessionId,
     };
 
     this.eventHistory.push(securityEvent);
-    
+
     // Maintain event history size
     if (this.eventHistory.length > 10000) {
       this.eventHistory = this.eventHistory.slice(-8000);
@@ -196,14 +195,14 @@ class AdvancedThreatDetectionSystem extends EventEmitter {
       this.anomalyDetector.detectAnomalies(event),
       this.patternAnalyzer.analyzePatterns(event),
       this.behaviorBaseline.checkDeviation(event),
-      this.threatClassifier.classifyThreat(event)
+      this.threatClassifier.classifyThreat(event),
     ]);
 
     // Combine analysis results
     const threatScore = this.calculateThreatScore(analyses);
     const threatType = this.determineThreatType(analyses);
     const confidence = this.calculateConfidence(analyses);
-    
+
     return {
       score: threatScore,
       type: threatType,
@@ -212,9 +211,9 @@ class AdvancedThreatDetectionSystem extends EventEmitter {
         component: ['anomaly', 'pattern', 'behavior', 'classifier'][index],
         status: result.status,
         value: result.status === 'fulfilled' ? result.value : null,
-        error: result.status === 'rejected' ? result.reason.message : null
+        error: result.status === 'rejected' ? result.reason.message : null,
       })),
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     };
   }
 
@@ -234,7 +233,7 @@ class AdvancedThreatDetectionSystem extends EventEmitter {
 
   determineThreatType(analyses) {
     const types = [];
-    
+
     analyses.forEach(result => {
       if (result.status === 'fulfilled' && result.value?.type) {
         types.push(result.value.type);
@@ -242,26 +241,32 @@ class AdvancedThreatDetectionSystem extends EventEmitter {
     });
 
     if (types.length === 0) return 'unknown';
-    
+
     // Return most frequent type
     const typeCounts = {};
     types.forEach(type => {
       typeCounts[type] = (typeCounts[type] || 0) + 1;
     });
 
-    return Object.keys(typeCounts).reduce((a, b) => 
+    return Object.keys(typeCounts).reduce((a, b) =>
       typeCounts[a] > typeCounts[b] ? a : b
     );
   }
 
   calculateConfidence(analyses) {
     const confidences = analyses
-      .filter(result => result.status === 'fulfilled' && result.value?.confidence !== undefined)
+      .filter(
+        result =>
+          result.status === 'fulfilled' &&
+          result.value?.confidence !== undefined
+      )
       .map(result => result.value.confidence);
 
     if (confidences.length === 0) return 0.5;
-    
-    return confidences.reduce((sum, conf) => sum + conf, 0) / confidences.length;
+
+    return (
+      confidences.reduce((sum, conf) => sum + conf, 0) / confidences.length
+    );
   }
 
   async handleThreat(event, analysis) {
@@ -272,39 +277,45 @@ class AdvancedThreatDetectionSystem extends EventEmitter {
       analysis,
       timestamp: Date.now(),
       status: 'active',
-      actions: []
+      actions: [],
     };
 
     this.activeThreats.set(threatId, threat);
 
     // Determine and execute response actions
     const actions = await this.determineResponseActions(threat);
-    
+
     for (const action of actions) {
       try {
         const result = await this.executeSecurityAction(action, threat);
         threat.actions.push({
           action: action.type,
           result,
-          timestamp: Date.now()
+          timestamp: Date.now(),
         });
       } catch (error) {
-        this.logger.error(`Failed to execute security action ${action.type}:`, error);
+        this.logger.error(
+          `Failed to execute security action ${action.type}:`,
+          error
+        );
         threat.actions.push({
           action: action.type,
           result: { status: 'failed', error: error.message },
-          timestamp: Date.now()
+          timestamp: Date.now(),
         });
       }
     }
 
     // Emit threat detected event
     this.emit('threatDetected', threat);
-    
-    this.logger.warn(`Threat detected and handled: ${analysis.type} (score: ${analysis.score.toFixed(3)})`, {
-      threatId,
-      actions: actions.map(a => a.type)
-    });
+
+    this.logger.warn(
+      `Threat detected and handled: ${analysis.type} (score: ${analysis.score.toFixed(3)})`,
+      {
+        threatId,
+        actions: actions.map(a => a.type),
+      }
+    );
   }
 
   async determineResponseActions(threat) {
@@ -312,23 +323,29 @@ class AdvancedThreatDetectionSystem extends EventEmitter {
     const { analysis, event } = threat;
 
     // Auto-block for high-confidence high-severity threats
-    if (analysis.score > this.config.autoBlockThreshold && analysis.confidence > 0.8) {
+    if (
+      analysis.score > this.config.autoBlockThreshold &&
+      analysis.confidence > 0.8
+    ) {
       actions.push({
         type: 'block_ip',
         target: event.clientIP,
         duration: 3600000, // 1 hour
-        reason: `High-severity threat: ${analysis.type}`
+        reason: `High-severity threat: ${analysis.type}`,
       });
     }
 
     // Rate limiting for medium threats
-    if (analysis.score > 0.5 && analysis.score <= this.config.autoBlockThreshold) {
+    if (
+      analysis.score > 0.5 &&
+      analysis.score <= this.config.autoBlockThreshold
+    ) {
       actions.push({
         type: 'rate_limit',
         target: event.clientIP,
         limit: 10,
         window: 60000, // 1 minute
-        reason: `Medium-severity threat: ${analysis.type}`
+        reason: `Medium-severity threat: ${analysis.type}`,
       });
     }
 
@@ -338,7 +355,7 @@ class AdvancedThreatDetectionSystem extends EventEmitter {
         type: 'enhanced_monitoring',
         target: event.sessionId || event.clientIP,
         duration: 1800000, // 30 minutes
-        reason: `Suspicious activity: ${analysis.type}`
+        reason: `Suspicious activity: ${analysis.type}`,
       });
     }
 
@@ -347,7 +364,7 @@ class AdvancedThreatDetectionSystem extends EventEmitter {
       actions.push({
         type: 'security_alert',
         severity: 'critical',
-        reason: `Critical security threat detected: ${analysis.type}`
+        reason: `Critical security threat detected: ${analysis.type}`,
       });
     }
 
@@ -355,7 +372,7 @@ class AdvancedThreatDetectionSystem extends EventEmitter {
     actions.push({
       type: 'log_event',
       level: this.determineLoglevel(analysis.score),
-      details: threat
+      details: threat,
     });
 
     return actions;
@@ -365,19 +382,19 @@ class AdvancedThreatDetectionSystem extends EventEmitter {
     switch (action.type) {
       case 'block_ip':
         return this.blockIP(action.target, action.duration, action.reason);
-      
+
       case 'rate_limit':
         return this.applyRateLimit(action.target, action.limit, action.window);
-      
+
       case 'enhanced_monitoring':
         return this.enableEnhancedMonitoring(action.target, action.duration);
-      
+
       case 'security_alert':
         return this.sendSecurityAlert(action.severity, action.reason, threat);
-      
+
       case 'log_event':
         return this.logSecurityEvent(action.level, action.details);
-      
+
       default:
         throw new Error(`Unknown security action: ${action.type}`);
     }
@@ -385,7 +402,7 @@ class AdvancedThreatDetectionSystem extends EventEmitter {
 
   async blockIP(ip, duration, reason) {
     this.blockedIPs.add(ip);
-    
+
     // Schedule unblock
     setTimeout(() => {
       this.blockedIPs.delete(ip);
@@ -393,39 +410,42 @@ class AdvancedThreatDetectionSystem extends EventEmitter {
     }, duration);
 
     this.logger.warn(`Blocked IP ${ip} for ${duration}ms: ${reason}`);
-    
+
     return {
       status: 'success',
       action: 'ip_blocked',
       ip,
       duration,
-      reason
+      reason,
     };
   }
 
   async applyRateLimit(target, limit, window) {
     const key = `rate_limit_${target}`;
-    const existing = this.suspiciousActivities.get(key) || { count: 0, window: Date.now() };
-    
+    const existing = this.suspiciousActivities.get(key) || {
+      count: 0,
+      window: Date.now(),
+    };
+
     // Reset if window expired
     if (Date.now() - existing.window > window) {
       existing.count = 0;
       existing.window = Date.now();
     }
-    
+
     existing.count++;
     existing.limit = limit;
     existing.windowDuration = window;
-    
+
     this.suspiciousActivities.set(key, existing);
-    
+
     return {
       status: 'success',
       action: 'rate_limit_applied',
       target,
       currentCount: existing.count,
       limit,
-      window
+      window,
     };
   }
 
@@ -435,7 +455,7 @@ class AdvancedThreatDetectionSystem extends EventEmitter {
       type: 'enhanced_monitoring',
       startTime: Date.now(),
       duration,
-      events: []
+      events: [],
     });
 
     // Schedule monitoring cleanup
@@ -447,7 +467,7 @@ class AdvancedThreatDetectionSystem extends EventEmitter {
       status: 'success',
       action: 'enhanced_monitoring_enabled',
       target,
-      duration
+      duration,
     };
   }
 
@@ -462,18 +482,18 @@ class AdvancedThreatDetectionSystem extends EventEmitter {
         threatType: threat.analysis.type,
         threatScore: threat.analysis.score,
         sourceIP: threat.event.clientIP,
-        eventType: threat.event.type
-      }
+        eventType: threat.event.type,
+      },
     };
 
     // In a real implementation, this would send to a security system
     this.emit('securityAlert', alert);
-    
+
     return {
       status: 'success',
       action: 'alert_sent',
       alertId: alert.id,
-      severity
+      severity,
     };
   }
 
@@ -482,13 +502,13 @@ class AdvancedThreatDetectionSystem extends EventEmitter {
       threatId: details.id,
       type: details.analysis.type,
       score: details.analysis.score,
-      timestamp: details.timestamp
+      timestamp: details.timestamp,
     });
 
     return {
       status: 'success',
       action: 'event_logged',
-      level
+      level,
     };
   }
 
@@ -508,11 +528,11 @@ class AdvancedThreatDetectionSystem extends EventEmitter {
         path: request.path,
         headers: request.headers,
         query: request.query,
-        body: request.body
+        body: request.body,
       },
       clientIP: request.ip,
       userAgent: request.headers?.['user-agent'],
-      sessionId: request.sessionId
+      sessionId: request.sessionId,
     };
 
     // Check if IP is blocked
@@ -535,10 +555,10 @@ class AdvancedThreatDetectionSystem extends EventEmitter {
         provider: call.provider,
         model: call.model,
         input: call.input,
-        metadata: call.metadata
+        metadata: call.metadata,
       },
       clientIP: call.clientIP,
-      sessionId: call.sessionId
+      sessionId: call.sessionId,
     };
 
     // Check for prompt injection attempts
@@ -557,7 +577,7 @@ class AdvancedThreatDetectionSystem extends EventEmitter {
       source: 'user_service',
       data: activity,
       clientIP: activity.clientIP,
-      sessionId: activity.sessionId
+      sessionId: activity.sessionId,
     };
 
     await this.processSecurityEvent(event);
@@ -566,11 +586,14 @@ class AdvancedThreatDetectionSystem extends EventEmitter {
   async checkRateLimits(ip) {
     const key = `rate_limit_${ip}`;
     const rateLimitInfo = this.suspiciousActivities.get(key);
-    
+
     if (rateLimitInfo && rateLimitInfo.count >= rateLimitInfo.limit) {
-      const timeRemaining = rateLimitInfo.windowDuration - (Date.now() - rateLimitInfo.window);
+      const timeRemaining =
+        rateLimitInfo.windowDuration - (Date.now() - rateLimitInfo.window);
       if (timeRemaining > 0) {
-        throw new Error(`Rate limit exceeded for IP ${ip}. Try again in ${Math.ceil(timeRemaining / 1000)} seconds`);
+        throw new Error(
+          `Rate limit exceeded for IP ${ip}. Try again in ${Math.ceil(timeRemaining / 1000)} seconds`
+        );
       }
     }
   }
@@ -593,8 +616,16 @@ class AdvancedThreatDetectionSystem extends EventEmitter {
 
     // Additional heuristics
     const suspiciousKeywords = [
-      'ignore', 'forget', 'override', 'system', 'admin',
-      'root', 'sudo', 'exec', 'eval', 'script'
+      'ignore',
+      'forget',
+      'override',
+      'system',
+      'admin',
+      'root',
+      'sudo',
+      'exec',
+      'eval',
+      'script',
     ];
 
     const lowercaseInput = input.toLowerCase();
@@ -627,9 +658,11 @@ class AdvancedThreatDetectionSystem extends EventEmitter {
     // Analyze recent events for emerging threats
     const recentEvents = this.eventHistory.slice(-100);
     const patterns = await this.identifyEmergingPatterns(recentEvents);
-    
+
     if (patterns.length > 0) {
-      this.logger.info(`Identified ${patterns.length} emerging threat patterns`);
+      this.logger.info(
+        `Identified ${patterns.length} emerging threat patterns`
+      );
       patterns.forEach(pattern => {
         this.emit('emergingThreat', pattern);
       });
@@ -641,7 +674,7 @@ class AdvancedThreatDetectionSystem extends EventEmitter {
 
   async identifyEmergingPatterns(events) {
     const patterns = [];
-    
+
     // Group events by IP
     const ipGroups = {};
     events.forEach(event => {
@@ -653,13 +686,15 @@ class AdvancedThreatDetectionSystem extends EventEmitter {
 
     // Look for suspicious patterns
     Object.entries(ipGroups).forEach(([ip, ipEvents]) => {
-      if (ipEvents.length > 20) { // High frequency
+      if (ipEvents.length > 20) {
+        // High frequency
         patterns.push({
           type: 'high_frequency_requests',
           ip,
           count: ipEvents.length,
-          timespan: ipEvents[ipEvents.length - 1].timestamp - ipEvents[0].timestamp,
-          severity: 'medium'
+          timespan:
+            ipEvents[ipEvents.length - 1].timestamp - ipEvents[0].timestamp,
+          severity: 'medium',
         });
       }
 
@@ -670,7 +705,7 @@ class AdvancedThreatDetectionSystem extends EventEmitter {
           type: 'scanning_behavior',
           ip,
           uniquePaths,
-          severity: 'high'
+          severity: 'high',
         });
       }
     });
@@ -681,15 +716,18 @@ class AdvancedThreatDetectionSystem extends EventEmitter {
   async updateThreatIntelligence() {
     // Simulate updating threat intelligence from external sources
     const newThreats = [];
-    
+
     // In a real implementation, this would fetch from threat intelligence feeds
     // For now, we'll simulate discovering new patterns from our own data
-    
-    const recentThreats = Array.from(this.activeThreats.values())
-      .filter(threat => Date.now() - threat.timestamp < 86400000); // Last 24 hours
+
+    const recentThreats = Array.from(this.activeThreats.values()).filter(
+      threat => Date.now() - threat.timestamp < 86400000
+    ); // Last 24 hours
 
     if (recentThreats.length > 0) {
-      this.logger.info(`Processed ${recentThreats.length} recent threats for intelligence update`);
+      this.logger.info(
+        `Processed ${recentThreats.length} recent threats for intelligence update`
+      );
     }
 
     return newThreats;
@@ -713,7 +751,10 @@ class AdvancedThreatDetectionSystem extends EventEmitter {
 
     // Clean up expired suspicious activities
     for (const [key, activity] of this.suspiciousActivities) {
-      if (activity.window && now - activity.window > (activity.windowDuration || 3600000)) {
+      if (
+        activity.window &&
+        now - activity.window > (activity.windowDuration || 3600000)
+      ) {
         this.suspiciousActivities.delete(key);
       }
     }
@@ -721,15 +762,15 @@ class AdvancedThreatDetectionSystem extends EventEmitter {
 
   updateSecurityMetrics(analysis) {
     this.securityMetrics.threatsDetected++;
-    
+
     if (analysis.score > this.config.threatScoreThreshold) {
       this.securityMetrics.threatsBlocked++;
     }
 
     // Update accuracy based on feedback (simplified)
     if (analysis.confidence > 0.8) {
-      this.securityMetrics.accuracy = 
-        (this.securityMetrics.accuracy * 0.95) + (analysis.confidence * 0.05);
+      this.securityMetrics.accuracy =
+        this.securityMetrics.accuracy * 0.95 + analysis.confidence * 0.05;
     }
   }
 
@@ -751,31 +792,41 @@ class AdvancedThreatDetectionSystem extends EventEmitter {
       blockedIPs: this.blockedIPs.size,
       activeThreats: this.activeThreats.size,
       recentEvents: this.eventHistory.length,
-      securityMetrics: this.securityMetrics
+      securityMetrics: this.securityMetrics,
     };
   }
 
   async getSecurityStatus() {
     const now = Date.now();
-    const recentThreats = Array.from(this.activeThreats.values())
-      .filter(threat => now - threat.timestamp < 3600000); // Last hour
+    const recentThreats = Array.from(this.activeThreats.values()).filter(
+      threat => now - threat.timestamp < 3600000
+    ); // Last hour
 
     const threatLevels = {
       critical: recentThreats.filter(t => t.analysis.score > 0.9).length,
-      high: recentThreats.filter(t => t.analysis.score > 0.7 && t.analysis.score <= 0.9).length,
-      medium: recentThreats.filter(t => t.analysis.score > 0.5 && t.analysis.score <= 0.7).length,
-      low: recentThreats.filter(t => t.analysis.score <= 0.5).length
+      high: recentThreats.filter(
+        t => t.analysis.score > 0.7 && t.analysis.score <= 0.9
+      ).length,
+      medium: recentThreats.filter(
+        t => t.analysis.score > 0.5 && t.analysis.score <= 0.7
+      ).length,
+      low: recentThreats.filter(t => t.analysis.score <= 0.5).length,
     };
 
     return {
-      status: threatLevels.critical > 0 ? 'critical' : 
-              threatLevels.high > 0 ? 'high' :
-              threatLevels.medium > 2 ? 'elevated' : 'normal',
+      status:
+        threatLevels.critical > 0
+          ? 'critical'
+          : threatLevels.high > 0
+            ? 'high'
+            : threatLevels.medium > 2
+              ? 'elevated'
+              : 'normal',
       threatLevels,
       activeThreats: this.activeThreats.size,
       blockedIPs: this.blockedIPs.size,
       metrics: this.securityMetrics,
-      lastUpdate: new Date().toISOString()
+      lastUpdate: new Date().toISOString(),
     };
   }
 
@@ -784,7 +835,7 @@ class AdvancedThreatDetectionSystem extends EventEmitter {
       this.anomalyDetector.getHealth(),
       this.patternAnalyzer.getHealth(),
       this.behaviorBaseline.getHealth(),
-      this.threatClassifier.getHealth()
+      this.threatClassifier.getHealth(),
     ]);
 
     const healthyComponents = componentsHealth.filter(
@@ -794,26 +845,38 @@ class AdvancedThreatDetectionSystem extends EventEmitter {
     return {
       healthy: this.initialized && healthyComponents >= 3,
       components: {
-        anomalyDetector: componentsHealth[0].status === 'fulfilled' ? componentsHealth[0].value : { healthy: false },
-        patternAnalyzer: componentsHealth[1].status === 'fulfilled' ? componentsHealth[1].value : { healthy: false },
-        behaviorBaseline: componentsHealth[2].status === 'fulfilled' ? componentsHealth[2].value : { healthy: false },
-        threatClassifier: componentsHealth[3].status === 'fulfilled' ? componentsHealth[3].value : { healthy: false }
+        anomalyDetector:
+          componentsHealth[0].status === 'fulfilled'
+            ? componentsHealth[0].value
+            : { healthy: false },
+        patternAnalyzer:
+          componentsHealth[1].status === 'fulfilled'
+            ? componentsHealth[1].value
+            : { healthy: false },
+        behaviorBaseline:
+          componentsHealth[2].status === 'fulfilled'
+            ? componentsHealth[2].value
+            : { healthy: false },
+        threatClassifier:
+          componentsHealth[3].status === 'fulfilled'
+            ? componentsHealth[3].value
+            : { healthy: false },
       },
       metrics: this.securityMetrics,
       activeThreats: this.activeThreats.size,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     };
   }
 
   async shutdown() {
     this.logger.info('Shutting down Advanced Threat Detection System...');
-    
+
     // Shutdown components
     await this.anomalyDetector.shutdown();
     await this.patternAnalyzer.shutdown();
     await this.behaviorBaseline.shutdown();
     await this.threatClassifier.shutdown();
-    
+
     // Clear data
     this.removeAllListeners();
     this.threatDatabase.clear();
@@ -822,7 +885,7 @@ class AdvancedThreatDetectionSystem extends EventEmitter {
     this.suspiciousActivities.clear();
     this.eventHistory = [];
     this.initialized = false;
-    
+
     this.logger.info('Advanced Threat Detection System shutdown complete');
   }
 }
@@ -842,33 +905,37 @@ class AnomalyDetector {
   async detectAnomalies(event) {
     // Simple statistical anomaly detection
     const key = `${event.type}_${event.source}`;
-    const baseline = this.baselines.get(key) || { count: 0, sum: 0, sumSquares: 0 };
-    
+    const baseline = this.baselines.get(key) || {
+      count: 0,
+      sum: 0,
+      sumSquares: 0,
+    };
+
     // Update baseline
     baseline.count++;
     const eventSize = JSON.stringify(event.data).length;
     baseline.sum += eventSize;
     baseline.sumSquares += eventSize * eventSize;
-    
+
     this.baselines.set(key, baseline);
-    
+
     // Calculate z-score if we have enough data
     if (baseline.count < 10) {
       return { score: 0, type: 'insufficient_data', confidence: 0.1 };
     }
-    
+
     const mean = baseline.sum / baseline.count;
-    const variance = (baseline.sumSquares / baseline.count) - (mean * mean);
+    const variance = baseline.sumSquares / baseline.count - mean * mean;
     const stdDev = Math.sqrt(variance);
-    
+
     const zScore = stdDev > 0 ? Math.abs(eventSize - mean) / stdDev : 0;
     const anomalyScore = Math.min(1, zScore / 3); // Normalize to 0-1
-    
+
     return {
       score: anomalyScore,
       type: anomalyScore > 0.7 ? 'size_anomaly' : 'normal',
       confidence: Math.min(0.9, baseline.count / 100),
-      details: { zScore, mean, stdDev, eventSize }
+      details: { zScore, mean, stdDev, eventSize },
     };
   }
 
@@ -876,7 +943,7 @@ class AnomalyDetector {
     return {
       healthy: true,
       baselines: this.baselines.size,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     };
   }
 
@@ -900,18 +967,30 @@ class PatternAnalyzer {
     // Simple pattern matching
     let maxScore = 0;
     let matchedType = 'unknown';
-    
+
     // Convert event data to string for pattern matching
     const eventString = JSON.stringify(event.data).toLowerCase();
-    
+
     // Check for suspicious patterns
     const suspiciousPatterns = [
-      { pattern: /admin|root|sudo/g, type: 'privilege_escalation', weight: 0.7 },
-      { pattern: /password|secret|token|key/g, type: 'credential_access', weight: 0.6 },
-      { pattern: /delete|drop|truncate|remove/g, type: 'data_destruction', weight: 0.8 },
-      { pattern: /script|eval|exec|cmd/g, type: 'code_execution', weight: 0.9 }
+      {
+        pattern: /admin|root|sudo/g,
+        type: 'privilege_escalation',
+        weight: 0.7,
+      },
+      {
+        pattern: /password|secret|token|key/g,
+        type: 'credential_access',
+        weight: 0.6,
+      },
+      {
+        pattern: /delete|drop|truncate|remove/g,
+        type: 'data_destruction',
+        weight: 0.8,
+      },
+      { pattern: /script|eval|exec|cmd/g, type: 'code_execution', weight: 0.9 },
     ];
-    
+
     suspiciousPatterns.forEach(({ pattern, type, weight }) => {
       const matches = eventString.match(pattern);
       if (matches) {
@@ -922,11 +1001,11 @@ class PatternAnalyzer {
         }
       }
     });
-    
+
     return {
       score: maxScore,
       type: matchedType,
-      confidence: maxScore > 0 ? 0.8 : 0.3
+      confidence: maxScore > 0 ? 0.8 : 0.3,
     };
   }
 
@@ -934,7 +1013,7 @@ class PatternAnalyzer {
     return {
       healthy: true,
       patterns: this.knownPatterns.size,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     };
   }
 
@@ -956,47 +1035,50 @@ class BehaviorBaseline {
 
   async checkDeviation(event) {
     const userId = event.sessionId || event.clientIP;
-    const behavior = this.userBehaviors.get(userId) || { 
-      requests: [], 
+    const behavior = this.userBehaviors.get(userId) || {
+      requests: [],
       patterns: new Set(),
-      avgInterval: 0 
+      avgInterval: 0,
     };
-    
+
     const now = Date.now();
     behavior.requests.push(now);
     behavior.patterns.add(event.type);
-    
+
     // Keep only recent requests (last hour)
     behavior.requests = behavior.requests.filter(time => now - time < 3600000);
-    
+
     // Calculate request frequency
     const frequency = behavior.requests.length;
-    const interval = behavior.requests.length > 1 ? 
-      (behavior.requests[behavior.requests.length - 1] - behavior.requests[0]) / behavior.requests.length :
-      0;
-    
+    const interval =
+      behavior.requests.length > 1
+        ? (behavior.requests[behavior.requests.length - 1] -
+            behavior.requests[0]) /
+          behavior.requests.length
+        : 0;
+
     behavior.avgInterval = behavior.avgInterval * 0.9 + interval * 0.1;
-    
+
     this.userBehaviors.set(userId, behavior);
-    
+
     // Check for deviations
     let deviationScore = 0;
-    
+
     // High frequency deviation
     if (frequency > 100) deviationScore += 0.3;
     if (frequency > 500) deviationScore += 0.5;
-    
+
     // Pattern diversity deviation
     if (behavior.patterns.size > 10) deviationScore += 0.2;
-    
+
     // Interval deviation
     if (interval < 100) deviationScore += 0.4; // Very fast requests
-    
+
     return {
       score: Math.min(1, deviationScore),
       type: deviationScore > 0.5 ? 'behavior_anomaly' : 'normal',
       confidence: Math.min(0.9, behavior.requests.length / 50),
-      details: { frequency, patterns: behavior.patterns.size, interval }
+      details: { frequency, patterns: behavior.patterns.size, interval },
     };
   }
 
@@ -1004,7 +1086,7 @@ class BehaviorBaseline {
     return {
       healthy: true,
       trackedUsers: this.userBehaviors.size,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     };
   }
 
@@ -1022,18 +1104,30 @@ class ThreatClassifier {
 
   async initialize() {
     // Simple threat classification model
-    this.threatModel.set('injection_attack', { weight: 0.9, indicators: ['sql', 'script', 'union', 'select'] });
-    this.threatModel.set('data_exfiltration', { weight: 0.95, indicators: ['email', 'ssn', 'credit', 'personal'] });
-    this.threatModel.set('privilege_escalation', { weight: 0.8, indicators: ['admin', 'root', 'sudo', 'elevated'] });
-    this.threatModel.set('reconnaissance', { weight: 0.6, indicators: ['scan', 'probe', 'enumerate', 'discover'] });
-    
+    this.threatModel.set('injection_attack', {
+      weight: 0.9,
+      indicators: ['sql', 'script', 'union', 'select'],
+    });
+    this.threatModel.set('data_exfiltration', {
+      weight: 0.95,
+      indicators: ['email', 'ssn', 'credit', 'personal'],
+    });
+    this.threatModel.set('privilege_escalation', {
+      weight: 0.8,
+      indicators: ['admin', 'root', 'sudo', 'elevated'],
+    });
+    this.threatModel.set('reconnaissance', {
+      weight: 0.6,
+      indicators: ['scan', 'probe', 'enumerate', 'discover'],
+    });
+
     this.logger.info('Threat Classifier initialized');
   }
 
   async classifyThreat(event) {
     const eventString = JSON.stringify(event.data).toLowerCase();
     let bestMatch = { score: 0, type: 'unknown', confidence: 0 };
-    
+
     for (const [threatType, model] of this.threatModel) {
       let matches = 0;
       model.indicators.forEach(indicator => {
@@ -1041,17 +1135,20 @@ class ThreatClassifier {
           matches++;
         }
       });
-      
+
       if (matches > 0) {
-        const score = Math.min(1, (matches / model.indicators.length) * model.weight);
+        const score = Math.min(
+          1,
+          (matches / model.indicators.length) * model.weight
+        );
         const confidence = matches / model.indicators.length;
-        
+
         if (score > bestMatch.score) {
           bestMatch = { score, type: threatType, confidence };
         }
       }
     }
-    
+
     return bestMatch;
   }
 
@@ -1059,7 +1156,7 @@ class ThreatClassifier {
     return {
       healthy: true,
       models: this.threatModel.size,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     };
   }
 
