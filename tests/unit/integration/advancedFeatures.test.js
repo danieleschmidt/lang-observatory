@@ -3,11 +3,19 @@
  * Testing the newly added advanced features
  */
 
-const { AdvancedSecurityManager } = require('../../../src/security/advancedSecurityManager');
-const { MultiRegionOrchestrator } = require('../../../src/global/multiRegionOrchestrator');
+const {
+  AdvancedSecurityManager,
+} = require('../../../src/security/advancedSecurityManager');
+const {
+  MultiRegionOrchestrator,
+} = require('../../../src/global/multiRegionOrchestrator');
 const { I18nManager } = require('../../../src/global/i18nManager');
-const { ExperimentalFramework } = require('../../../src/research/experimentalFramework');
-const { AdvancedMonitoringOrchestrator } = require('../../../src/monitoring/advancedMonitoringOrchestrator');
+const {
+  ExperimentalFramework,
+} = require('../../../src/research/experimentalFramework');
+const {
+  AdvancedMonitoringOrchestrator,
+} = require('../../../src/monitoring/advancedMonitoringOrchestrator');
 
 describe('Advanced Security Manager', () => {
   let securityManager;
@@ -27,23 +35,23 @@ describe('Advanced Security Manager', () => {
   test('should encrypt and decrypt data correctly', () => {
     const testData = { sensitive: 'information', userId: 123 };
     const encrypted = securityManager.encryptData(testData, 'confidential');
-    
+
     expect(encrypted).toHaveProperty('encrypted');
     expect(encrypted).toHaveProperty('classification', 'confidential');
     expect(encrypted).toHaveProperty('algorithm');
-    
+
     const decrypted = securityManager.decryptData(encrypted);
     expect(decrypted).toEqual(testData);
   });
 
   test('should enforce rate limiting', () => {
     const ip = '192.168.1.1';
-    
+
     // Should allow requests within limit
     for (let i = 0; i < 50; i++) {
       expect(securityManager.checkRateLimit(ip, 'global')).toBe(true);
     }
-    
+
     // Should block after limit
     for (let i = 0; i < 100; i++) {
       securityManager.checkRateLimit(ip, 'global');
@@ -67,7 +75,7 @@ describe('Advanced Security Manager', () => {
     });
 
     const result = await securityManager.authenticateRequest(credentials);
-    
+
     expect(result.authenticated).toBe(true);
     expect(result.user.id).toBe('test-user');
     expect(result.permissions).toContain('read');
@@ -75,11 +83,11 @@ describe('Advanced Security Manager', () => {
 
   test('should track security metrics', () => {
     const initialMetrics = securityManager.getSecurityMetrics();
-    
+
     // Simulate some security events
     securityManager.securityMetrics.encryptedOperations = 10;
     securityManager.securityMetrics.authenticatedRequests = 5;
-    
+
     const updatedMetrics = securityManager.getSecurityMetrics();
     expect(updatedMetrics.encryptedOperations).toBe(10);
     expect(updatedMetrics.authenticatedRequests).toBe(5);
@@ -128,17 +136,25 @@ describe('Multi-Region Orchestrator', () => {
       classification: 'personal',
     };
 
-    const validTransfer = orchestrator.validateCrossRegionCompliance(gdprData, 'eu-west-1');
+    const validTransfer = orchestrator.validateCrossRegionCompliance(
+      gdprData,
+      'eu-west-1'
+    );
     expect(validTransfer).toBe(true);
 
     const invalidData = { ...gdprData, gdprConsent: false };
-    const invalidTransfer = orchestrator.validateCrossRegionCompliance(invalidData, 'eu-west-1');
+    const invalidTransfer = orchestrator.validateCrossRegionCompliance(
+      invalidData,
+      'eu-west-1'
+    );
     expect(invalidTransfer).toBe(false);
   });
 
   test('should route requests to appropriate regions', async () => {
     const request = { type: 'api', data: 'test' };
-    const routing = await orchestrator.routeRequest(request, { userLocation: 'US' });
+    const routing = await orchestrator.routeRequest(request, {
+      userLocation: 'US',
+    });
 
     expect(routing).toHaveProperty('targetRegion');
     expect(routing).toHaveProperty('endpoint');
@@ -169,7 +185,7 @@ describe('I18n Manager', () => {
 
     expect(englishText).toBe('An error occurred');
     expect(spanishText).toBe('Se produjo un error');
-    expect(frenchText).toBe('Une erreur s\'est produite');
+    expect(frenchText).toBe("Une erreur s'est produite");
   });
 
   test('should handle locale detection from request', () => {
@@ -189,7 +205,7 @@ describe('I18n Manager', () => {
 
   test('should format numbers according to locale', () => {
     const number = 1234.56;
-    
+
     const usFormat = i18nManager.formatNumber(number, 'en-US');
     const deFormat = i18nManager.formatNumber(number, 'de-DE');
     const frFormat = i18nManager.formatNumber(number, 'fr-FR');
@@ -214,7 +230,7 @@ describe('I18n Manager', () => {
     };
 
     i18nManager.setUserPreference(userId, preferences);
-    
+
     const request = { user: { id: userId } };
     const detectedLocale = i18nManager.detectLocale(request);
     expect(detectedLocale).toBe('ja-JP');
@@ -245,7 +261,7 @@ describe('Experimental Framework', () => {
     };
 
     const experiment = await framework.createExperiment(hypothesis);
-    
+
     expect(experiment).toHaveProperty('id');
     expect(experiment.hypothesis.statement).toBe(hypothesis.statement);
     expect(experiment.status).toBe('designed');
@@ -272,7 +288,7 @@ describe('Experimental Framework', () => {
     const newAlgorithm = {
       name: 'Optimized Quantum Planner',
       version: '2.0',
-      implementation: async (tasks) => ({
+      implementation: async tasks => ({
         plan: tasks.map((t, i) => ({ ...t, optimized: true, order: i })),
         time: 75, // Faster than baselines
       }),
@@ -303,7 +319,7 @@ describe('Experimental Framework', () => {
 
   test('should calculate statistical measures correctly', () => {
     const values = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
-    
+
     const mean = framework.calculateMean(values);
     const std = framework.calculateStandardDeviation(values);
     const stats = framework.calculateDescriptiveStats(values);
@@ -376,12 +392,14 @@ describe('Advanced Monitoring Orchestrator', () => {
     const now = Date.now();
     const rule = Array.from(monitoring.alertRules.values())[0];
     const shouldAlert = monitoring.evaluateAlertRule(rule, now);
-    
+
     expect(shouldAlert).toBe(true);
   });
 
   test('should detect anomalies', () => {
-    const normalValues = Array(50).fill().map(() => 100 + Math.random() * 10);
+    const normalValues = Array(50)
+      .fill()
+      .map(() => 100 + Math.random() * 10);
     const anomalyValues = [150, 160]; // Clear anomalies
     const allValues = [...normalValues, ...anomalyValues];
 
@@ -428,7 +446,7 @@ describe('Advanced Monitoring Orchestrator', () => {
     monitoring.updateMetric('app.requests.total', 1500);
 
     const prometheusOutput = monitoring.prometheusEndpoint.getMetrics();
-    
+
     expect(prometheusOutput).toContain('system.cpu.usage');
     expect(prometheusOutput).toContain('app.requests.total');
     expect(prometheusOutput).toContain('45.5');

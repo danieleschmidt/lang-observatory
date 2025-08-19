@@ -93,7 +93,12 @@ class AdvancedSecurityManager extends EventEmitter {
     });
 
     // Generate data classification keys
-    const classifications = ['public', 'internal', 'confidential', 'restricted'];
+    const classifications = [
+      'public',
+      'internal',
+      'confidential',
+      'restricted',
+    ];
     for (const classification of classifications) {
       const key = crypto.randomBytes(32);
       this.encryptionKeys.set(classification, {
@@ -165,9 +170,12 @@ class AdvancedSecurityManager extends EventEmitter {
     });
 
     // Cleanup old audit logs based on retention policy
-    setInterval(() => {
-      this.cleanupAuditLogs();
-    }, 24 * 60 * 60 * 1000); // Daily cleanup
+    setInterval(
+      () => {
+        this.cleanupAuditLogs();
+      },
+      24 * 60 * 60 * 1000
+    ); // Daily cleanup
   }
 
   setupComplianceMonitoring() {
@@ -182,21 +190,30 @@ class AdvancedSecurityManager extends EventEmitter {
     }
 
     // Data retention monitoring
-    setInterval(() => {
-      this.enforceDataRetention();
-    }, 24 * 60 * 60 * 1000); // Daily enforcement
+    setInterval(
+      () => {
+        this.enforceDataRetention();
+      },
+      24 * 60 * 60 * 1000
+    ); // Daily enforcement
   }
 
   startSecurityMonitoring() {
     // Monitor for suspicious patterns
-    setInterval(() => {
-      this.analyzeSuspiciousActivity();
-    }, 5 * 60 * 1000); // Every 5 minutes
+    setInterval(
+      () => {
+        this.analyzeSuspiciousActivity();
+      },
+      5 * 60 * 1000
+    ); // Every 5 minutes
 
     // Generate security reports
-    setInterval(() => {
-      this.generateSecurityReport();
-    }, 60 * 60 * 1000); // Hourly reports
+    setInterval(
+      () => {
+        this.generateSecurityReport();
+      },
+      60 * 60 * 1000
+    ); // Hourly reports
   }
 
   // Data encryption methods
@@ -208,14 +225,19 @@ class AdvancedSecurityManager extends EventEmitter {
     const keyInfo = this.encryptionKeys.get(classification);
     const iv = crypto.randomBytes(16);
     const cipher = crypto.createCipher(keyInfo.algorithm, keyInfo.key);
-    cipher.setAAD(Buffer.from(JSON.stringify({ classification, timestamp: Date.now() })));
+    cipher.setAAD(
+      Buffer.from(JSON.stringify({ classification, timestamp: Date.now() }))
+    );
 
     let encrypted = cipher.update(JSON.stringify(data), 'utf8', 'hex');
     encrypted += cipher.final('hex');
     const authTag = cipher.getAuthTag();
 
     this.securityMetrics.encryptedOperations++;
-    this.emit('encryption_operation', { classification, size: encrypted.length });
+    this.emit('encryption_operation', {
+      classification,
+      size: encrypted.length,
+    });
 
     return {
       encrypted,
@@ -229,18 +251,24 @@ class AdvancedSecurityManager extends EventEmitter {
 
   decryptData(encryptedData) {
     const { encrypted, iv, authTag, classification, algorithm } = encryptedData;
-    
+
     if (!this.encryptionKeys.has(classification)) {
-      throw new Error(`Cannot decrypt: Unknown classification ${classification}`);
+      throw new Error(
+        `Cannot decrypt: Unknown classification ${classification}`
+      );
     }
 
     const keyInfo = this.encryptionKeys.get(classification);
     const decipher = crypto.createDecipher(algorithm, keyInfo.key);
     decipher.setAuthTag(Buffer.from(authTag, 'hex'));
-    decipher.setAAD(Buffer.from(JSON.stringify({ 
-      classification, 
-      timestamp: encryptedData.timestamp 
-    })));
+    decipher.setAAD(
+      Buffer.from(
+        JSON.stringify({
+          classification,
+          timestamp: encryptedData.timestamp,
+        })
+      )
+    );
 
     let decrypted = decipher.update(encrypted, 'hex', 'utf8');
     decrypted += decipher.final('utf8');
@@ -334,18 +362,26 @@ class AdvancedSecurityManager extends EventEmitter {
     }
 
     const requests = limiter.requests.get(identifier);
-    
+
     // Remove old requests
     const recentRequests = requests.filter(time => time > oneHourAgo);
     limiter.requests.set(identifier, recentRequests);
 
     // Check limits
-    const lastMinuteRequests = recentRequests.filter(time => time > oneMinuteAgo);
+    const lastMinuteRequests = recentRequests.filter(
+      time => time > oneMinuteAgo
+    );
     const lastHourRequests = recentRequests;
 
-    if (lastMinuteRequests.length >= limiter.maxPerMinute ||
-        lastHourRequests.length >= limiter.maxPerHour) {
-      this.emit('rate_limit_exceeded', { identifier, endpoint, timestamp: now });
+    if (
+      lastMinuteRequests.length >= limiter.maxPerMinute ||
+      lastHourRequests.length >= limiter.maxPerHour
+    ) {
+      this.emit('rate_limit_exceeded', {
+        identifier,
+        endpoint,
+        timestamp: now,
+      });
       return false;
     }
 
@@ -356,7 +392,10 @@ class AdvancedSecurityManager extends EventEmitter {
 
   recordFailedAttempt(identifier, ip) {
     const key = `${identifier}:${ip}`;
-    const attempts = this.failedAttempts.get(key) || { count: 0, firstAttempt: Date.now() };
+    const attempts = this.failedAttempts.get(key) || {
+      count: 0,
+      firstAttempt: Date.now(),
+    };
     attempts.count++;
     attempts.lastAttempt = Date.now();
 
@@ -365,8 +404,10 @@ class AdvancedSecurityManager extends EventEmitter {
     // Check if we should blacklist this IP
     if (attempts.count >= this.config.authentication.maxFailedAttempts) {
       this.blacklistedIPs.add(ip);
-      this.logger.warn(`IP ${ip} blacklisted after ${attempts.count} failed attempts`);
-      
+      this.logger.warn(
+        `IP ${ip} blacklisted after ${attempts.count} failed attempts`
+      );
+
       // Auto-remove from blacklist after lockout duration
       setTimeout(() => {
         this.blacklistedIPs.delete(ip);
@@ -401,8 +442,10 @@ class AdvancedSecurityManager extends EventEmitter {
   }
 
   enforceDataRetention() {
-    const retentionPeriod = this.config.compliance.dataRetentionDays * 24 * 60 * 60 * 1000;
-    const auditRetentionPeriod = this.config.compliance.auditLogRetentionDays * 24 * 60 * 60 * 1000;
+    const retentionPeriod =
+      this.config.compliance.dataRetentionDays * 24 * 60 * 60 * 1000;
+    const auditRetentionPeriod =
+      this.config.compliance.auditLogRetentionDays * 24 * 60 * 60 * 1000;
     const now = Date.now();
 
     // Clean up old audit logs
@@ -435,7 +478,8 @@ class AdvancedSecurityManager extends EventEmitter {
 
     // Check for repeated failed attempts from same IP
     for (const [key, attempts] of this.failedAttempts) {
-      if (attempts.count > 3 && Date.now() - attempts.firstAttempt < 300000) { // 5 minutes
+      if (attempts.count > 3 && Date.now() - attempts.firstAttempt < 300000) {
+        // 5 minutes
         suspiciousPatterns.push({
           type: 'repeated_failed_attempts',
           key,
@@ -478,9 +522,12 @@ class AdvancedSecurityManager extends EventEmitter {
 
   rotateEncryptionKeys() {
     const now = Date.now();
-    
+
     for (const [classification, keyInfo] of this.encryptionKeys) {
-      if (now - keyInfo.createdAt > this.config.encryption.keyRotationInterval) {
+      if (
+        now - keyInfo.createdAt >
+        this.config.encryption.keyRotationInterval
+      ) {
         const newKey = crypto.randomBytes(32);
         this.encryptionKeys.set(classification, {
           key: newKey,
@@ -490,14 +537,16 @@ class AdvancedSecurityManager extends EventEmitter {
         });
 
         this.emit('key_rotation', { classification, timestamp: now });
-        this.logger.info(`Encryption key rotated for classification: ${classification}`);
+        this.logger.info(
+          `Encryption key rotated for classification: ${classification}`
+        );
       }
     }
   }
 
   cleanupRateLimitEntries() {
     const oneHourAgo = Date.now() - 3600000;
-    
+
     for (const [endpoint, limiter] of this.rateLimiters) {
       for (const [identifier, requests] of limiter.requests) {
         const recentRequests = requests.filter(time => time > oneHourAgo);
@@ -511,9 +560,10 @@ class AdvancedSecurityManager extends EventEmitter {
   }
 
   cleanupAuditLogs() {
-    const retentionPeriod = this.config.compliance.auditLogRetentionDays * 24 * 60 * 60 * 1000;
+    const retentionPeriod =
+      this.config.compliance.auditLogRetentionDays * 24 * 60 * 60 * 1000;
     const now = Date.now();
-    
+
     this.auditLogs = this.auditLogs.filter(
       log => now - log.timestamp < retentionPeriod
     );

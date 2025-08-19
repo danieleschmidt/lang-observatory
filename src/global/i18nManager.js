@@ -111,7 +111,9 @@ class I18nManager extends EventEmitter {
     this.startCacheManagement();
 
     this.initialized = true;
-    this.logger.info(`I18n Manager initialized with ${this.config.supportedLocales.length} locales`);
+    this.logger.info(
+      `I18n Manager initialized with ${this.config.supportedLocales.length} locales`
+    );
 
     return this;
   }
@@ -166,9 +168,9 @@ class I18nManager extends EventEmitter {
         'dashboard.settings': 'Configuración',
       },
       'fr-FR': {
-        'system.error.general': 'Une erreur s\'est produite',
+        'system.error.general': "Une erreur s'est produite",
         'system.error.network': 'Échec de la connexion réseau',
-        'system.error.auth': 'Échec de l\'authentification',
+        'system.error.auth': "Échec de l'authentification",
         'system.error.permission': 'Permission refusée',
         'system.success.operation': 'Opération terminée avec succès',
         'system.loading': 'Chargement...',
@@ -264,30 +266,33 @@ class I18nManager extends EventEmitter {
       this.translations.set(locale, new Map(Object.entries(translations)));
     }
 
-    this.logger.info(`Loaded core translations for ${Object.keys(coreTranslations).length} locales`);
+    this.logger.info(
+      `Loaded core translations for ${Object.keys(coreTranslations).length} locales`
+    );
   }
 
   setupPluralizationRules() {
     // English and similar languages (0, 1, 2+)
-    const englishRule = (count) => {
+    const englishRule = count => {
       if (count === 0) return 'zero';
       if (count === 1) return 'one';
       return 'other';
     };
 
     // Romance languages (0, 1, 2+)
-    const romanceRule = (count) => {
+    const romanceRule = count => {
       if (count === 0 || count === 1) return 'one';
       return 'other';
     };
 
     // Slavic languages (complex rules)
-    const slavicRule = (count) => {
+    const slavicRule = count => {
       const mod10 = count % 10;
       const mod100 = count % 100;
-      
+
       if (mod10 === 1 && mod100 !== 11) return 'one';
-      if (mod10 >= 2 && mod10 <= 4 && (mod100 < 10 || mod100 >= 20)) return 'few';
+      if (mod10 >= 2 && mod10 <= 4 && (mod100 < 10 || mod100 >= 20))
+        return 'few';
       return 'many';
     };
 
@@ -295,7 +300,7 @@ class I18nManager extends EventEmitter {
     const noPlural = () => 'other';
 
     // Arabic (complex 6-form system)
-    const arabicRule = (count) => {
+    const arabicRule = count => {
       if (count === 0) return 'zero';
       if (count === 1) return 'one';
       if (count === 2) return 'two';
@@ -306,14 +311,24 @@ class I18nManager extends EventEmitter {
 
     // Map locales to pluralization rules
     const localeRules = {
-      'en-US': englishRule, 'en-GB': englishRule,
-      'es-ES': romanceRule, 'es-MX': romanceRule,
-      'fr-FR': romanceRule, 'fr-CA': romanceRule,
-      'it-IT': romanceRule, 'pt-BR': romanceRule,
-      'de-DE': englishRule, 'nl-NL': englishRule,
-      'pl-PL': slavicRule, 'ru-RU': slavicRule,
-      'ja-JP': noPlural, 'ko-KR': noPlural, 'zh-CN': noPlural, 'zh-TW': noPlural,
-      'th-TH': noPlural, 'vi-VN': noPlural,
+      'en-US': englishRule,
+      'en-GB': englishRule,
+      'es-ES': romanceRule,
+      'es-MX': romanceRule,
+      'fr-FR': romanceRule,
+      'fr-CA': romanceRule,
+      'it-IT': romanceRule,
+      'pt-BR': romanceRule,
+      'de-DE': englishRule,
+      'nl-NL': englishRule,
+      'pl-PL': slavicRule,
+      'ru-RU': slavicRule,
+      'ja-JP': noPlural,
+      'ko-KR': noPlural,
+      'zh-CN': noPlural,
+      'zh-TW': noPlural,
+      'th-TH': noPlural,
+      'vi-VN': noPlural,
       'ar-SA': arabicRule,
       'hi-IN': englishRule,
       'tr-TR': englishRule,
@@ -323,19 +338,42 @@ class I18nManager extends EventEmitter {
       this.pluralizationRules.set(locale, rule);
     }
 
-    this.logger.info('Pluralization rules configured for all supported locales');
+    this.logger.info(
+      'Pluralization rules configured for all supported locales'
+    );
   }
 
   setupCulturalAdaptations() {
     // Date and time formats
     const dateFormats = new Map([
-      ['en-US', { date: 'MM/DD/YYYY', time: 'h:mm A', datetime: 'MM/DD/YYYY h:mm A' }],
-      ['en-GB', { date: 'DD/MM/YYYY', time: 'HH:mm', datetime: 'DD/MM/YYYY HH:mm' }],
-      ['es-ES', { date: 'DD/MM/YYYY', time: 'HH:mm', datetime: 'DD/MM/YYYY HH:mm' }],
-      ['fr-FR', { date: 'DD/MM/YYYY', time: 'HH:mm', datetime: 'DD/MM/YYYY HH:mm' }],
-      ['de-DE', { date: 'DD.MM.YYYY', time: 'HH:mm', datetime: 'DD.MM.YYYY HH:mm' }],
-      ['ja-JP', { date: 'YYYY/MM/DD', time: 'HH:mm', datetime: 'YYYY/MM/DD HH:mm' }],
-      ['zh-CN', { date: 'YYYY-MM-DD', time: 'HH:mm', datetime: 'YYYY-MM-DD HH:mm' }],
+      [
+        'en-US',
+        { date: 'MM/DD/YYYY', time: 'h:mm A', datetime: 'MM/DD/YYYY h:mm A' },
+      ],
+      [
+        'en-GB',
+        { date: 'DD/MM/YYYY', time: 'HH:mm', datetime: 'DD/MM/YYYY HH:mm' },
+      ],
+      [
+        'es-ES',
+        { date: 'DD/MM/YYYY', time: 'HH:mm', datetime: 'DD/MM/YYYY HH:mm' },
+      ],
+      [
+        'fr-FR',
+        { date: 'DD/MM/YYYY', time: 'HH:mm', datetime: 'DD/MM/YYYY HH:mm' },
+      ],
+      [
+        'de-DE',
+        { date: 'DD.MM.YYYY', time: 'HH:mm', datetime: 'DD.MM.YYYY HH:mm' },
+      ],
+      [
+        'ja-JP',
+        { date: 'YYYY/MM/DD', time: 'HH:mm', datetime: 'YYYY/MM/DD HH:mm' },
+      ],
+      [
+        'zh-CN',
+        { date: 'YYYY-MM-DD', time: 'HH:mm', datetime: 'YYYY-MM-DD HH:mm' },
+      ],
     ]);
 
     // Number formats
@@ -354,9 +392,18 @@ class I18nManager extends EventEmitter {
 
     // Color coding cultural meanings
     const colorMeanings = new Map([
-      ['en-US', { success: 'green', warning: 'yellow', error: 'red', info: 'blue' }],
-      ['zh-CN', { success: 'red', warning: 'yellow', error: 'black', info: 'blue' }],
-      ['ja-JP', { success: 'green', warning: 'yellow', error: 'red', info: 'blue' }],
+      [
+        'en-US',
+        { success: 'green', warning: 'yellow', error: 'red', info: 'blue' },
+      ],
+      [
+        'zh-CN',
+        { success: 'red', warning: 'yellow', error: 'black', info: 'blue' },
+      ],
+      [
+        'ja-JP',
+        { success: 'green', warning: 'yellow', error: 'red', info: 'blue' },
+      ],
     ]);
 
     this.culturalRules.set('dateFormats', dateFormats);
@@ -369,11 +416,12 @@ class I18nManager extends EventEmitter {
 
   initializeLocaleDetectors() {
     // Browser locale detector
-    this.localeDetectors.set('browser', (request) => {
+    this.localeDetectors.set('browser', request => {
       const acceptLanguage = request.headers?.['accept-language'];
       if (!acceptLanguage) return null;
 
-      const languages = acceptLanguage.split(',')
+      const languages = acceptLanguage
+        .split(',')
         .map(lang => {
           const [locale, q = '1'] = lang.trim().split(';q=');
           return { locale: locale.trim(), quality: parseFloat(q) };
@@ -385,7 +433,7 @@ class I18nManager extends EventEmitter {
           return locale;
         }
         // Try to find similar locale (e.g., 'en' -> 'en-US')
-        const similar = this.config.supportedLocales.find(supported => 
+        const similar = this.config.supportedLocales.find(supported =>
           supported.startsWith(locale.split('-')[0])
         );
         if (similar) return similar;
@@ -395,7 +443,7 @@ class I18nManager extends EventEmitter {
     });
 
     // User preference detector
-    this.localeDetectors.set('user', (request) => {
+    this.localeDetectors.set('user', request => {
       const userId = request.user?.id;
       if (userId && this.userPreferences.has(userId)) {
         return this.userPreferences.get(userId).locale;
@@ -404,17 +452,31 @@ class I18nManager extends EventEmitter {
     });
 
     // Geographic detector
-    this.localeDetectors.set('geographic', (request) => {
+    this.localeDetectors.set('geographic', request => {
       const country = request.geo?.country;
       const geoMapping = {
-        'US': 'en-US', 'GB': 'en-GB', 'CA': 'en-US',
-        'ES': 'es-ES', 'MX': 'es-MX', 'AR': 'es-ES',
-        'FR': 'fr-FR', 'DE': 'de-DE', 'IT': 'it-IT',
-        'JP': 'ja-JP', 'CN': 'zh-CN', 'TW': 'zh-TW',
-        'KR': 'ko-KR', 'BR': 'pt-BR', 'RU': 'ru-RU',
-        'SA': 'ar-SA', 'IN': 'hi-IN', 'TH': 'th-TH',
-        'VN': 'vi-VN', 'TR': 'tr-TR', 'PL': 'pl-PL',
-        'NL': 'nl-NL',
+        US: 'en-US',
+        GB: 'en-GB',
+        CA: 'en-US',
+        ES: 'es-ES',
+        MX: 'es-MX',
+        AR: 'es-ES',
+        FR: 'fr-FR',
+        DE: 'de-DE',
+        IT: 'it-IT',
+        JP: 'ja-JP',
+        CN: 'zh-CN',
+        TW: 'zh-TW',
+        KR: 'ko-KR',
+        BR: 'pt-BR',
+        RU: 'ru-RU',
+        SA: 'ar-SA',
+        IN: 'hi-IN',
+        TH: 'th-TH',
+        VN: 'vi-VN',
+        TR: 'tr-TR',
+        PL: 'pl-PL',
+        NL: 'nl-NL',
       };
       return geoMapping[country] || null;
     });
@@ -425,48 +487,66 @@ class I18nManager extends EventEmitter {
   setupContentAdaptationRules() {
     // Technical term translations
     const technicalTerms = new Map([
-      ['en-US', new Map([
-        ['API', 'API'],
-        ['token', 'token'],
-        ['latency', 'latency'],
-        ['throughput', 'throughput'],
-        ['cache', 'cache'],
-      ])],
-      ['es-ES', new Map([
-        ['API', 'API'],
-        ['token', 'token'],
-        ['latency', 'latencia'],
-        ['throughput', 'rendimiento'],
-        ['cache', 'caché'],
-      ])],
-      ['fr-FR', new Map([
-        ['API', 'API'],
-        ['token', 'jeton'],
-        ['latency', 'latence'],
-        ['throughput', 'débit'],
-        ['cache', 'cache'],
-      ])],
-      ['de-DE', new Map([
-        ['API', 'API'],
-        ['token', 'Token'],
-        ['latency', 'Latenz'],
-        ['throughput', 'Durchsatz'],
-        ['cache', 'Cache'],
-      ])],
-      ['ja-JP', new Map([
-        ['API', 'API'],
-        ['token', 'トークン'],
-        ['latency', 'レイテンシ'],
-        ['throughput', 'スループット'],
-        ['cache', 'キャッシュ'],
-      ])],
-      ['zh-CN', new Map([
-        ['API', 'API'],
-        ['token', '令牌'],
-        ['latency', '延迟'],
-        ['throughput', '吞吐量'],
-        ['cache', '缓存'],
-      ])],
+      [
+        'en-US',
+        new Map([
+          ['API', 'API'],
+          ['token', 'token'],
+          ['latency', 'latency'],
+          ['throughput', 'throughput'],
+          ['cache', 'cache'],
+        ]),
+      ],
+      [
+        'es-ES',
+        new Map([
+          ['API', 'API'],
+          ['token', 'token'],
+          ['latency', 'latencia'],
+          ['throughput', 'rendimiento'],
+          ['cache', 'caché'],
+        ]),
+      ],
+      [
+        'fr-FR',
+        new Map([
+          ['API', 'API'],
+          ['token', 'jeton'],
+          ['latency', 'latence'],
+          ['throughput', 'débit'],
+          ['cache', 'cache'],
+        ]),
+      ],
+      [
+        'de-DE',
+        new Map([
+          ['API', 'API'],
+          ['token', 'Token'],
+          ['latency', 'Latenz'],
+          ['throughput', 'Durchsatz'],
+          ['cache', 'Cache'],
+        ]),
+      ],
+      [
+        'ja-JP',
+        new Map([
+          ['API', 'API'],
+          ['token', 'トークン'],
+          ['latency', 'レイテンシ'],
+          ['throughput', 'スループット'],
+          ['cache', 'キャッシュ'],
+        ]),
+      ],
+      [
+        'zh-CN',
+        new Map([
+          ['API', 'API'],
+          ['token', '令牌'],
+          ['latency', '延迟'],
+          ['throughput', '吞吐量'],
+          ['cache', '缓存'],
+        ]),
+      ],
     ]);
 
     this.contentAdaptations.set('technicalTerms', technicalTerms);
@@ -478,28 +558,33 @@ class I18nManager extends EventEmitter {
     if (!this.config.caching.enabled) return;
 
     // Cache cleanup interval
-    setInterval(() => {
-      this.cleanupTranslationCache();
-    }, 60 * 60 * 1000); // Every hour
+    setInterval(
+      () => {
+        this.cleanupTranslationCache();
+      },
+      60 * 60 * 1000
+    ); // Every hour
 
     this.logger.info('Translation cache management started');
   }
 
   detectLocale(request) {
-    this.metrics.localeDetections.set('total', 
+    this.metrics.localeDetections.set(
+      'total',
       (this.metrics.localeDetections.get('total') || 0) + 1
     );
 
     // Try detectors in order of priority
     const detectorOrder = ['user', 'browser', 'geographic'];
-    
+
     for (const detectorName of detectorOrder) {
       const detector = this.localeDetectors.get(detectorName);
       if (detector) {
         try {
           const locale = detector(request);
           if (locale) {
-            this.metrics.localeDetections.set(detectorName, 
+            this.metrics.localeDetections.set(
+              detectorName,
               (this.metrics.localeDetections.get(detectorName) || 0) + 1
             );
             return locale;
@@ -511,7 +596,8 @@ class I18nManager extends EventEmitter {
     }
 
     // Fallback to default locale
-    this.metrics.localeDetections.set('fallback', 
+    this.metrics.localeDetections.set(
+      'fallback',
       (this.metrics.localeDetections.get('fallback') || 0) + 1
     );
     return this.config.defaultLocale;
@@ -558,7 +644,9 @@ class I18nManager extends EventEmitter {
     if (translation) return translation;
 
     // Try fallback chain
-    const fallbacks = this.config.fallbackChain[locale] || [this.config.defaultLocale];
+    const fallbacks = this.config.fallbackChain[locale] || [
+      this.config.defaultLocale,
+    ];
     for (const fallbackLocale of fallbacks) {
       translation = this.getTranslation(key, fallbackLocale, context);
       if (translation) {
@@ -570,7 +658,7 @@ class I18nManager extends EventEmitter {
     // Log missing translation
     this.metrics.missingTranslations++;
     this.emit('missingTranslation', { key, locale, context });
-    
+
     return null;
   }
 
@@ -607,12 +695,13 @@ class I18nManager extends EventEmitter {
 
   formatNumber(number, locale = this.config.defaultLocale, options = {}) {
     const formats = this.culturalRules.get('numberFormats');
-    const format = formats?.get(locale) || formats?.get(this.config.defaultLocale);
-    
+    const format =
+      formats?.get(locale) || formats?.get(this.config.defaultLocale);
+
     if (!format) return number.toString();
 
     const { style = 'decimal', currency } = options;
-    
+
     try {
       const formatter = new Intl.NumberFormat(locale, {
         style,
@@ -628,8 +717,9 @@ class I18nManager extends EventEmitter {
 
   formatDate(date, locale = this.config.defaultLocale, options = {}) {
     const formats = this.culturalRules.get('dateFormats');
-    const format = formats?.get(locale) || formats?.get(this.config.defaultLocale);
-    
+    const format =
+      formats?.get(locale) || formats?.get(this.config.defaultLocale);
+
     if (!format) return date.toISOString();
 
     try {
@@ -648,7 +738,10 @@ class I18nManager extends EventEmitter {
 
   getCulturalColors(locale) {
     const colorMeanings = this.culturalRules.get('colorMeanings');
-    return colorMeanings?.get(locale) || colorMeanings?.get(this.config.defaultLocale);
+    return (
+      colorMeanings?.get(locale) ||
+      colorMeanings?.get(this.config.defaultLocale)
+    );
   }
 
   setUserPreference(userId, preferences) {
@@ -701,7 +794,9 @@ class I18nManager extends EventEmitter {
       }
     }
 
-    this.logger.debug(`Translation cache cleaned up, size: ${this.translationCache.size}`);
+    this.logger.debug(
+      `Translation cache cleaned up, size: ${this.translationCache.size}`
+    );
   }
 
   clearCacheForKey(locale, key) {
@@ -719,7 +814,8 @@ class I18nManager extends EventEmitter {
       ...this.metrics,
       cacheSize: this.translationCache.size,
       translationsLoaded: Array.from(this.translations.entries()).reduce(
-        (total, [_, localeMap]) => total + localeMap.size, 0
+        (total, [_, localeMap]) => total + localeMap.size,
+        0
       ),
       supportedLocales: this.config.supportedLocales.length,
       userPreferences: this.userPreferences.size,

@@ -4,8 +4,12 @@
  */
 
 const { Logger } = require('../utils/logger');
-const { AdaptiveLearningSystem } = require('../auto-optimization/adaptiveLearning');
-const { PredictiveAnalyticsEngine } = require('../intelligence/predictiveAnalytics');
+const {
+  AdaptiveLearningSystem,
+} = require('../auto-optimization/adaptiveLearning');
+const {
+  PredictiveAnalyticsEngine,
+} = require('../intelligence/predictiveAnalytics');
 const EventEmitter = require('events');
 
 class IntelligentOrchestrator extends EventEmitter {
@@ -17,15 +21,19 @@ class IntelligentOrchestrator extends EventEmitter {
       maxConcurrentActions: 5,
       emergencyModeThreshold: 0.95,
       enableAutonomousActions: true,
-      ...config
+      ...config,
     };
-    
+
     this.logger = new Logger({ service: 'IntelligentOrchestrator' });
-    
+
     // Core AI systems
-    this.adaptiveLearning = new AdaptiveLearningSystem(config.adaptiveLearning || {});
-    this.predictiveAnalytics = new PredictiveAnalyticsEngine(config.predictiveAnalytics || {});
-    
+    this.adaptiveLearning = new AdaptiveLearningSystem(
+      config.adaptiveLearning || {}
+    );
+    this.predictiveAnalytics = new PredictiveAnalyticsEngine(
+      config.predictiveAnalytics || {}
+    );
+
     // System state
     this.systemState = {
       health: 'unknown',
@@ -33,83 +41,95 @@ class IntelligentOrchestrator extends EventEmitter {
       errors: 0,
       predictions: {},
       adaptations: [],
-      emergencyMode: false
+      emergencyMode: false,
     };
-    
+
     // Decision engine
     this.decisionEngine = new DecisionEngine(this.config);
     this.actionExecutor = new ActionExecutor(this.config);
     this.contextAnalyzer = new ContextAnalyzer(this.config);
-    
+
     // Active orchestration
     this.activeActions = new Map();
     this.orchestrationHistory = [];
     this.initialized = false;
-    
+
     this.setupEventHandlers();
   }
 
   async initialize() {
     try {
       this.logger.info('Initializing Intelligent Orchestrator...');
-      
+
       // Initialize AI systems
       await this.adaptiveLearning.initialize();
       await this.predictiveAnalytics.initialize();
-      
+
       // Initialize orchestration components
       await this.decisionEngine.initialize();
       await this.actionExecutor.initialize();
       await this.contextAnalyzer.initialize();
-      
+
       // Start orchestration cycle
       this.startOrchestrationCycle();
-      
+
       this.initialized = true;
       this.logger.info('Intelligent Orchestrator initialized successfully');
-      
+
       return this;
     } catch (error) {
-      this.logger.error('Failed to initialize Intelligent Orchestrator:', error);
+      this.logger.error(
+        'Failed to initialize Intelligent Orchestrator:',
+        error
+      );
       throw error;
     }
   }
 
   setupEventHandlers() {
     // Listen to system events
-    this.on('systemMetrics', (metrics) => this.processSystemMetrics(metrics));
-    this.on('performanceAlert', (alert) => this.handlePerformanceAlert(alert));
-    this.on('anomalyDetected', (anomaly) => this.handleAnomaly(anomaly));
+    this.on('systemMetrics', metrics => this.processSystemMetrics(metrics));
+    this.on('performanceAlert', alert => this.handlePerformanceAlert(alert));
+    this.on('anomalyDetected', anomaly => this.handleAnomaly(anomaly));
     this.on('emergencyTrigger', () => this.enterEmergencyMode());
-    
+
     // Listen to AI system events
-    this.adaptiveLearning.on('adaptationRecommendation', (rec) => this.handleAdaptationRecommendation(rec));
-    this.predictiveAnalytics.on('predictionsGenerated', (pred) => this.handlePredictions(pred));
-    this.predictiveAnalytics.on('modelsRetrained', (info) => this.handleModelUpdate(info));
+    this.adaptiveLearning.on('adaptationRecommendation', rec =>
+      this.handleAdaptationRecommendation(rec)
+    );
+    this.predictiveAnalytics.on('predictionsGenerated', pred =>
+      this.handlePredictions(pred)
+    );
+    this.predictiveAnalytics.on('modelsRetrained', info =>
+      this.handleModelUpdate(info)
+    );
   }
 
   async processSystemMetrics(metrics) {
     try {
       // Update system state
       this.updateSystemState(metrics);
-      
+
       // Analyze context
-      const context = await this.contextAnalyzer.analyzeContext(metrics, this.systemState);
-      
+      const context = await this.contextAnalyzer.analyzeContext(
+        metrics,
+        this.systemState
+      );
+
       // Generate predictions
-      const predictions = await this.predictiveAnalytics.generatePredictions(context);
+      const predictions =
+        await this.predictiveAnalytics.generatePredictions(context);
       this.systemState.predictions = predictions;
-      
+
       // Feed data to adaptive learning
       this.adaptiveLearning.emit('performanceData', {
         ...metrics,
         context,
-        predictions
+        predictions,
       });
-      
+
       // Make orchestration decisions
       await this.makeOrchestrationDecisions(context, predictions);
-      
     } catch (error) {
       this.logger.error('Error processing system metrics:', error);
     }
@@ -121,29 +141,34 @@ class IntelligentOrchestrator extends EventEmitter {
       health: this.calculateOverallHealth(metrics),
       load: metrics.load || 0,
       errors: metrics.errors || 0,
-      lastUpdate: new Date().toISOString()
+      lastUpdate: new Date().toISOString(),
     };
-    
+
     // Check for emergency conditions
-    if (this.systemState.load > this.config.emergencyModeThreshold || 
-        this.systemState.errors > 0.1) {
+    if (
+      this.systemState.load > this.config.emergencyModeThreshold ||
+      this.systemState.errors > 0.1
+    ) {
       this.emit('emergencyTrigger');
     }
   }
 
   calculateOverallHealth(metrics) {
     const factors = {
-      latency: metrics.latency < 2000 ? 1 : Math.max(0, 1 - (metrics.latency - 2000) / 3000),
+      latency:
+        metrics.latency < 2000
+          ? 1
+          : Math.max(0, 1 - (metrics.latency - 2000) / 3000),
       errors: Math.max(0, 1 - (metrics.errors || 0)),
       load: Math.max(0, 1 - (metrics.load || 0)),
-      availability: metrics.availability || 0.99
+      availability: metrics.availability || 0.99,
     };
-    
+
     const weights = { latency: 0.3, errors: 0.3, load: 0.2, availability: 0.2 };
     const score = Object.entries(factors).reduce((sum, [key, value]) => {
       return sum + value * weights[key];
     }, 0);
-    
+
     if (score > 0.9) return 'excellent';
     if (score > 0.7) return 'good';
     if (score > 0.5) return 'fair';
@@ -154,17 +179,16 @@ class IntelligentOrchestrator extends EventEmitter {
     try {
       // Generate decision options
       const decisions = await this.decisionEngine.generateDecisions(
-        context, 
-        predictions, 
+        context,
+        predictions,
         this.systemState
       );
-      
+
       // Filter and prioritize decisions
       const prioritizedDecisions = this.prioritizeDecisions(decisions);
-      
+
       // Execute top decisions
       await this.executeDecisions(prioritizedDecisions);
-      
     } catch (error) {
       this.logger.error('Error making orchestration decisions:', error);
     }
@@ -184,12 +208,18 @@ class IntelligentOrchestrator extends EventEmitter {
   async executeDecisions(decisions) {
     const executionPromises = decisions.map(async decision => {
       try {
-        if (this.config.enableAutonomousActions || decision.requiresApproval === false) {
+        if (
+          this.config.enableAutonomousActions ||
+          decision.requiresApproval === false
+        ) {
           const result = await this.actionExecutor.executeAction(decision);
           this.recordOrchestrationAction(decision, result);
           return result;
         } else {
-          this.logger.info(`Decision requires approval: ${decision.type}`, decision);
+          this.logger.info(
+            `Decision requires approval: ${decision.type}`,
+            decision
+          );
           this.emit('approvalRequired', decision);
           return { status: 'pending_approval', decision };
         }
@@ -208,32 +238,35 @@ class IntelligentOrchestrator extends EventEmitter {
       decision,
       result,
       timestamp: new Date().toISOString(),
-      systemState: { ...this.systemState }
+      systemState: { ...this.systemState },
     };
-    
+
     this.orchestrationHistory.push(record);
-    
+
     // Maintain history size
     if (this.orchestrationHistory.length > 1000) {
       this.orchestrationHistory = this.orchestrationHistory.slice(-800);
     }
-    
+
     this.emit('actionExecuted', record);
   }
 
   async handlePerformanceAlert(alert) {
     this.logger.warn('Performance alert received:', alert);
-    
-    const emergencyDecision = await this.decisionEngine.generateEmergencyDecision(alert);
+
+    const emergencyDecision =
+      await this.decisionEngine.generateEmergencyDecision(alert);
     if (emergencyDecision && emergencyDecision.confidence > 0.8) {
       await this.actionExecutor.executeAction(emergencyDecision);
-      this.recordOrchestrationAction(emergencyDecision, { status: 'emergency_executed' });
+      this.recordOrchestrationAction(emergencyDecision, {
+        status: 'emergency_executed',
+      });
     }
   }
 
   async handleAnomaly(anomaly) {
     this.logger.warn('Anomaly detected:', anomaly);
-    
+
     // Generate immediate response
     const response = await this.decisionEngine.generateAnomalyResponse(anomaly);
     if (response) {
@@ -243,10 +276,14 @@ class IntelligentOrchestrator extends EventEmitter {
   }
 
   async handleAdaptationRecommendation(recommendation) {
-    this.logger.info('Adaptation recommendation received:', recommendation.type);
-    
+    this.logger.info(
+      'Adaptation recommendation received:',
+      recommendation.type
+    );
+
     // Convert recommendation to executable decision
-    const decision = await this.decisionEngine.convertRecommendationToDecision(recommendation);
+    const decision =
+      await this.decisionEngine.convertRecommendationToDecision(recommendation);
     if (decision && decision.confidence > this.config.decisionThreshold) {
       await this.executeDecisions([decision]);
     }
@@ -255,21 +292,24 @@ class IntelligentOrchestrator extends EventEmitter {
   async handlePredictions(predictionData) {
     // Use predictions to proactively optimize
     const { predictions } = predictionData;
-    
+
     // Check for predicted issues
-    if (predictions.latency?.value > 2 && predictions.latency?.confidence > 0.7) {
+    if (
+      predictions.latency?.value > 2 &&
+      predictions.latency?.confidence > 0.7
+    ) {
       const preemptiveDecision = {
         id: `preemptive_${Date.now()}`,
         type: 'latency_preemption',
         action: 'scale_resources',
         confidence: predictions.latency.confidence,
         priority: 2,
-        rationale: 'Predicted latency spike'
+        rationale: 'Predicted latency spike',
       };
-      
+
       await this.executeDecisions([preemptiveDecision]);
     }
-    
+
     // Check for cost optimization opportunities
     if (predictions.cost?.value > 0.05 && predictions.cost?.confidence > 0.8) {
       const costOptimization = {
@@ -278,26 +318,26 @@ class IntelligentOrchestrator extends EventEmitter {
         action: 'enable_caching',
         confidence: predictions.cost.confidence,
         priority: 3,
-        rationale: 'Predicted high costs'
+        rationale: 'Predicted high costs',
       };
-      
+
       await this.executeDecisions([costOptimization]);
     }
   }
 
   async handleModelUpdate(updateInfo) {
     this.logger.info('Prediction models updated:', updateInfo);
-    
+
     // Recalibrate decision thresholds based on new model accuracy
     await this.decisionEngine.recalibrateThresholds(updateInfo);
   }
 
   async enterEmergencyMode() {
     if (this.systemState.emergencyMode) return;
-    
+
     this.logger.warn('Entering emergency mode');
     this.systemState.emergencyMode = true;
-    
+
     // Execute emergency protocols
     const emergencyActions = [
       {
@@ -305,38 +345,41 @@ class IntelligentOrchestrator extends EventEmitter {
         type: 'circuit_breaker',
         action: 'enable_all',
         confidence: 1.0,
-        priority: 1
+        priority: 1,
       },
       {
         id: 'emergency_rate_limit',
         type: 'rate_limiting',
         action: 'enforce_strict',
         confidence: 1.0,
-        priority: 1
+        priority: 1,
       },
       {
         id: 'emergency_logging',
         type: 'logging',
         action: 'increase_verbosity',
         confidence: 1.0,
-        priority: 2
-      }
+        priority: 2,
+      },
     ];
-    
+
     await this.executeDecisions(emergencyActions);
-    
+
     // Schedule emergency mode exit check
     setTimeout(() => this.checkEmergencyExit(), 300000); // 5 minutes
   }
 
   async checkEmergencyExit() {
     if (!this.systemState.emergencyMode) return;
-    
+
     // Check if conditions have improved
-    if (this.systemState.health === 'good' || this.systemState.health === 'excellent') {
+    if (
+      this.systemState.health === 'good' ||
+      this.systemState.health === 'excellent'
+    ) {
       this.logger.info('Exiting emergency mode - conditions improved');
       this.systemState.emergencyMode = false;
-      
+
       // Restore normal operations
       const restoreActions = [
         {
@@ -344,10 +387,10 @@ class IntelligentOrchestrator extends EventEmitter {
           type: 'restore',
           action: 'normal_mode',
           confidence: 0.9,
-          priority: 1
-        }
+          priority: 1,
+        },
       ];
-      
+
       await this.executeDecisions(restoreActions);
     } else {
       // Continue in emergency mode, check again later
@@ -368,28 +411,29 @@ class IntelligentOrchestrator extends EventEmitter {
   async performOrchestrationCycle() {
     // Periodic optimization and health checks
     const health = await this.getSystemHealth();
-    
+
     if (health.overallScore < 0.8) {
       // Generate optimization recommendations
-      const optimizations = await this.generateOptimizationRecommendations(health);
+      const optimizations =
+        await this.generateOptimizationRecommendations(health);
       await this.executeDecisions(optimizations);
     }
-    
+
     // Clean up completed actions
     this.cleanupCompletedActions();
-    
+
     // Emit orchestration status
     this.emit('orchestrationCycle', {
       health,
       activeActions: this.activeActions.size,
       systemState: this.systemState,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
   }
 
   async generateOptimizationRecommendations(health) {
     const recommendations = [];
-    
+
     // Performance optimization
     if (health.performance < 0.7) {
       recommendations.push({
@@ -398,10 +442,10 @@ class IntelligentOrchestrator extends EventEmitter {
         action: 'optimize_resources',
         confidence: 0.8,
         priority: 2,
-        rationale: 'Low performance detected'
+        rationale: 'Low performance detected',
       });
     }
-    
+
     // Cost optimization
     if (health.costEfficiency < 0.6) {
       recommendations.push({
@@ -410,10 +454,10 @@ class IntelligentOrchestrator extends EventEmitter {
         action: 'optimize_providers',
         confidence: 0.7,
         priority: 3,
-        rationale: 'Cost inefficiency detected'
+        rationale: 'Cost inefficiency detected',
       });
     }
-    
+
     // Reliability enhancement
     if (health.reliability < 0.9) {
       recommendations.push({
@@ -422,19 +466,22 @@ class IntelligentOrchestrator extends EventEmitter {
         action: 'enhance_monitoring',
         confidence: 0.9,
         priority: 1,
-        rationale: 'Reliability below threshold'
+        rationale: 'Reliability below threshold',
       });
     }
-    
+
     return recommendations;
   }
 
   cleanupCompletedActions() {
     const now = Date.now();
     for (const [actionId, action] of this.activeActions) {
-      if (action.status === 'completed' || 
-          action.status === 'failed' ||
-          (now - action.startTime) > 3600000) { // 1 hour timeout
+      if (
+        action.status === 'completed' ||
+        action.status === 'failed' ||
+        now - action.startTime > 3600000
+      ) {
+        // 1 hour timeout
         this.activeActions.delete(actionId);
       }
     }
@@ -442,14 +489,15 @@ class IntelligentOrchestrator extends EventEmitter {
 
   async getSystemHealth() {
     const adaptiveLearningHealth = await this.adaptiveLearning.getHealth();
-    const predictiveAnalyticsHealth = await this.predictiveAnalytics.getHealth();
-    
+    const predictiveAnalyticsHealth =
+      await this.predictiveAnalytics.getHealth();
+
     const performance = this.calculatePerformanceScore();
     const reliability = this.calculateReliabilityScore();
     const costEfficiency = this.calculateCostEfficiencyScore();
-    
+
     const overallScore = (performance + reliability + costEfficiency) / 3;
-    
+
     return {
       overallScore,
       performance,
@@ -457,18 +505,20 @@ class IntelligentOrchestrator extends EventEmitter {
       costEfficiency,
       aiSystems: {
         adaptiveLearning: adaptiveLearningHealth.healthy,
-        predictiveAnalytics: predictiveAnalyticsHealth.healthy
+        predictiveAnalytics: predictiveAnalyticsHealth.healthy,
       },
       systemState: this.systemState,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     };
   }
 
   calculatePerformanceScore() {
     const recentActions = this.orchestrationHistory.slice(-50);
     if (recentActions.length === 0) return 0.8;
-    
-    const successRate = recentActions.filter(a => a.result.status === 'success').length / recentActions.length;
+
+    const successRate =
+      recentActions.filter(a => a.result.status === 'success').length /
+      recentActions.length;
     return Math.min(1, successRate + 0.2); // Bonus for system health
   }
 
@@ -479,25 +529,25 @@ class IntelligentOrchestrator extends EventEmitter {
   calculateCostEfficiencyScore() {
     const predictions = this.systemState.predictions;
     if (!predictions.cost?.value) return 0.7;
-    
+
     // Lower cost = higher efficiency score
-    return Math.max(0.1, 1 - (predictions.cost.value / 0.1));
+    return Math.max(0.1, 1 - predictions.cost.value / 0.1);
   }
 
   async getOrchestrationMetrics() {
     const recentHistory = this.orchestrationHistory.slice(-100);
     const actionTypes = {};
     const successRates = {};
-    
+
     recentHistory.forEach(record => {
       const type = record.decision.type;
       actionTypes[type] = (actionTypes[type] || 0) + 1;
-      
+
       if (!successRates[type]) successRates[type] = { total: 0, success: 0 };
       successRates[type].total++;
       if (record.result.status === 'success') successRates[type].success++;
     });
-    
+
     return {
       totalActions: this.orchestrationHistory.length,
       recentActions: recentHistory.length,
@@ -505,32 +555,32 @@ class IntelligentOrchestrator extends EventEmitter {
       actionTypes,
       successRates: Object.fromEntries(
         Object.entries(successRates).map(([type, data]) => [
-          type, 
-          data.total > 0 ? data.success / data.total : 0
+          type,
+          data.total > 0 ? data.success / data.total : 0,
         ])
       ),
       systemState: this.systemState,
-      emergencyMode: this.systemState.emergencyMode
+      emergencyMode: this.systemState.emergencyMode,
     };
   }
 
   async shutdown() {
     this.logger.info('Shutting down Intelligent Orchestrator...');
-    
+
     // Shutdown AI systems
     await this.adaptiveLearning.shutdown();
     await this.predictiveAnalytics.shutdown();
-    
+
     // Shutdown orchestration components
     await this.decisionEngine.shutdown();
     await this.actionExecutor.shutdown();
     await this.contextAnalyzer.shutdown();
-    
+
     this.removeAllListeners();
     this.activeActions.clear();
     this.orchestrationHistory = [];
     this.initialized = false;
-    
+
     this.logger.info('Intelligent Orchestrator shutdown complete');
   }
 }
@@ -545,7 +595,7 @@ class DecisionEngine {
       latency: 2000,
       cost: 0.05,
       errors: 0.05,
-      load: 0.8
+      load: 0.8,
     };
   }
 
@@ -557,44 +607,44 @@ class DecisionEngine {
   setupDecisionRules() {
     // Latency optimization rule
     this.decisionRules.set('latency_optimization', {
-      condition: (context, predictions) => 
+      condition: (context, predictions) =>
         predictions.latency?.value > this.thresholds.latency / 1000,
-      action: (context) => ({
+      action: context => ({
         type: 'latency_optimization',
         action: 'scale_resources',
         confidence: 0.8,
-        priority: 2
-      })
+        priority: 2,
+      }),
     });
-    
+
     // Cost optimization rule
     this.decisionRules.set('cost_optimization', {
-      condition: (context, predictions) => 
+      condition: (context, predictions) =>
         predictions.cost?.value > this.thresholds.cost,
-      action: (context) => ({
+      action: context => ({
         type: 'cost_optimization',
         action: 'enable_caching',
         confidence: 0.7,
-        priority: 3
-      })
+        priority: 3,
+      }),
     });
-    
+
     // Error handling rule
     this.decisionRules.set('error_handling', {
-      condition: (context, predictions) => 
+      condition: (context, predictions) =>
         predictions.errors?.value > this.thresholds.errors,
-      action: (context) => ({
+      action: context => ({
         type: 'error_handling',
         action: 'enable_circuit_breaker',
         confidence: 0.9,
-        priority: 1
-      })
+        priority: 1,
+      }),
     });
   }
 
   async generateDecisions(context, predictions, systemState) {
     const decisions = [];
-    
+
     for (const [ruleId, rule] of this.decisionRules) {
       try {
         if (rule.condition(context, predictions, systemState)) {
@@ -604,14 +654,14 @@ class DecisionEngine {
             ruleId,
             ...decision,
             context,
-            predictions
+            predictions,
           });
         }
       } catch (error) {
         this.logger.error(`Error in decision rule ${ruleId}:`, error);
       }
     }
-    
+
     return decisions;
   }
 
@@ -622,41 +672,41 @@ class DecisionEngine {
       action: 'activate_failsafe',
       confidence: 0.95,
       priority: 1,
-      alert
+      alert,
     };
   }
 
   async generateAnomalyResponse(anomaly) {
     const responseMap = {
-      'latency_spike': {
+      latency_spike: {
         type: 'latency_response',
         action: 'enable_circuit_breaker',
         confidence: 0.8,
-        priority: 1
+        priority: 1,
       },
-      'cost_spike': {
+      cost_spike: {
         type: 'cost_response',
         action: 'enable_rate_limiting',
         confidence: 0.7,
-        priority: 2
+        priority: 2,
       },
-      'error_increase': {
+      error_increase: {
         type: 'error_response',
         action: 'activate_fallback',
         confidence: 0.9,
-        priority: 1
-      }
+        priority: 1,
+      },
     };
-    
+
     const response = responseMap[anomaly.type];
     if (response) {
       return {
         id: `anomaly_${Date.now()}`,
         ...response,
-        anomaly
+        anomaly,
       };
     }
-    
+
     return null;
   }
 
@@ -667,16 +717,18 @@ class DecisionEngine {
       action: recommendation.changes ? 'apply_changes' : 'investigate',
       confidence: 0.6,
       priority: 2,
-      recommendation
+      recommendation,
     };
   }
 
   async recalibrateThresholds(updateInfo) {
     // Adjust thresholds based on model accuracy
-    const avgAccuracy = Object.values(updateInfo.modelMetrics || {})
-      .reduce((sum, metrics) => sum + (metrics.accuracy || 0), 0) / 
-      Object.keys(updateInfo.modelMetrics || {}).length;
-    
+    const avgAccuracy =
+      Object.values(updateInfo.modelMetrics || {}).reduce(
+        (sum, metrics) => sum + (metrics.accuracy || 0),
+        0
+      ) / Object.keys(updateInfo.modelMetrics || {}).length;
+
     if (avgAccuracy > 0.8) {
       // High accuracy - can be more aggressive
       this.thresholds.latency *= 0.9;
@@ -686,7 +738,7 @@ class DecisionEngine {
       this.thresholds.latency *= 1.1;
       this.thresholds.cost *= 1.05;
     }
-    
+
     this.logger.info('Decision thresholds recalibrated', this.thresholds);
   }
 
@@ -710,10 +762,22 @@ class ActionExecutor {
   setupActionHandlers() {
     this.actionHandlers.set('scale_resources', this.scaleResources.bind(this));
     this.actionHandlers.set('enable_caching', this.enableCaching.bind(this));
-    this.actionHandlers.set('enable_circuit_breaker', this.enableCircuitBreaker.bind(this));
-    this.actionHandlers.set('enable_rate_limiting', this.enableRateLimiting.bind(this));
-    this.actionHandlers.set('optimize_providers', this.optimizeProviders.bind(this));
-    this.actionHandlers.set('enhance_monitoring', this.enhanceMonitoring.bind(this));
+    this.actionHandlers.set(
+      'enable_circuit_breaker',
+      this.enableCircuitBreaker.bind(this)
+    );
+    this.actionHandlers.set(
+      'enable_rate_limiting',
+      this.enableRateLimiting.bind(this)
+    );
+    this.actionHandlers.set(
+      'optimize_providers',
+      this.optimizeProviders.bind(this)
+    );
+    this.actionHandlers.set(
+      'enhance_monitoring',
+      this.enhanceMonitoring.bind(this)
+    );
   }
 
   async executeAction(decision) {
@@ -721,18 +785,18 @@ class ActionExecutor {
     if (!handler) {
       throw new Error(`No handler for action: ${decision.action}`);
     }
-    
+
     const startTime = Date.now();
     try {
       const result = await handler(decision);
       const duration = Date.now() - startTime;
-      
+
       this.logger.info(`Executed action ${decision.action} in ${duration}ms`);
       return {
         status: 'success',
         duration,
         result,
-        decision
+        decision,
       };
     } catch (error) {
       const duration = Date.now() - startTime;
@@ -741,7 +805,7 @@ class ActionExecutor {
         status: 'failed',
         duration,
         error: error.message,
-        decision
+        decision,
       };
     }
   }
@@ -752,7 +816,7 @@ class ActionExecutor {
       action: 'scale_resources',
       scalingType: 'horizontal',
       newReplicas: 3,
-      estimatedImpact: 'latency_reduction_30%'
+      estimatedImpact: 'latency_reduction_30%',
     };
   }
 
@@ -761,7 +825,7 @@ class ActionExecutor {
       action: 'enable_caching',
       cacheType: 'intelligent',
       ttl: 3600,
-      estimatedSavings: '25%'
+      estimatedSavings: '25%',
     };
   }
 
@@ -770,7 +834,7 @@ class ActionExecutor {
       action: 'enable_circuit_breaker',
       threshold: '5_failures_in_60s',
       timeout: '30s',
-      fallbackEnabled: true
+      fallbackEnabled: true,
     };
   }
 
@@ -779,7 +843,7 @@ class ActionExecutor {
       action: 'enable_rate_limiting',
       limit: '100_requests_per_minute',
       scope: 'per_provider',
-      gracefulDegradation: true
+      gracefulDegradation: true,
     };
   }
 
@@ -788,7 +852,7 @@ class ActionExecutor {
       action: 'optimize_providers',
       strategy: 'cost_performance_balance',
       newRouting: 'intelligent_routing',
-      estimatedSavings: '15%'
+      estimatedSavings: '15%',
     };
   }
 
@@ -797,7 +861,7 @@ class ActionExecutor {
       action: 'enhance_monitoring',
       newMetrics: ['detailed_latency', 'provider_health', 'cost_tracking'],
       alerting: 'proactive',
-      dashboard: 'updated'
+      dashboard: 'updated',
     };
   }
 
@@ -821,13 +885,18 @@ class ContextAnalyzer {
     const loadContext = this.analyzeLoadContext(metrics);
     const healthContext = this.analyzeHealthContext(systemState);
     const trendContext = this.analyzeTrendContext(metrics);
-    
+
     return {
       time: timeContext,
       load: loadContext,
       health: healthContext,
       trends: trendContext,
-      combined: this.combineContexts(timeContext, loadContext, healthContext, trendContext)
+      combined: this.combineContexts(
+        timeContext,
+        loadContext,
+        healthContext,
+        trendContext
+      ),
     };
   }
 
@@ -835,13 +904,14 @@ class ContextAnalyzer {
     const now = new Date();
     const hour = now.getHours();
     const dayOfWeek = now.getDay();
-    
+
     return {
       hour,
       dayOfWeek,
-      isBusinessHours: hour >= 9 && hour <= 17 && dayOfWeek >= 1 && dayOfWeek <= 5,
+      isBusinessHours:
+        hour >= 9 && hour <= 17 && dayOfWeek >= 1 && dayOfWeek <= 5,
       isPeakTime: (hour >= 9 && hour <= 11) || (hour >= 14 && hour <= 16),
-      timeZone: now.getTimezoneOffset()
+      timeZone: now.getTimezoneOffset(),
     };
   }
 
@@ -851,7 +921,7 @@ class ContextAnalyzer {
       current: load,
       category: load > 0.8 ? 'high' : load > 0.5 ? 'medium' : 'low',
       trend: this.calculateLoadTrend(metrics),
-      predictedPeak: this.predictNextPeak()
+      predictedPeak: this.predictNextPeak(),
     };
   }
 
@@ -861,7 +931,7 @@ class ContextAnalyzer {
       errors: systemState.errors,
       emergencyMode: systemState.emergencyMode,
       lastIncident: systemState.lastIncident || null,
-      recoveryTime: this.calculateRecoveryTime(systemState)
+      recoveryTime: this.calculateRecoveryTime(systemState),
     };
   }
 
@@ -870,14 +940,14 @@ class ContextAnalyzer {
       latencyTrend: 'stable', // Simplified
       costTrend: 'increasing',
       errorTrend: 'decreasing',
-      usageTrend: 'stable'
+      usageTrend: 'stable',
     };
   }
 
   combineContexts(time, load, health, trends) {
     let priority = 'normal';
     let urgency = 'low';
-    
+
     if (health.emergencyMode || load.category === 'high') {
       priority = 'critical';
       urgency = 'immediate';
@@ -885,41 +955,46 @@ class ContextAnalyzer {
       priority = 'high';
       urgency = 'medium';
     }
-    
+
     return {
       priority,
       urgency,
       riskLevel: this.calculateRiskLevel(time, load, health, trends),
-      recommendedActions: this.generateContextualRecommendations(time, load, health, trends)
+      recommendedActions: this.generateContextualRecommendations(
+        time,
+        load,
+        health,
+        trends
+      ),
     };
   }
 
   calculateRiskLevel(time, load, health, trends) {
     let risk = 0;
-    
+
     if (health.emergencyMode) risk += 0.5;
     if (load.category === 'high') risk += 0.3;
     if (time.isPeakTime) risk += 0.1;
     if (trends.errorTrend === 'increasing') risk += 0.2;
-    
+
     return Math.min(1, risk);
   }
 
   generateContextualRecommendations(time, load, health, trends) {
     const recommendations = [];
-    
+
     if (time.isPeakTime && load.category !== 'low') {
       recommendations.push('scale_proactively');
     }
-    
+
     if (health.overall === 'poor') {
       recommendations.push('immediate_health_check');
     }
-    
+
     if (trends.costTrend === 'increasing') {
       recommendations.push('cost_optimization_review');
     }
-    
+
     return recommendations;
   }
 
@@ -931,7 +1006,7 @@ class ContextAnalyzer {
   predictNextPeak() {
     const now = new Date();
     const nextPeak = new Date(now);
-    
+
     if (now.getHours() < 9) {
       nextPeak.setHours(9, 0, 0, 0);
     } else if (now.getHours() < 14) {
@@ -940,13 +1015,13 @@ class ContextAnalyzer {
       nextPeak.setDate(nextPeak.getDate() + 1);
       nextPeak.setHours(9, 0, 0, 0);
     }
-    
+
     return nextPeak.toISOString();
   }
 
   calculateRecoveryTime(systemState) {
     if (!systemState.lastIncident) return null;
-    
+
     const now = Date.now();
     const incidentTime = new Date(systemState.lastIncident).getTime();
     return now - incidentTime;

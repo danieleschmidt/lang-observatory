@@ -36,6 +36,22 @@ module.exports = {
         'no-console': 'off',
       },
     },
+    {
+      files: ['tests/performance/**/*.js'],
+      globals: {
+        __ENV: 'readonly',
+        __VU: 'readonly',
+        __ITER: 'readonly',
+        check: 'readonly',
+        group: 'readonly',
+        sleep: 'readonly',
+        http: 'readonly',
+      },
+      rules: {
+        'no-console': 'off',
+        'no-undef': 'off',
+      },
+    },
   ],
   ignorePatterns: [
     'node_modules/',

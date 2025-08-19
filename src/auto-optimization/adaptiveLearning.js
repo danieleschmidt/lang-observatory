@@ -15,9 +15,9 @@ class AdaptiveLearningSystem extends EventEmitter {
       adaptationThreshold: 0.05,
       enableOnlineLearning: true,
       modelUpdateInterval: 3600000, // 1 hour
-      ...config
+      ...config,
     };
-    
+
     this.logger = new Logger({ service: 'AdaptiveLearning' });
     this.patterns = new Map();
     this.performanceHistory = [];
@@ -25,13 +25,13 @@ class AdaptiveLearningSystem extends EventEmitter {
       latency: 0.3,
       accuracy: 0.4,
       cost: 0.2,
-      reliability: 0.1
+      reliability: 0.1,
     };
-    
+
     this.optimizationRules = new Map();
     this.learningMemory = [];
     this.initialized = false;
-    
+
     if (this.config.enableOnlineLearning) {
       this.setupOnlineLearning();
     }
@@ -40,30 +40,33 @@ class AdaptiveLearningSystem extends EventEmitter {
   async initialize() {
     try {
       this.logger.info('Initializing Adaptive Learning System...');
-      
+
       // Load historical patterns
       await this.loadHistoricalPatterns();
-      
+
       // Initialize optimization rules
       this.initializeOptimizationRules();
-      
+
       // Start continuous learning
       this.startContinuousLearning();
-      
+
       this.initialized = true;
       this.logger.info('Adaptive Learning System initialized successfully');
-      
+
       return this;
     } catch (error) {
-      this.logger.error('Failed to initialize Adaptive Learning System:', error);
+      this.logger.error(
+        'Failed to initialize Adaptive Learning System:',
+        error
+      );
       throw error;
     }
   }
 
   setupOnlineLearning() {
-    this.on('performanceData', (data) => this.processPerformanceData(data));
-    this.on('patternDetected', (pattern) => this.adaptToPattern(pattern));
-    this.on('anomalyDetected', (anomaly) => this.handleAnomaly(anomaly));
+    this.on('performanceData', data => this.processPerformanceData(data));
+    this.on('patternDetected', pattern => this.adaptToPattern(pattern));
+    this.on('anomalyDetected', anomaly => this.handleAnomaly(anomaly));
   }
 
   async loadHistoricalPatterns() {
@@ -76,7 +79,7 @@ class AdaptiveLearningSystem extends EventEmitter {
         avgAccuracy: 0.95,
         avgCost: 0.03,
         reliability: 0.99,
-        patterns: ['reasoning_tasks', 'code_generation']
+        patterns: ['reasoning_tasks', 'code_generation'],
       },
       {
         provider: 'anthropic',
@@ -85,8 +88,8 @@ class AdaptiveLearningSystem extends EventEmitter {
         avgAccuracy: 0.94,
         avgCost: 0.025,
         reliability: 0.98,
-        patterns: ['analysis_tasks', 'content_writing']
-      }
+        patterns: ['analysis_tasks', 'content_writing'],
+      },
     ];
 
     historicalPatterns.forEach(pattern => {
@@ -99,26 +102,28 @@ class AdaptiveLearningSystem extends EventEmitter {
   initializeOptimizationRules() {
     // Rule: High latency detection and optimization
     this.optimizationRules.set('high_latency', {
-      condition: (metrics) => metrics.avgLatency > 2000,
-      action: (context) => this.optimizeForLatency(context),
-      priority: 1
+      condition: metrics => metrics.avgLatency > 2000,
+      action: context => this.optimizeForLatency(context),
+      priority: 1,
     });
 
     // Rule: Cost optimization
     this.optimizationRules.set('cost_optimization', {
-      condition: (metrics) => metrics.avgCost > 0.05,
-      action: (context) => this.optimizeForCost(context),
-      priority: 2
+      condition: metrics => metrics.avgCost > 0.05,
+      action: context => this.optimizeForCost(context),
+      priority: 2,
     });
 
     // Rule: Reliability enhancement
     this.optimizationRules.set('reliability_boost', {
-      condition: (metrics) => metrics.reliability < 0.95,
-      action: (context) => this.enhanceReliability(context),
-      priority: 1
+      condition: metrics => metrics.reliability < 0.95,
+      action: context => this.enhanceReliability(context),
+      priority: 1,
     });
 
-    this.logger.info(`Initialized ${this.optimizationRules.size} optimization rules`);
+    this.logger.info(
+      `Initialized ${this.optimizationRules.size} optimization rules`
+    );
   }
 
   async processPerformanceData(data) {
@@ -126,7 +131,7 @@ class AdaptiveLearningSystem extends EventEmitter {
       // Store performance data
       this.performanceHistory.push({
         ...data,
-        timestamp: Date.now()
+        timestamp: Date.now(),
       });
 
       // Maintain memory size limit
@@ -148,7 +153,6 @@ class AdaptiveLearningSystem extends EventEmitter {
 
       // Learn from data
       await this.learnFromData(data);
-
     } catch (error) {
       this.logger.error('Error processing performance data:', error);
     }
@@ -162,7 +166,7 @@ class AdaptiveLearningSystem extends EventEmitter {
       patterns.push({
         type: 'high_performance',
         confidence: 0.9,
-        data: data
+        data: data,
       });
     }
 
@@ -171,7 +175,7 @@ class AdaptiveLearningSystem extends EventEmitter {
       patterns.push({
         type: 'cost_effective',
         confidence: 0.85,
-        data: data
+        data: data,
       });
     }
 
@@ -181,7 +185,7 @@ class AdaptiveLearningSystem extends EventEmitter {
       patterns.push({
         type: 'peak_usage',
         confidence: 0.8,
-        data: data
+        data: data,
       });
     }
 
@@ -201,7 +205,7 @@ class AdaptiveLearningSystem extends EventEmitter {
         severity: 'high',
         actual: data.latency,
         expected: baseline.latency,
-        deviation: (data.latency - baseline.latency) / baseline.latency
+        deviation: (data.latency - baseline.latency) / baseline.latency,
       });
     }
 
@@ -212,7 +216,7 @@ class AdaptiveLearningSystem extends EventEmitter {
         severity: 'medium',
         actual: data.accuracy,
         expected: baseline.accuracy,
-        deviation: (baseline.accuracy - data.accuracy) / baseline.accuracy
+        deviation: (baseline.accuracy - data.accuracy) / baseline.accuracy,
       });
     }
 
@@ -223,7 +227,8 @@ class AdaptiveLearningSystem extends EventEmitter {
         severity: 'medium',
         actual: data.costPerToken,
         expected: baseline.costPerToken,
-        deviation: (data.costPerToken - baseline.costPerToken) / baseline.costPerToken
+        deviation:
+          (data.costPerToken - baseline.costPerToken) / baseline.costPerToken,
       });
     }
 
@@ -233,13 +238,13 @@ class AdaptiveLearningSystem extends EventEmitter {
   async getBaselineMetrics(provider, model) {
     const key = `${provider}_${model}`;
     const pattern = this.patterns.get(key);
-    
+
     if (pattern) {
       return {
         latency: pattern.avgLatency,
         accuracy: pattern.avgAccuracy,
         costPerToken: pattern.avgCost,
-        reliability: pattern.reliability
+        reliability: pattern.reliability,
       };
     }
 
@@ -248,14 +253,14 @@ class AdaptiveLearningSystem extends EventEmitter {
       latency: 1000,
       accuracy: 0.9,
       costPerToken: 0.03,
-      reliability: 0.95
+      reliability: 0.95,
     };
   }
 
   async learnFromData(data) {
     // Update model weights based on performance
     const performance = this.calculatePerformanceScore(data);
-    
+
     if (performance > 0.8) {
       // Good performance - reinforce current patterns
       this.updateModelWeights(data, 1.0);
@@ -268,7 +273,7 @@ class AdaptiveLearningSystem extends EventEmitter {
     this.learningMemory.push({
       data: data,
       performance: performance,
-      timestamp: Date.now()
+      timestamp: Date.now(),
     });
 
     // Maintain memory limit
@@ -279,9 +284,9 @@ class AdaptiveLearningSystem extends EventEmitter {
 
   calculatePerformanceScore(data) {
     // Normalize metrics to 0-1 scale
-    const normalizedLatency = Math.max(0, 1 - (data.latency / 5000)); // 5s max
+    const normalizedLatency = Math.max(0, 1 - data.latency / 5000); // 5s max
     const normalizedAccuracy = data.accuracy || 0;
-    const normalizedCost = Math.max(0, 1 - (data.costPerToken / 0.1)); // $0.1 max
+    const normalizedCost = Math.max(0, 1 - data.costPerToken / 0.1); // $0.1 max
     const normalizedReliability = data.reliability || 0.9;
 
     // Calculate weighted score
@@ -295,16 +300,16 @@ class AdaptiveLearningSystem extends EventEmitter {
 
   updateModelWeights(data, adjustment) {
     const learningRate = this.config.learningRate;
-    
+
     // Adjust weights based on performance
     if (data.latency < 1000) {
       this.modelWeights.latency += learningRate * adjustment;
     }
-    
+
     if (data.accuracy > 0.9) {
       this.modelWeights.accuracy += learningRate * adjustment;
     }
-    
+
     if (data.costPerToken < 0.03) {
       this.modelWeights.cost += learningRate * adjustment;
     }
@@ -345,8 +350,8 @@ class AdaptiveLearningSystem extends EventEmitter {
       changes: {
         priority: 'high',
         cacheSize: '+20%',
-        connectionPool: '+2'
-      }
+        connectionPool: '+2',
+      },
     };
 
     this.emit('adaptationRecommendation', recommendations);
@@ -362,8 +367,8 @@ class AdaptiveLearningSystem extends EventEmitter {
       changes: {
         routing: 'prefer',
         budget: '+10%',
-        monitoring: 'enhanced'
-      }
+        monitoring: 'enhanced',
+      },
     };
 
     this.emit('adaptationRecommendation', recommendations);
@@ -378,8 +383,8 @@ class AdaptiveLearningSystem extends EventEmitter {
       changes: {
         replicas: '+2',
         cachePreload: 'enable',
-        rateLimits: 'increase'
-      }
+        rateLimits: 'increase',
+      },
     };
 
     this.emit('adaptationRecommendation', recommendations);
@@ -391,10 +396,10 @@ class AdaptiveLearningSystem extends EventEmitter {
       try {
         const response = await this.generateAnomalyResponse(anomaly);
         this.emit('anomalyResponse', response);
-        
+
         this.logger.warn(`Handled anomaly: ${anomaly.type}`, {
           severity: anomaly.severity,
-          response: response.type
+          response: response.type,
         });
       } catch (error) {
         this.logger.error(`Error handling anomaly ${anomaly.type}:`, error);
@@ -409,29 +414,29 @@ class AdaptiveLearningSystem extends EventEmitter {
           type: 'circuit_breaker',
           action: 'enable',
           threshold: anomaly.actual * 0.8,
-          duration: '5m'
+          duration: '5m',
         };
-      
+
       case 'accuracy_drop':
         return {
           type: 'fallback_model',
           action: 'activate',
-          reason: 'accuracy_degradation'
+          reason: 'accuracy_degradation',
         };
-      
+
       case 'cost_spike':
         return {
           type: 'rate_limiting',
           action: 'enforce',
           limit: '50%',
-          duration: '10m'
+          duration: '10m',
         };
-      
+
       default:
         return {
           type: 'monitoring',
           action: 'enhance',
-          target: anomaly.type
+          target: anomaly.type,
         };
     }
   }
@@ -451,7 +456,9 @@ class AdaptiveLearningSystem extends EventEmitter {
 
     // Analyze recent performance trends
     const recentData = this.learningMemory.slice(-100);
-    const avgPerformance = recentData.reduce((sum, item) => sum + item.performance, 0) / recentData.length;
+    const avgPerformance =
+      recentData.reduce((sum, item) => sum + item.performance, 0) /
+      recentData.length;
 
     // Update patterns based on learning
     if (avgPerformance > 0.8) {
@@ -462,7 +469,9 @@ class AdaptiveLearningSystem extends EventEmitter {
       await this.exploreNewPatterns();
     }
 
-    this.logger.info(`Performed periodic learning - avg performance: ${avgPerformance.toFixed(3)}`);
+    this.logger.info(
+      `Performed periodic learning - avg performance: ${avgPerformance.toFixed(3)}`
+    );
   }
 
   async consolidatePatterns() {
@@ -474,14 +483,15 @@ class AdaptiveLearningSystem extends EventEmitter {
     for (const data of successfulPatterns) {
       const key = `${data.provider}_${data.model}`;
       const existing = this.patterns.get(key) || { count: 0 };
-      
+
       this.patterns.set(key, {
         ...existing,
         avgLatency: (existing.avgLatency || 0) * 0.9 + data.latency * 0.1,
         avgAccuracy: (existing.avgAccuracy || 0) * 0.9 + data.accuracy * 0.1,
         avgCost: (existing.avgCost || 0) * 0.9 + data.costPerToken * 0.1,
-        reliability: (existing.reliability || 0) * 0.9 + (data.reliability || 0.9) * 0.1,
-        count: existing.count + 1
+        reliability:
+          (existing.reliability || 0) * 0.9 + (data.reliability || 0.9) * 0.1,
+        count: existing.count + 1,
       });
     }
   }
@@ -507,14 +517,15 @@ class AdaptiveLearningSystem extends EventEmitter {
     if (failureData.latency > 2000) {
       return {
         id: `latency_${Date.now()}`,
-        condition: (metrics) => metrics.provider === failureData.provider && metrics.latency > 1500,
-        action: (context) => ({
+        condition: metrics =>
+          metrics.provider === failureData.provider && metrics.latency > 1500,
+        action: context => ({
           type: 'timeout_adjustment',
-          value: Math.min(failureData.latency * 0.8, 5000)
+          value: Math.min(failureData.latency * 0.8, 5000),
         }),
         priority: 2,
         temporary: true,
-        expires: Date.now() + 3600000 // 1 hour
+        expires: Date.now() + 3600000, // 1 hour
       };
     }
 
@@ -533,7 +544,7 @@ class AdaptiveLearningSystem extends EventEmitter {
             ruleId,
             priority: rule.priority || 3,
             action,
-            confidence: this.calculateRuleConfidence(ruleId, context)
+            confidence: this.calculateRuleConfidence(ruleId, context),
           });
         }
       } catch (error) {
@@ -550,14 +561,17 @@ class AdaptiveLearningSystem extends EventEmitter {
 
   calculateRuleConfidence(ruleId, context) {
     // Calculate confidence based on historical success
-    const relatedMemory = this.learningMemory.filter(item => 
-      item.data.provider === context.provider &&
-      item.data.model === context.model
+    const relatedMemory = this.learningMemory.filter(
+      item =>
+        item.data.provider === context.provider &&
+        item.data.model === context.model
     );
 
     if (relatedMemory.length === 0) return 0.5;
 
-    const avgPerformance = relatedMemory.reduce((sum, item) => sum + item.performance, 0) / relatedMemory.length;
+    const avgPerformance =
+      relatedMemory.reduce((sum, item) => sum + item.performance, 0) /
+      relatedMemory.length;
     return Math.min(0.95, Math.max(0.1, avgPerformance));
   }
 
@@ -567,9 +581,9 @@ class AdaptiveLearningSystem extends EventEmitter {
       actions: [
         'enable_connection_pooling',
         'increase_timeout_threshold',
-        'activate_regional_fallback'
+        'activate_regional_fallback',
       ],
-      priority: 'high'
+      priority: 'high',
     };
   }
 
@@ -579,9 +593,9 @@ class AdaptiveLearningSystem extends EventEmitter {
       actions: [
         'enable_aggressive_caching',
         'prefer_cost_effective_models',
-        'implement_request_batching'
+        'implement_request_batching',
       ],
-      priority: 'medium'
+      priority: 'medium',
     };
   }
 
@@ -591,9 +605,9 @@ class AdaptiveLearningSystem extends EventEmitter {
       actions: [
         'enable_circuit_breaker',
         'increase_retry_attempts',
-        'activate_health_monitoring'
+        'activate_health_monitoring',
       ],
-      priority: 'high'
+      priority: 'high',
     };
   }
 
@@ -606,10 +620,10 @@ class AdaptiveLearningSystem extends EventEmitter {
       totalPatterns: this.patterns.size,
       patterns: Array.from(this.patterns.entries()).map(([key, pattern]) => ({
         key,
-        ...pattern
+        ...pattern,
       })),
       optimizationRules: this.optimizationRules.size,
-      memorySize: this.learningMemory.length
+      memorySize: this.learningMemory.length,
     };
   }
 
@@ -620,7 +634,7 @@ class AdaptiveLearningSystem extends EventEmitter {
       memoryUsage: this.learningMemory.length,
       optimizationRules: this.optimizationRules.size,
       modelWeights: this.modelWeights,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     };
   }
 

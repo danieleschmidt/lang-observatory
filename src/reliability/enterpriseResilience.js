@@ -18,11 +18,11 @@ class EnterpriseResilienceManager extends EventEmitter {
       recoveryTimeout: 300000, // 5 minutes
       enableBulkheadPattern: true,
       enableTimeoutPattern: true,
-      ...config
+      ...config,
     };
-    
+
     this.logger = new Logger({ service: 'EnterpriseResilience' });
-    
+
     // Resilience components
     this.circuitBreakers = new Map();
     this.bulkheads = new Map();
@@ -30,84 +30,107 @@ class EnterpriseResilienceManager extends EventEmitter {
     this.failoverManager = new FailoverManager(this.config);
     this.disasterRecovery = new DisasterRecoveryOrchestrator(this.config);
     this.chaosEngineering = new ChaosEngineeringEngine(this.config);
-    
+
     // Resilience state
     this.systemHealth = {
       overall: 'unknown',
       components: new Map(),
       degradedServices: new Set(),
-      lastHealthCheck: null
+      lastHealthCheck: null,
     };
-    
+
     this.resilienceMetrics = {
       availability: 0.999,
       mttr: 0, // Mean Time To Recovery
       mtbf: 0, // Mean Time Between Failures
       failoverCount: 0,
-      recoveryCount: 0
+      recoveryCount: 0,
     };
-    
+
     this.incidentHistory = [];
     this.activeIncidents = new Map();
     this.initialized = false;
-    
+
     this.setupEventHandlers();
   }
 
   async initialize() {
     try {
       this.logger.info('Initializing Enterprise Resilience Manager...');
-      
+
       // Initialize resilience components
       await this.failoverManager.initialize();
       await this.disasterRecovery.initialize();
-      
+
       if (this.config.enableChaosEngineering) {
         await this.chaosEngineering.initialize();
         this.logger.warn('Chaos Engineering is enabled - use with caution!');
       }
-      
+
       // Setup circuit breakers for critical services
       this.setupCircuitBreakers();
-      
+
       // Setup bulkheads for resource isolation
       if (this.config.enableBulkheadPattern) {
         this.setupBulkheads();
       }
-      
+
       // Start health monitoring
       this.startHealthMonitoring();
-      
+
       // Start resilience monitoring
       this.startResilienceMonitoring();
-      
+
       this.initialized = true;
-      this.logger.info('Enterprise Resilience Manager initialized successfully');
-      
+      this.logger.info(
+        'Enterprise Resilience Manager initialized successfully'
+      );
+
       return this;
     } catch (error) {
-      this.logger.error('Failed to initialize Enterprise Resilience Manager:', error);
+      this.logger.error(
+        'Failed to initialize Enterprise Resilience Manager:',
+        error
+      );
       throw error;
     }
   }
 
   setupEventHandlers() {
-    this.on('componentFailure', (failure) => this.handleComponentFailure(failure));
-    this.on('healthDegradation', (degradation) => this.handleHealthDegradation(degradation));
-    this.on('capacityExceeded', (capacity) => this.handleCapacityExceeded(capacity));
-    this.on('securityIncident', (incident) => this.handleSecurityIncident(incident));
-    
+    this.on('componentFailure', failure =>
+      this.handleComponentFailure(failure)
+    );
+    this.on('healthDegradation', degradation =>
+      this.handleHealthDegradation(degradation)
+    );
+    this.on('capacityExceeded', capacity =>
+      this.handleCapacityExceeded(capacity)
+    );
+    this.on('securityIncident', incident =>
+      this.handleSecurityIncident(incident)
+    );
+
     // Failover events
-    this.failoverManager.on('failoverTriggered', (event) => this.handleFailoverEvent(event));
-    this.failoverManager.on('failoverCompleted', (event) => this.handleFailoverCompleted(event));
-    
+    this.failoverManager.on('failoverTriggered', event =>
+      this.handleFailoverEvent(event)
+    );
+    this.failoverManager.on('failoverCompleted', event =>
+      this.handleFailoverCompleted(event)
+    );
+
     // Disaster recovery events
-    this.disasterRecovery.on('disasterDetected', (disaster) => this.handleDisasterDetected(disaster));
-    this.disasterRecovery.on('recoveryInitiated', (recovery) => this.handleRecoveryInitiated(recovery));
-    
+    this.disasterRecovery.on('disasterDetected', disaster =>
+      this.handleDisasterDetected(disaster)
+    );
+    this.disasterRecovery.on('recoveryInitiated', recovery =>
+      this.handleRecoveryInitiated(recovery)
+    );
+
     // Chaos engineering events
     if (this.config.enableChaosEngineering) {
-      this.chaosEngineering.on('chaosExperiment', (experiment) => this.handleChaosExperiment(experiment));
+      this.chaosEngineering.on('chaosExperiment', experiment =>
+        this.handleChaosExperiment(experiment)
+      );
     }
   }
 
@@ -117,17 +140,20 @@ class EnterpriseResilienceManager extends EventEmitter {
       'openlit-service',
       'database-connection',
       'metrics-collector',
-      'llm-providers'
+      'llm-providers',
     ];
 
     criticalServices.forEach(service => {
-      this.circuitBreakers.set(service, new CircuitBreaker({
-        name: service,
-        failureThreshold: this.config.failoverThreshold,
-        recoveryTimeout: this.config.recoveryTimeout,
-        enableTimeout: this.config.enableTimeoutPattern,
-        timeout: 30000 // 30 seconds default timeout
-      }));
+      this.circuitBreakers.set(
+        service,
+        new CircuitBreaker({
+          name: service,
+          failureThreshold: this.config.failoverThreshold,
+          recoveryTimeout: this.config.recoveryTimeout,
+          enableTimeout: this.config.enableTimeoutPattern,
+          timeout: 30000, // 30 seconds default timeout
+        })
+      );
     });
 
     this.logger.info(`Setup ${criticalServices.length} circuit breakers`);
@@ -138,19 +164,24 @@ class EnterpriseResilienceManager extends EventEmitter {
       { name: 'api-requests', maxConcurrency: 100, queue: 50 },
       { name: 'llm-calls', maxConcurrency: 50, queue: 100 },
       { name: 'database-queries', maxConcurrency: 25, queue: 25 },
-      { name: 'background-tasks', maxConcurrency: 10, queue: 50 }
+      { name: 'background-tasks', maxConcurrency: 10, queue: 50 },
     ];
 
     resourcePools.forEach(pool => {
-      this.bulkheads.set(pool.name, new Bulkhead({
-        name: pool.name,
-        maxConcurrency: pool.maxConcurrency,
-        queueSize: pool.queue,
-        timeoutMs: 60000
-      }));
+      this.bulkheads.set(
+        pool.name,
+        new Bulkhead({
+          name: pool.name,
+          maxConcurrency: pool.maxConcurrency,
+          queueSize: pool.queue,
+          timeoutMs: 60000,
+        })
+      );
     });
 
-    this.logger.info(`Setup ${resourcePools.length} bulkheads for resource isolation`);
+    this.logger.info(
+      `Setup ${resourcePools.length} bulkheads for resource isolation`
+    );
   }
 
   startHealthMonitoring() {
@@ -170,26 +201,38 @@ class EnterpriseResilienceManager extends EventEmitter {
       this.checkServiceHealth('database'),
       this.checkServiceHealth('metrics'),
       this.checkResourceHealth(),
-      this.checkSystemPerformance()
+      this.checkSystemPerformance(),
     ]);
 
     const componentHealth = new Map();
-    const services = ['langfuse', 'openlit', 'database', 'metrics', 'resources', 'performance'];
-    
+    const services = [
+      'langfuse',
+      'openlit',
+      'database',
+      'metrics',
+      'resources',
+      'performance',
+    ];
+
     healthResults.forEach((result, index) => {
       const serviceName = services[index];
       componentHealth.set(serviceName, {
         healthy: result.status === 'fulfilled' && result.value.healthy,
-        status: result.status === 'fulfilled' ? result.value : { healthy: false, error: result.reason?.message },
-        lastCheck: new Date().toISOString()
+        status:
+          result.status === 'fulfilled'
+            ? result.value
+            : { healthy: false, error: result.reason?.message },
+        lastCheck: new Date().toISOString(),
       });
     });
 
     this.systemHealth.components = componentHealth;
     this.systemHealth.lastHealthCheck = new Date().toISOString();
-    
+
     // Calculate overall health
-    const healthyComponents = Array.from(componentHealth.values()).filter(c => c.healthy).length;
+    const healthyComponents = Array.from(componentHealth.values()).filter(
+      c => c.healthy
+    ).length;
     const totalComponents = componentHealth.size;
     const healthRatio = healthyComponents / totalComponents;
 
@@ -197,7 +240,10 @@ class EnterpriseResilienceManager extends EventEmitter {
       this.systemHealth.overall = 'healthy';
     } else if (healthRatio >= 0.8) {
       this.systemHealth.overall = 'degraded';
-      this.emit('healthDegradation', { ratio: healthRatio, unhealthyComponents: totalComponents - healthyComponents });
+      this.emit('healthDegradation', {
+        ratio: healthRatio,
+        unhealthyComponents: totalComponents - healthyComponents,
+      });
     } else {
       this.systemHealth.overall = 'critical';
       this.emit('systemCritical', { ratio: healthRatio, componentHealth });
@@ -205,32 +251,36 @@ class EnterpriseResilienceManager extends EventEmitter {
 
     // Update availability metric
     this.updateAvailabilityMetric(healthRatio);
-    
+
     this.emit('healthCheckCompleted', this.systemHealth);
   }
 
   async checkServiceHealth(serviceName) {
     // Simulate service health checks
     const circuitBreaker = this.circuitBreakers.get(`${serviceName}-service`);
-    
+
     try {
       // Check circuit breaker state
       if (circuitBreaker && circuitBreaker.isOpen()) {
-        return { healthy: false, reason: 'circuit_breaker_open', circuitState: 'open' };
+        return {
+          healthy: false,
+          reason: 'circuit_breaker_open',
+          circuitState: 'open',
+        };
       }
 
       // Perform actual health check (simplified simulation)
       const latency = Math.random() * 1000;
       const errorRate = Math.random() * 0.1;
-      
+
       const healthy = latency < 500 && errorRate < 0.05;
-      
+
       return {
         healthy,
         latency,
         errorRate,
         circuitState: circuitBreaker ? circuitBreaker.getState() : 'unknown',
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       };
     } catch (error) {
       return { healthy: false, error: error.message };
@@ -240,19 +290,20 @@ class EnterpriseResilienceManager extends EventEmitter {
   async checkResourceHealth() {
     // Check resource utilization and bulkhead status
     const bulkheadStatus = {};
-    
+
     for (const [name, bulkhead] of this.bulkheads) {
       bulkheadStatus[name] = bulkhead.getStatus();
     }
 
-    const overloadedBulkheads = Object.values(bulkheadStatus)
-      .filter(status => status.utilizationRatio > 0.9).length;
+    const overloadedBulkheads = Object.values(bulkheadStatus).filter(
+      status => status.utilizationRatio > 0.9
+    ).length;
 
     return {
       healthy: overloadedBulkheads === 0,
       bulkheadStatus,
       overloadedBulkheads,
-      resourceUtilization: this.calculateResourceUtilization(bulkheadStatus)
+      resourceUtilization: this.calculateResourceUtilization(bulkheadStatus),
     };
   }
 
@@ -260,53 +311,60 @@ class EnterpriseResilienceManager extends EventEmitter {
     // Check overall system performance metrics
     const metrics = {
       memoryUsage: Math.random() * 0.8, // Simulate memory usage
-      cpuUsage: Math.random() * 0.7,    // Simulate CPU usage
-      diskUsage: Math.random() * 0.6,   // Simulate disk usage
-      networkLatency: Math.random() * 100 + 10 // Simulate network latency
+      cpuUsage: Math.random() * 0.7, // Simulate CPU usage
+      diskUsage: Math.random() * 0.6, // Simulate disk usage
+      networkLatency: Math.random() * 100 + 10, // Simulate network latency
     };
 
     const performanceScore = this.calculatePerformanceScore(metrics);
-    
+
     return {
       healthy: performanceScore > 0.7,
       score: performanceScore,
       metrics,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     };
   }
 
   calculateResourceUtilization(bulkheadStatus) {
-    const utilizations = Object.values(bulkheadStatus).map(status => status.utilizationRatio);
-    return utilizations.reduce((sum, util) => sum + util, 0) / utilizations.length;
+    const utilizations = Object.values(bulkheadStatus).map(
+      status => status.utilizationRatio
+    );
+    return (
+      utilizations.reduce((sum, util) => sum + util, 0) / utilizations.length
+    );
   }
 
   calculatePerformanceScore(metrics) {
     const weights = { memory: 0.3, cpu: 0.3, disk: 0.2, network: 0.2 };
-    
+
     const scores = {
       memory: Math.max(0, 1 - metrics.memoryUsage),
       cpu: Math.max(0, 1 - metrics.cpuUsage),
       disk: Math.max(0, 1 - metrics.diskUsage),
-      network: Math.max(0, 1 - (metrics.networkLatency / 1000))
+      network: Math.max(0, 1 - metrics.networkLatency / 1000),
     };
 
     return Object.entries(scores).reduce((total, [metric, score]) => {
-      return total + (score * weights[metric]);
+      return total + score * weights[metric];
     }, 0);
   }
 
   updateAvailabilityMetric(healthRatio) {
     // Update rolling availability metric
-    this.resilienceMetrics.availability = 
-      (this.resilienceMetrics.availability * 0.95) + (healthRatio * 0.05);
+    this.resilienceMetrics.availability =
+      this.resilienceMetrics.availability * 0.95 + healthRatio * 0.05;
   }
 
   async handleComponentFailure(failure) {
-    this.logger.error(`Component failure detected: ${failure.component}`, failure);
-    
+    this.logger.error(
+      `Component failure detected: ${failure.component}`,
+      failure
+    );
+
     const incident = this.createIncident('component_failure', failure);
     this.activeIncidents.set(incident.id, incident);
-    
+
     // Check if failover is needed
     if (this.config.enableAutomaticFailover) {
       const shouldFailover = await this.assessFailoverNeed(failure);
@@ -314,51 +372,54 @@ class EnterpriseResilienceManager extends EventEmitter {
         await this.triggerFailover(failure.component, failure);
       }
     }
-    
+
     // Apply circuit breaker
     const circuitBreaker = this.circuitBreakers.get(failure.component);
     if (circuitBreaker) {
       await circuitBreaker.recordFailure();
     }
-    
+
     this.emit('incidentCreated', incident);
   }
 
   async handleHealthDegradation(degradation) {
     this.logger.warn('System health degradation detected', degradation);
-    
+
     const incident = this.createIncident('health_degradation', degradation);
     this.activeIncidents.set(incident.id, incident);
-    
+
     // Implement graceful degradation strategies
     await this.implementGracefulDegradation(degradation);
-    
+
     this.emit('incidentCreated', incident);
   }
 
   async handleCapacityExceeded(capacity) {
     this.logger.warn('System capacity exceeded', capacity);
-    
+
     const incident = this.createIncident('capacity_exceeded', capacity);
     this.activeIncidents.set(incident.id, incident);
-    
+
     // Scale resources if possible
     if (this.config.enableAutoScaling) {
       await this.triggerAutoScaling(capacity);
     }
-    
+
     this.emit('incidentCreated', incident);
   }
 
   async handleSecurityIncident(incident) {
     this.logger.error('Security incident detected', incident);
-    
-    const resilienceIncident = this.createIncident('security_incident', incident);
+
+    const resilienceIncident = this.createIncident(
+      'security_incident',
+      incident
+    );
     this.activeIncidents.set(resilienceIncident.id, resilienceIncident);
-    
+
     // Implement security lockdown procedures
     await this.implementSecurityLockdown(incident);
-    
+
     this.emit('incidentCreated', resilienceIncident);
   }
 
@@ -371,11 +432,11 @@ class EnterpriseResilienceManager extends EventEmitter {
       status: 'active',
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
-      actions: []
+      actions: [],
     };
 
     this.incidentHistory.push(incident);
-    
+
     // Maintain incident history size
     if (this.incidentHistory.length > 1000) {
       this.incidentHistory = this.incidentHistory.slice(-800);
@@ -386,36 +447,40 @@ class EnterpriseResilienceManager extends EventEmitter {
 
   calculateIncidentSeverity(type, data) {
     const severityMap = {
-      'component_failure': 'high',
-      'health_degradation': 'medium',
-      'capacity_exceeded': 'medium',
-      'security_incident': 'critical',
-      'disaster': 'critical'
+      component_failure: 'high',
+      health_degradation: 'medium',
+      capacity_exceeded: 'medium',
+      security_incident: 'critical',
+      disaster: 'critical',
     };
 
     let baseSeverity = severityMap[type] || 'low';
-    
+
     // Adjust based on data
     if (data.ratio && data.ratio < 0.5) baseSeverity = 'critical';
-    if (data.affectedUsers && data.affectedUsers > 1000) baseSeverity = 'critical';
-    
+    if (data.affectedUsers && data.affectedUsers > 1000)
+      baseSeverity = 'critical';
+
     return baseSeverity;
   }
 
   async assessFailoverNeed(failure) {
     const circuitBreaker = this.circuitBreakers.get(failure.component);
     const failureCount = circuitBreaker ? circuitBreaker.getFailureCount() : 1;
-    
+
     return failureCount >= this.config.failoverThreshold;
   }
 
   async triggerFailover(component, failure) {
     this.logger.info(`Triggering failover for component: ${component}`);
-    
+
     try {
-      const failoverResult = await this.failoverManager.initiateFailover(component, failure);
+      const failoverResult = await this.failoverManager.initiateFailover(
+        component,
+        failure
+      );
       this.resilienceMetrics.failoverCount++;
-      
+
       return failoverResult;
     } catch (error) {
       this.logger.error(`Failover failed for component ${component}:`, error);
@@ -428,7 +493,7 @@ class EnterpriseResilienceManager extends EventEmitter {
       'reduce_non_essential_features',
       'increase_cache_ttl',
       'simplify_responses',
-      'prioritize_critical_requests'
+      'prioritize_critical_requests',
     ];
 
     for (const strategy of strategies) {
@@ -444,17 +509,23 @@ class EnterpriseResilienceManager extends EventEmitter {
   async applyDegradationStrategy(strategy, context) {
     switch (strategy) {
       case 'reduce_non_essential_features':
-        return { action: 'disabled_non_essential_features', features: ['detailed_analytics', 'real_time_updates'] };
-      
+        return {
+          action: 'disabled_non_essential_features',
+          features: ['detailed_analytics', 'real_time_updates'],
+        };
+
       case 'increase_cache_ttl':
         return { action: 'increased_cache_ttl', oldTtl: 300, newTtl: 1800 };
-      
+
       case 'simplify_responses':
         return { action: 'simplified_responses', responseReduction: '30%' };
-      
+
       case 'prioritize_critical_requests':
-        return { action: 'enabled_request_prioritization', levels: ['critical', 'high', 'normal'] };
-      
+        return {
+          action: 'enabled_request_prioritization',
+          levels: ['critical', 'high', 'normal'],
+        };
+
       default:
         return { action: 'unknown_strategy', strategy };
     }
@@ -462,11 +533,19 @@ class EnterpriseResilienceManager extends EventEmitter {
 
   async triggerAutoScaling(capacity) {
     this.logger.info('Triggering auto-scaling due to capacity limits');
-    
+
     const scalingActions = [
       { type: 'horizontal_scale', target: 'api_servers', increase: 2 },
-      { type: 'increase_bulkhead_limits', target: 'api-requests', increase: '20%' },
-      { type: 'optimize_resource_allocation', target: 'all', optimization: 'dynamic' }
+      {
+        type: 'increase_bulkhead_limits',
+        target: 'api-requests',
+        increase: '20%',
+      },
+      {
+        type: 'optimize_resource_allocation',
+        target: 'all',
+        optimization: 'dynamic',
+      },
     ];
 
     const results = [];
@@ -476,7 +555,11 @@ class EnterpriseResilienceManager extends EventEmitter {
         results.push(result);
       } catch (error) {
         this.logger.error(`Scaling action failed: ${action.type}`, error);
-        results.push({ action: action.type, status: 'failed', error: error.message });
+        results.push({
+          action: action.type,
+          status: 'failed',
+          error: error.message,
+        });
       }
     }
 
@@ -487,19 +570,33 @@ class EnterpriseResilienceManager extends EventEmitter {
     // Simulate scaling actions
     switch (action.type) {
       case 'horizontal_scale':
-        return { action: action.type, newInstances: action.increase, status: 'completed' };
-      
-      case 'increase_bulkhead_limits':
+        return {
+          action: action.type,
+          newInstances: action.increase,
+          status: 'completed',
+        };
+
+      case 'increase_bulkhead_limits': {
         const bulkhead = this.bulkheads.get(action.target);
         if (bulkhead) {
           bulkhead.increaseLimits(action.increase);
-          return { action: action.type, target: action.target, increase: action.increase, status: 'completed' };
+          return {
+            action: action.type,
+            target: action.target,
+            increase: action.increase,
+            status: 'completed',
+          };
         }
         throw new Error(`Bulkhead ${action.target} not found`);
-      
+      }
+
       case 'optimize_resource_allocation':
-        return { action: action.type, optimization: action.optimization, status: 'completed' };
-      
+        return {
+          action: action.type,
+          optimization: action.optimization,
+          status: 'completed',
+        };
+
       default:
         throw new Error(`Unknown scaling action: ${action.type}`);
     }
@@ -510,7 +607,7 @@ class EnterpriseResilienceManager extends EventEmitter {
       'enable_enhanced_monitoring',
       'restrict_api_access',
       'increase_authentication_requirements',
-      'activate_incident_response_team'
+      'activate_incident_response_team',
     ];
 
     for (const action of lockdownActions) {
@@ -526,17 +623,33 @@ class EnterpriseResilienceManager extends EventEmitter {
   async executeSecurityAction(action, incident) {
     switch (action) {
       case 'enable_enhanced_monitoring':
-        return { action, status: 'monitoring_enhanced', details: 'Increased logging verbosity and real-time alerting' };
-      
+        return {
+          action,
+          status: 'monitoring_enhanced',
+          details: 'Increased logging verbosity and real-time alerting',
+        };
+
       case 'restrict_api_access':
-        return { action, status: 'access_restricted', details: 'Temporarily restricted non-essential API endpoints' };
-      
+        return {
+          action,
+          status: 'access_restricted',
+          details: 'Temporarily restricted non-essential API endpoints',
+        };
+
       case 'increase_authentication_requirements':
-        return { action, status: 'auth_enhanced', details: 'Enabled additional authentication factors' };
-      
+        return {
+          action,
+          status: 'auth_enhanced',
+          details: 'Enabled additional authentication factors',
+        };
+
       case 'activate_incident_response_team':
-        return { action, status: 'team_activated', details: 'Security incident response team has been notified' };
-      
+        return {
+          action,
+          status: 'team_activated',
+          details: 'Security incident response team has been notified',
+        };
+
       default:
         throw new Error(`Unknown security action: ${action}`);
     }
@@ -544,16 +657,17 @@ class EnterpriseResilienceManager extends EventEmitter {
 
   async handleFailoverEvent(event) {
     this.logger.info('Failover event triggered', event);
-    
+
     // Update incident if exists
-    const relatedIncident = Array.from(this.activeIncidents.values())
-      .find(inc => inc.data.component === event.component);
-    
+    const relatedIncident = Array.from(this.activeIncidents.values()).find(
+      inc => inc.data.component === event.component
+    );
+
     if (relatedIncident) {
       relatedIncident.actions.push({
         type: 'failover_triggered',
         details: event,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
       relatedIncident.updatedAt = new Date().toISOString();
     }
@@ -561,7 +675,7 @@ class EnterpriseResilienceManager extends EventEmitter {
 
   async handleFailoverCompleted(event) {
     this.logger.info('Failover completed successfully', event);
-    
+
     // Start recovery tracking
     const recoveryStartTime = Date.now();
     setTimeout(() => {
@@ -571,68 +685,76 @@ class EnterpriseResilienceManager extends EventEmitter {
 
   recordRecoveryMetrics(component, startTime) {
     const recoveryTime = Date.now() - startTime;
-    
+
     // Update MTTR
     if (this.resilienceMetrics.mttr === 0) {
       this.resilienceMetrics.mttr = recoveryTime;
     } else {
-      this.resilienceMetrics.mttr = (this.resilienceMetrics.mttr * 0.8) + (recoveryTime * 0.2);
+      this.resilienceMetrics.mttr =
+        this.resilienceMetrics.mttr * 0.8 + recoveryTime * 0.2;
     }
-    
+
     this.resilienceMetrics.recoveryCount++;
-    
-    this.logger.info(`Recovery completed for ${component} in ${recoveryTime}ms`);
+
+    this.logger.info(
+      `Recovery completed for ${component} in ${recoveryTime}ms`
+    );
   }
 
   async handleDisasterDetected(disaster) {
-    this.logger.error('Disaster detected - initiating disaster recovery', disaster);
-    
+    this.logger.error(
+      'Disaster detected - initiating disaster recovery',
+      disaster
+    );
+
     const incident = this.createIncident('disaster', disaster);
     this.activeIncidents.set(incident.id, incident);
-    
+
     if (this.config.enableDisasterRecovery) {
       await this.disasterRecovery.initiateRecovery(disaster);
     }
-    
+
     this.emit('incidentCreated', incident);
   }
 
   async handleRecoveryInitiated(recovery) {
     this.logger.info('Disaster recovery initiated', recovery);
-    
+
     // Update related incident
-    const relatedIncident = Array.from(this.activeIncidents.values())
-      .find(inc => inc.type === 'disaster');
-    
+    const relatedIncident = Array.from(this.activeIncidents.values()).find(
+      inc => inc.type === 'disaster'
+    );
+
     if (relatedIncident) {
       relatedIncident.actions.push({
         type: 'disaster_recovery_initiated',
         details: recovery,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
     }
   }
 
   async handleChaosExperiment(experiment) {
     this.logger.warn('Chaos engineering experiment executed', experiment);
-    
+
     // Monitor the impact of chaos experiments
     const monitoringId = setTimeout(async () => {
       await this.assessChaosImpact(experiment);
     }, 30000); // Assess impact after 30 seconds
-    
+
     experiment.monitoringId = monitoringId;
   }
 
   async assessChaosImpact(experiment) {
     const healthBefore = experiment.systemHealthBefore;
     const healthAfter = await this.getSystemHealthSnapshot();
-    
+
     const impact = {
       experiment: experiment.id,
       healthImpact: healthAfter.overall !== healthBefore.overall,
-      availabilityChange: healthAfter.availabilityScore - healthBefore.availabilityScore,
-      recoveryTime: Date.now() - experiment.startTime
+      availabilityChange:
+        healthAfter.availabilityScore - healthBefore.availabilityScore,
+      recoveryTime: Date.now() - experiment.startTime,
     };
 
     this.logger.info('Chaos experiment impact assessment', impact);
@@ -653,43 +775,46 @@ class EnterpriseResilienceManager extends EventEmitter {
 
   async analyzeResiliencePatterns() {
     const recentIncidents = this.incidentHistory.slice(-20);
-    
+
     if (recentIncidents.length === 0) return;
-    
+
     // Analyze incident patterns
     const incidentTypes = {};
     const componentFailures = {};
-    
+
     recentIncidents.forEach(incident => {
       incidentTypes[incident.type] = (incidentTypes[incident.type] || 0) + 1;
-      
+
       if (incident.data.component) {
-        componentFailures[incident.data.component] = (componentFailures[incident.data.component] || 0) + 1;
+        componentFailures[incident.data.component] =
+          (componentFailures[incident.data.component] || 0) + 1;
       }
     });
-    
+
     // Identify problematic patterns
     const problematicComponents = Object.entries(componentFailures)
       .filter(([component, count]) => count > 3)
       .map(([component]) => component);
-    
+
     if (problematicComponents.length > 0) {
       this.emit('resiliencePattern', {
         type: 'frequent_component_failures',
         components: problematicComponents,
-        recommendation: 'Consider component health review and improvement'
+        recommendation: 'Consider component health review and improvement',
       });
     }
-    
+
     // Check for incident clustering
-    const recentIncidentTimes = recentIncidents.map(inc => new Date(inc.createdAt).getTime());
+    const recentIncidentTimes = recentIncidents.map(inc =>
+      new Date(inc.createdAt).getTime()
+    );
     const timeWindows = this.analyzeIncidentClustering(recentIncidentTimes);
-    
+
     if (timeWindows.length > 0) {
       this.emit('resiliencePattern', {
         type: 'incident_clustering',
         windows: timeWindows,
-        recommendation: 'Investigate potential systemic issues'
+        recommendation: 'Investigate potential systemic issues',
       });
     }
   }
@@ -698,87 +823,94 @@ class EnterpriseResilienceManager extends EventEmitter {
     const clusters = [];
     const clusterWindow = 3600000; // 1 hour
     const minClusterSize = 3;
-    
+
     for (let i = 0; i < incidentTimes.length; i++) {
       const windowStart = incidentTimes[i];
       const windowEnd = windowStart + clusterWindow;
-      
-      const incidentsInWindow = incidentTimes.filter(time => 
-        time >= windowStart && time <= windowEnd
+
+      const incidentsInWindow = incidentTimes.filter(
+        time => time >= windowStart && time <= windowEnd
       ).length;
-      
+
       if (incidentsInWindow >= minClusterSize) {
         clusters.push({
           start: new Date(windowStart).toISOString(),
           end: new Date(windowEnd).toISOString(),
-          incidentCount: incidentsInWindow
+          incidentCount: incidentsInWindow,
         });
       }
     }
-    
+
     return clusters;
   }
 
   async updateResilienceMetrics() {
     const now = Date.now();
     const oneDay = 24 * 3600000;
-    
+
     // Calculate MTBF (Mean Time Between Failures)
     const recentFailures = this.incidentHistory
       .filter(inc => now - new Date(inc.createdAt).getTime() < oneDay)
       .filter(inc => inc.type === 'component_failure');
-    
+
     if (recentFailures.length > 1) {
       const timeBetweenFailures = recentFailures
         .slice(1)
         .map((incident, index) => {
           const currentTime = new Date(incident.createdAt).getTime();
-          const previousTime = new Date(recentFailures[index].createdAt).getTime();
+          const previousTime = new Date(
+            recentFailures[index].createdAt
+          ).getTime();
           return currentTime - previousTime;
         });
-      
-      const avgTimeBetweenFailures = timeBetweenFailures.reduce((sum, time) => sum + time, 0) / timeBetweenFailures.length;
+
+      const avgTimeBetweenFailures =
+        timeBetweenFailures.reduce((sum, time) => sum + time, 0) /
+        timeBetweenFailures.length;
       this.resilienceMetrics.mtbf = avgTimeBetweenFailures;
     }
-    
+
     // Update other metrics
     this.resilienceMetrics.lastUpdated = new Date().toISOString();
   }
 
   async executeWithResilience(operation, context = {}) {
     const { component = 'unknown', bulkhead = null, timeout = 30000 } = context;
-    
+
     // Get circuit breaker for component
     const circuitBreaker = this.circuitBreakers.get(component);
     if (circuitBreaker && circuitBreaker.isOpen()) {
       throw new Error(`Circuit breaker is open for component: ${component}`);
     }
-    
+
     // Use bulkhead if specified
     if (bulkhead && this.bulkheads.has(bulkhead)) {
       return this.bulkheads.get(bulkhead).execute(operation, timeout);
     }
-    
+
     // Execute with timeout
     const timeoutPromise = new Promise((_, reject) => {
-      setTimeout(() => reject(new Error(`Operation timed out after ${timeout}ms`)), timeout);
+      setTimeout(
+        () => reject(new Error(`Operation timed out after ${timeout}ms`)),
+        timeout
+      );
     });
-    
+
     try {
       const result = await Promise.race([operation(), timeoutPromise]);
-      
+
       // Record success in circuit breaker
       if (circuitBreaker) {
         circuitBreaker.recordSuccess();
       }
-      
+
       return result;
     } catch (error) {
       // Record failure in circuit breaker
       if (circuitBreaker) {
         circuitBreaker.recordFailure();
       }
-      
+
       throw error;
     }
   }
@@ -789,22 +921,24 @@ class EnterpriseResilienceManager extends EventEmitter {
       components: Object.fromEntries(this.systemHealth.components),
       degradedServices: Array.from(this.systemHealth.degradedServices),
       availabilityScore: this.resilienceMetrics.availability,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     };
   }
 
   async getResilienceReport() {
     const activeIncidentCount = this.activeIncidents.size;
     const recentIncidents = this.incidentHistory.slice(-50);
-    
+
     const incidentsByType = {};
     const incidentsBySeverity = {};
-    
+
     recentIncidents.forEach(incident => {
-      incidentsByType[incident.type] = (incidentsByType[incident.type] || 0) + 1;
-      incidentsBySeverity[incident.severity] = (incidentsBySeverity[incident.severity] || 0) + 1;
+      incidentsByType[incident.type] =
+        (incidentsByType[incident.type] || 0) + 1;
+      incidentsBySeverity[incident.severity] =
+        (incidentsBySeverity[incident.severity] || 0) + 1;
     });
-    
+
     return {
       systemHealth: this.systemHealth,
       metrics: this.resilienceMetrics,
@@ -815,7 +949,7 @@ class EnterpriseResilienceManager extends EventEmitter {
       circuitBreakerStatus: this.getCircuitBreakerStatus(),
       bulkheadStatus: this.getBulkheadStatus(),
       lastHealthCheck: this.systemHealth.lastHealthCheck,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     };
   }
 
@@ -826,7 +960,7 @@ class EnterpriseResilienceManager extends EventEmitter {
         state: cb.getState(),
         failureCount: cb.getFailureCount(),
         lastFailure: cb.getLastFailureTime(),
-        isOpen: cb.isOpen()
+        isOpen: cb.isOpen(),
       };
     }
     return status;
@@ -843,7 +977,7 @@ class EnterpriseResilienceManager extends EventEmitter {
   async getHealth() {
     const failoverHealth = await this.failoverManager.getHealth();
     const drHealth = await this.disasterRecovery.getHealth();
-    
+
     return {
       healthy: this.initialized && this.systemHealth.overall !== 'critical',
       systemHealth: this.systemHealth.overall,
@@ -852,35 +986,39 @@ class EnterpriseResilienceManager extends EventEmitter {
       components: {
         failoverManager: failoverHealth.healthy,
         disasterRecovery: drHealth.healthy,
-        circuitBreakers: Array.from(this.circuitBreakers.values()).every(cb => !cb.isOpen()),
-        bulkheads: Array.from(this.bulkheads.values()).every(b => b.isHealthy())
+        circuitBreakers: Array.from(this.circuitBreakers.values()).every(
+          cb => !cb.isOpen()
+        ),
+        bulkheads: Array.from(this.bulkheads.values()).every(b =>
+          b.isHealthy()
+        ),
       },
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     };
   }
 
   async shutdown() {
     this.logger.info('Shutting down Enterprise Resilience Manager...');
-    
+
     // Shutdown components
     await this.failoverManager.shutdown();
     await this.disasterRecovery.shutdown();
-    
+
     if (this.config.enableChaosEngineering) {
       await this.chaosEngineering.shutdown();
     }
-    
+
     // Clear circuit breakers and bulkheads
     this.circuitBreakers.clear();
     this.bulkheads.clear();
     this.healthCheckers.clear();
-    
+
     // Clear state
     this.removeAllListeners();
     this.activeIncidents.clear();
     this.incidentHistory = [];
     this.initialized = false;
-    
+
     this.logger.info('Enterprise Resilience Manager shutdown complete');
   }
 }
@@ -892,9 +1030,9 @@ class CircuitBreaker {
       failureThreshold: 5,
       recoveryTimeout: 60000,
       timeout: 30000,
-      ...config
+      ...config,
     };
-    
+
     this.state = 'closed'; // closed, open, half-open
     this.failureCount = 0;
     this.lastFailureTime = null;
@@ -905,7 +1043,7 @@ class CircuitBreaker {
     if (this.isOpen()) {
       throw new Error(`Circuit breaker is open for ${this.config.name}`);
     }
-    
+
     try {
       const result = await this.executeWithTimeout(operation);
       this.recordSuccess();
@@ -920,11 +1058,17 @@ class CircuitBreaker {
     if (!this.config.enableTimeout) {
       return operation();
     }
-    
+
     const timeoutPromise = new Promise((_, reject) => {
-      setTimeout(() => reject(new Error(`Operation timed out after ${this.config.timeout}ms`)), this.config.timeout);
+      setTimeout(
+        () =>
+          reject(
+            new Error(`Operation timed out after ${this.config.timeout}ms`)
+          ),
+        this.config.timeout
+      );
     });
-    
+
     return Promise.race([operation(), timeoutPromise]);
   }
 
@@ -936,7 +1080,7 @@ class CircuitBreaker {
   recordFailure() {
     this.failureCount++;
     this.lastFailureTime = Date.now();
-    
+
     if (this.failureCount >= this.config.failureThreshold) {
       this.state = 'open';
     }
@@ -944,7 +1088,7 @@ class CircuitBreaker {
 
   isOpen() {
     if (this.state === 'closed') return false;
-    
+
     if (this.state === 'open') {
       if (Date.now() - this.lastFailureTime > this.config.recoveryTimeout) {
         this.state = 'half-open';
@@ -952,7 +1096,7 @@ class CircuitBreaker {
       }
       return true;
     }
-    
+
     return false; // half-open allows one attempt
   }
 
@@ -975,9 +1119,9 @@ class Bulkhead {
       maxConcurrency: 10,
       queueSize: 20,
       timeoutMs: 30000,
-      ...config
+      ...config,
     };
-    
+
     this.activeTasks = 0;
     this.queue = [];
     this.totalExecutions = 0;
@@ -1000,11 +1144,11 @@ class Bulkhead {
   async executeImmediately(operation, timeout, resolve, reject) {
     this.activeTasks++;
     this.totalExecutions++;
-    
+
     const timeoutHandle = setTimeout(() => {
       reject(new Error(`Bulkhead ${this.config.name} operation timed out`));
     }, timeout);
-    
+
     try {
       const result = await operation();
       clearTimeout(timeoutHandle);
@@ -1019,7 +1163,10 @@ class Bulkhead {
   }
 
   processQueue() {
-    if (this.queue.length > 0 && this.activeTasks < this.config.maxConcurrency) {
+    if (
+      this.queue.length > 0 &&
+      this.activeTasks < this.config.maxConcurrency
+    ) {
       const { operation, timeout, resolve, reject } = this.queue.shift();
       this.executeImmediately(operation, timeout, resolve, reject);
     }
@@ -1027,7 +1174,9 @@ class Bulkhead {
 
   increaseLimits(percentage) {
     const increase = parseFloat(percentage.replace('%', '')) / 100;
-    this.config.maxConcurrency = Math.ceil(this.config.maxConcurrency * (1 + increase));
+    this.config.maxConcurrency = Math.ceil(
+      this.config.maxConcurrency * (1 + increase)
+    );
     this.config.queueSize = Math.ceil(this.config.queueSize * (1 + increase));
   }
 
@@ -1041,7 +1190,10 @@ class Bulkhead {
       utilizationRatio: this.activeTasks / this.config.maxConcurrency,
       totalExecutions: this.totalExecutions,
       totalRejections: this.totalRejections,
-      rejectionRate: this.totalExecutions > 0 ? this.totalRejections / this.totalExecutions : 0
+      rejectionRate:
+        this.totalExecutions > 0
+          ? this.totalRejections / this.totalExecutions
+          : 0,
     };
   }
 
@@ -1070,14 +1222,14 @@ class FailoverManager extends EventEmitter {
       primary: 'langfuse-primary',
       secondary: 'langfuse-secondary',
       healthCheck: () => this.checkLangfuseHealth(),
-      failoverTime: 30000
+      failoverTime: 30000,
     });
-    
+
     this.failoverStrategies.set('database-connection', {
       primary: 'primary-db',
       secondary: 'replica-db',
       healthCheck: () => this.checkDatabaseHealth(),
-      failoverTime: 15000
+      failoverTime: 15000,
     });
   }
 
@@ -1094,7 +1246,7 @@ class FailoverManager extends EventEmitter {
       strategy,
       failure,
       startTime: Date.now(),
-      status: 'in_progress'
+      status: 'in_progress',
     };
 
     this.activeFailovers.set(failoverId, failoverContext);
@@ -1103,16 +1255,16 @@ class FailoverManager extends EventEmitter {
     try {
       // Simulate failover process
       await this.executeFailoverSteps(failoverContext);
-      
+
       failoverContext.status = 'completed';
       failoverContext.completionTime = Date.now();
-      
+
       this.emit('failoverCompleted', failoverContext);
       return failoverContext;
     } catch (error) {
       failoverContext.status = 'failed';
       failoverContext.error = error.message;
-      
+
       this.emit('failoverFailed', failoverContext);
       throw error;
     }
@@ -1121,13 +1273,13 @@ class FailoverManager extends EventEmitter {
   async executeFailoverSteps(context) {
     // Step 1: Validate secondary system
     await this.validateSecondarySystem(context.strategy.secondary);
-    
+
     // Step 2: Drain traffic from primary
     await this.drainTraffic(context.strategy.primary);
-    
+
     // Step 3: Switch to secondary
     await this.switchToSecondary(context.strategy.secondary);
-    
+
     // Step 4: Verify failover success
     await this.verifyFailover(context);
   }
@@ -1164,7 +1316,7 @@ class FailoverManager extends EventEmitter {
     return {
       healthy: true,
       activeFailovers: this.activeFailovers.size,
-      strategies: this.failoverStrategies.size
+      strategies: this.failoverStrategies.size,
     };
   }
 
@@ -1193,25 +1345,25 @@ class DisasterRecoveryOrchestrator extends EventEmitter {
     this.recoveryPlans.set('datacenter_failure', {
       priority: 'critical',
       rto: 3600000, // 1 hour
-      rpo: 300000,  // 5 minutes
+      rpo: 300000, // 5 minutes
       steps: [
         'activate_backup_datacenter',
         'restore_from_backup',
         'redirect_traffic',
-        'verify_operations'
-      ]
+        'verify_operations',
+      ],
     });
-    
+
     this.recoveryPlans.set('database_corruption', {
       priority: 'high',
       rto: 1800000, // 30 minutes
-      rpo: 60000,   // 1 minute
+      rpo: 60000, // 1 minute
       steps: [
         'isolate_corrupted_database',
         'restore_from_latest_backup',
         'verify_data_integrity',
-        'resume_operations'
-      ]
+        'resume_operations',
+      ],
     });
   }
 
@@ -1228,7 +1380,7 @@ class DisasterRecoveryOrchestrator extends EventEmitter {
       plan,
       startTime: Date.now(),
       status: 'initiated',
-      currentStep: 0
+      currentStep: 0,
     };
 
     this.activeRecoveries.set(recoveryId, recoveryContext);
@@ -1250,8 +1402,10 @@ class DisasterRecoveryOrchestrator extends EventEmitter {
     for (let i = 0; i < context.plan.steps.length; i++) {
       context.currentStep = i;
       const step = context.plan.steps[i];
-      
-      this.logger.info(`Executing recovery step ${i + 1}/${context.plan.steps.length}: ${step}`);
+
+      this.logger.info(
+        `Executing recovery step ${i + 1}/${context.plan.steps.length}: ${step}`
+      );
       await this.executeRecoveryStep(step, context);
     }
   }
@@ -1266,7 +1420,7 @@ class DisasterRecoveryOrchestrator extends EventEmitter {
     return {
       healthy: true,
       activeRecoveries: this.activeRecoveries.size,
-      recoveryPlans: this.recoveryPlans.size
+      recoveryPlans: this.recoveryPlans.size,
     };
   }
 
@@ -1301,14 +1455,14 @@ class ChaosEngineeringEngine extends EventEmitter {
       name: 'Network Latency Injection',
       description: 'Inject network latency to test timeout handling',
       safetyLevel: 'medium',
-      execute: () => this.injectNetworkLatency()
+      execute: () => this.injectNetworkLatency(),
     });
-    
+
     this.experiments.set('service_failure', {
       name: 'Service Failure Simulation',
       description: 'Simulate service failures to test failover',
       safetyLevel: 'high',
-      execute: () => this.simulateServiceFailure()
+      execute: () => this.simulateServiceFailure(),
     });
   }
 
@@ -1317,14 +1471,18 @@ class ChaosEngineeringEngine extends EventEmitter {
   }
 
   async simulateServiceFailure() {
-    return { type: 'service_failure', service: 'test-service', duration: '30s' };
+    return {
+      type: 'service_failure',
+      service: 'test-service',
+      duration: '30s',
+    };
   }
 
   async getHealth() {
     return {
       healthy: true,
       experimentsAvailable: this.experiments.size,
-      activeExperiments: this.activeExperiments.size
+      activeExperiments: this.activeExperiments.size,
     };
   }
 

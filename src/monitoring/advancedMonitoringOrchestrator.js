@@ -102,7 +102,9 @@ class AdvancedMonitoringOrchestrator extends EventEmitter {
     this.startMonitoringLoops();
 
     this.initialized = true;
-    this.logger.info('Advanced Monitoring Orchestrator initialized successfully');
+    this.logger.info(
+      'Advanced Monitoring Orchestrator initialized successfully'
+    );
 
     return this;
   }
@@ -136,31 +138,53 @@ class AdvancedMonitoringOrchestrator extends EventEmitter {
       { name: 'quantum.efficiency.score', type: 'gauge', unit: 'ratio' },
 
       // Neuromorphic metrics
-      { name: 'neuromorphic.processing.duration', type: 'histogram', unit: 'seconds' },
-      { name: 'neuromorphic.patterns.detected', type: 'counter', unit: 'patterns' },
+      {
+        name: 'neuromorphic.processing.duration',
+        type: 'histogram',
+        unit: 'seconds',
+      },
+      {
+        name: 'neuromorphic.patterns.detected',
+        type: 'counter',
+        unit: 'patterns',
+      },
       { name: 'neuromorphic.adaptation.rate', type: 'gauge', unit: 'ratio' },
 
       // Reliability metrics
-      { name: 'reliability.circuit_breaker.state', type: 'gauge', unit: 'state' },
+      {
+        name: 'reliability.circuit_breaker.state',
+        type: 'gauge',
+        unit: 'state',
+      },
       { name: 'reliability.retries.total', type: 'counter', unit: 'retries' },
-      { name: 'reliability.fallbacks.total', type: 'counter', unit: 'fallbacks' },
+      {
+        name: 'reliability.fallbacks.total',
+        type: 'counter',
+        unit: 'fallbacks',
+      },
 
       // Security metrics
       { name: 'security.auth.attempts', type: 'counter', unit: 'attempts' },
       { name: 'security.auth.failures', type: 'counter', unit: 'failures' },
-      { name: 'security.rate_limit.violations', type: 'counter', unit: 'violations' },
+      {
+        name: 'security.rate_limit.violations',
+        type: 'counter',
+        unit: 'violations',
+      },
     ];
 
     for (const metric of coreMetrics) {
       this.registerMetric(metric);
     }
 
-    this.logger.info(`Registered ${coreMetrics.length} core metrics for collection`);
+    this.logger.info(
+      `Registered ${coreMetrics.length} core metrics for collection`
+    );
   }
 
   registerMetric(metricConfig) {
     const { name, type, unit, help, labels = [] } = metricConfig;
-    
+
     this.metrics.set(name, {
       name,
       type,
@@ -248,7 +272,9 @@ class AdvancedMonitoringOrchestrator extends EventEmitter {
       this.addAlertRule(rule);
     }
 
-    this.logger.info(`Configured ${defaultAlertRules.length} default alert rules`);
+    this.logger.info(
+      `Configured ${defaultAlertRules.length} default alert rules`
+    );
   }
 
   addAlertRule(rule) {
@@ -276,19 +302,22 @@ class AdvancedMonitoringOrchestrator extends EventEmitter {
 
         const mean = values.reduce((sum, val) => sum + val, 0) / values.length;
         const std = Math.sqrt(
-          values.reduce((sum, val) => sum + Math.pow(val - mean, 2), 0) / values.length
+          values.reduce((sum, val) => sum + Math.pow(val - mean, 2), 0) /
+            values.length
         );
 
-        return values.map((value, index) => {
-          const zScore = Math.abs((value - mean) / std);
-          return {
-            index,
-            value,
-            anomaly: zScore > threshold,
-            score: zScore,
-            threshold,
-          };
-        }).filter(result => result.anomaly);
+        return values
+          .map((value, index) => {
+            const zScore = Math.abs((value - mean) / std);
+            return {
+              index,
+              value,
+              anomaly: zScore > threshold,
+              score: zScore,
+              threshold,
+            };
+          })
+          .filter(result => result.anomaly);
       },
     });
 
@@ -301,8 +330,9 @@ class AdvancedMonitoringOrchestrator extends EventEmitter {
         // Simplified isolation score calculation
         const scores = values.map((value, index) => {
           let isolationScore = 0;
-          for (let i = 0; i < 10; i++) { // 10 trees
-            let currentValue = value;
+          for (let i = 0; i < 10; i++) {
+            // 10 trees
+            const currentValue = value;
             let pathLength = 0;
             let min = Math.min(...values);
             let max = Math.max(...values);
@@ -318,9 +348,9 @@ class AdvancedMonitoringOrchestrator extends EventEmitter {
             }
             isolationScore += pathLength;
           }
-          
+
           isolationScore /= 10; // Average path length
-          const normalizedScore = 1 - (isolationScore / 10); // Normalize to 0-1
+          const normalizedScore = 1 - isolationScore / 10; // Normalize to 0-1
 
           return {
             index,
@@ -340,7 +370,9 @@ class AdvancedMonitoringOrchestrator extends EventEmitter {
 
   async setupSLOMonitoring() {
     // Setup SLO calculators for each target
-    for (const [sloName, target] of Object.entries(this.config.performance.sloTargets)) {
+    for (const [sloName, target] of Object.entries(
+      this.config.performance.sloTargets
+    )) {
       this.sloCalculators.set(sloName, {
         name: sloName,
         target,
@@ -351,7 +383,9 @@ class AdvancedMonitoringOrchestrator extends EventEmitter {
       });
     }
 
-    this.logger.info(`Configured SLO monitoring for ${Object.keys(this.config.performance.sloTargets).length} targets`);
+    this.logger.info(
+      `Configured SLO monitoring for ${Object.keys(this.config.performance.sloTargets).length} targets`
+    );
   }
 
   createSLOCalculator(sloName, target) {
@@ -366,7 +400,10 @@ class AdvancedMonitoringOrchestrator extends EventEmitter {
 
       case 'latency_p95':
         return () => {
-          const latencyHistogram = this.getMetricHistory('app.requests.duration', 3600000); // 1 hour
+          const latencyHistogram = this.getMetricHistory(
+            'app.requests.duration',
+            3600000
+          ); // 1 hour
           if (latencyHistogram.length === 0) return 0;
           const sorted = latencyHistogram.sort((a, b) => a - b);
           return sorted[Math.floor(sorted.length * 0.95)];
@@ -374,7 +411,10 @@ class AdvancedMonitoringOrchestrator extends EventEmitter {
 
       case 'latency_p99':
         return () => {
-          const latencyHistogram = this.getMetricHistory('app.requests.duration', 3600000);
+          const latencyHistogram = this.getMetricHistory(
+            'app.requests.duration',
+            3600000
+          );
           if (latencyHistogram.length === 0) return 0;
           const sorted = latencyHistogram.sort((a, b) => a - b);
           return sorted[Math.floor(sorted.length * 0.99)];
@@ -429,7 +469,7 @@ class AdvancedMonitoringOrchestrator extends EventEmitter {
         for (const [name, metric] of this.metrics) {
           output += `# HELP ${name} ${metric.help}\n`;
           output += `# TYPE ${name} ${metric.type}\n`;
-          
+
           for (const [labels, value] of metric.values) {
             const labelString = labels ? `{${labels}}` : '';
             output += `${name}${labelString} ${value}\n`;
@@ -490,18 +530,28 @@ class AdvancedMonitoringOrchestrator extends EventEmitter {
     if (!this.config.integrations.slack.webhook) return;
 
     this.slackNotifier = {
-      sendAlert: async (alert) => {
+      sendAlert: async alert => {
         const message = {
           text: `🚨 Alert: ${alert.name}`,
-          attachments: [{
-            color: this.getSlackColor(alert.severity),
-            fields: [
-              { title: 'Severity', value: alert.severity, short: true },
-              { title: 'Metric', value: alert.metric, short: true },
-              { title: 'Description', value: alert.description, short: false },
-              { title: 'Time', value: new Date(alert.timestamp).toISOString(), short: true },
-            ],
-          }],
+          attachments: [
+            {
+              color: this.getSlackColor(alert.severity),
+              fields: [
+                { title: 'Severity', value: alert.severity, short: true },
+                { title: 'Metric', value: alert.metric, short: true },
+                {
+                  title: 'Description',
+                  value: alert.description,
+                  short: false,
+                },
+                {
+                  title: 'Time',
+                  value: new Date(alert.timestamp).toISOString(),
+                  short: true,
+                },
+              ],
+            },
+          ],
         };
 
         // In production, send to actual Slack webhook
@@ -516,7 +566,7 @@ class AdvancedMonitoringOrchestrator extends EventEmitter {
     if (!this.config.integrations.pagerduty.apiKey) return;
 
     this.pagerDutyNotifier = {
-      createIncident: async (alert) => {
+      createIncident: async alert => {
         const incident = {
           routing_key: this.config.integrations.pagerduty.apiKey,
           event_action: 'trigger',
@@ -539,29 +589,44 @@ class AdvancedMonitoringOrchestrator extends EventEmitter {
 
   startMonitoringLoops() {
     // Metric collection loop
-    this.intervals.set('metricCollection', setInterval(() => {
-      this.collectMetrics();
-    }, this.config.metrics.collectionInterval));
+    this.intervals.set(
+      'metricCollection',
+      setInterval(() => {
+        this.collectMetrics();
+      }, this.config.metrics.collectionInterval)
+    );
 
     // Alert evaluation loop
-    this.intervals.set('alertEvaluation', setInterval(() => {
-      this.evaluateAlerts();
-    }, this.config.alerting.evaluationInterval));
+    this.intervals.set(
+      'alertEvaluation',
+      setInterval(() => {
+        this.evaluateAlerts();
+      }, this.config.alerting.evaluationInterval)
+    );
 
     // Anomaly detection loop
-    this.intervals.set('anomalyDetection', setInterval(() => {
-      this.detectAnomalies();
-    }, 60000)); // Every minute
+    this.intervals.set(
+      'anomalyDetection',
+      setInterval(() => {
+        this.detectAnomalies();
+      }, 60000)
+    ); // Every minute
 
     // SLO calculation loop
-    this.intervals.set('sloCalculation', setInterval(() => {
-      this.calculateSLOs();
-    }, 300000)); // Every 5 minutes
+    this.intervals.set(
+      'sloCalculation',
+      setInterval(() => {
+        this.calculateSLOs();
+      }, 300000)
+    ); // Every 5 minutes
 
     // Health check loop
-    this.intervals.set('healthCheck', setInterval(() => {
-      this.performHealthCheck();
-    }, 30000)); // Every 30 seconds
+    this.intervals.set(
+      'healthCheck',
+      setInterval(() => {
+        this.performHealthCheck();
+      }, 30000)
+    ); // Every 30 seconds
 
     this.logger.info('Monitoring loops started');
   }
@@ -599,12 +664,12 @@ class AdvancedMonitoringOrchestrator extends EventEmitter {
     // Add to history
     const history = this.metricHistory.get(name) || [];
     history.push({ timestamp: Date.now(), value, labels });
-    
+
     // Limit history size
     if (history.length > 1000) {
       history.shift();
     }
-    
+
     this.metricHistory.set(name, history);
 
     // Calculate aggregations
@@ -613,11 +678,11 @@ class AdvancedMonitoringOrchestrator extends EventEmitter {
 
   calculateMetricAggregations(name, metric) {
     const history = this.metricHistory.get(name) || [];
-    
+
     for (const window of this.config.metrics.aggregationWindows) {
-      const windowStart = Date.now() - (window * 1000);
+      const windowStart = Date.now() - window * 1000;
       const windowData = history.filter(h => h.timestamp >= windowStart);
-      
+
       if (windowData.length === 0) continue;
 
       const values = windowData.map(h => h.value);
@@ -644,20 +709,23 @@ class AdvancedMonitoringOrchestrator extends EventEmitter {
 
   evaluateAlerts() {
     const now = Date.now();
-    
+
     for (const [ruleId, rule] of this.alertRules) {
       if (!rule.enabled) continue;
 
       try {
         const shouldAlert = this.evaluateAlertRule(rule, now);
-        
+
         if (shouldAlert) {
           this.triggerAlert(rule);
         }
-        
+
         rule.lastEvaluated = now;
       } catch (error) {
-        this.logger.error(`Alert rule evaluation failed for ${rule.name}:`, error);
+        this.logger.error(
+          `Alert rule evaluation failed for ${rule.name}:`,
+          error
+        );
       }
     }
   }
@@ -678,10 +746,11 @@ class AdvancedMonitoringOrchestrator extends EventEmitter {
       case 'eq':
         conditionMet = metricValue === rule.threshold;
         break;
-      case 'rate_gt':
+      case 'rate_gt': {
         const rate = this.calculateMetricRate(rule.metric, 60000); // 1 minute rate
         conditionMet = rate > rule.threshold;
         break;
+      }
       default:
         this.logger.warn(`Unknown alert condition: ${rule.condition}`);
         return false;
@@ -691,14 +760,18 @@ class AdvancedMonitoringOrchestrator extends EventEmitter {
     if (conditionMet && rule.duration > 0) {
       const durationStart = now - rule.duration;
       const historyInWindow = this.getMetricHistory(rule.metric, rule.duration);
-      
+
       // All values in the duration window must meet the condition
       return historyInWindow.every(value => {
         switch (rule.condition) {
-          case 'gt': return value > rule.threshold;
-          case 'lt': return value < rule.threshold;
-          case 'eq': return value === rule.threshold;
-          default: return false;
+          case 'gt':
+            return value > rule.threshold;
+          case 'lt':
+            return value < rule.threshold;
+          case 'eq':
+            return value === rule.threshold;
+          default:
+            return false;
         }
       });
     }
@@ -726,7 +799,10 @@ class AdvancedMonitoringOrchestrator extends EventEmitter {
       .filter(a => a.name === rule.name)
       .sort((a, b) => b.timestamp - a.timestamp)[0];
 
-    if (lastAlert && (Date.now() - lastAlert.timestamp) < this.config.alerting.suppressionTime) {
+    if (
+      lastAlert &&
+      Date.now() - lastAlert.timestamp < this.config.alerting.suppressionTime
+    ) {
       this.logger.debug(`Alert suppressed: ${rule.name}`);
       return;
     }
@@ -752,7 +828,10 @@ class AdvancedMonitoringOrchestrator extends EventEmitter {
     }
 
     // Send to PagerDuty for critical/emergency alerts
-    if (this.pagerDutyNotifier && ['critical', 'emergency'].includes(alert.severity)) {
+    if (
+      this.pagerDutyNotifier &&
+      ['critical', 'emergency'].includes(alert.severity)
+    ) {
       this.pagerDutyNotifier.createIncident(alert);
     }
   }
@@ -766,10 +845,13 @@ class AdvancedMonitoringOrchestrator extends EventEmitter {
         if (history.length < 20) continue; // Need sufficient data
 
         const values = history.map(h => h.value);
-        
+
         for (const [detectorName, detector] of this.anomalyDetectors) {
-          const anomalies = detector.detect(values, this.config.anomalyDetection.sensitivity);
-          
+          const anomalies = detector.detect(
+            values,
+            this.config.anomalyDetection.sensitivity
+          );
+
           if (anomalies.length > 0) {
             this.handleAnomalies(metricName, detectorName, anomalies);
           }
@@ -804,10 +886,11 @@ class AdvancedMonitoringOrchestrator extends EventEmitter {
       try {
         const currentValue = sloConfig.calculator();
         const previousStatus = sloConfig.status;
-        
+
         sloConfig.currentValue = currentValue;
-        sloConfig.status = currentValue >= sloConfig.target ? 'met' : 'violated';
-        
+        sloConfig.status =
+          currentValue >= sloConfig.target ? 'met' : 'violated';
+
         // Record history
         sloConfig.history.push({
           timestamp: Date.now(),
@@ -817,7 +900,8 @@ class AdvancedMonitoringOrchestrator extends EventEmitter {
         });
 
         // Limit history
-        if (sloConfig.history.length > 288) { // 24 hours at 5-minute intervals
+        if (sloConfig.history.length > 288) {
+          // 24 hours at 5-minute intervals
           sloConfig.history.shift();
         }
 
@@ -862,30 +946,34 @@ class AdvancedMonitoringOrchestrator extends EventEmitter {
     const issues = [];
 
     // Check metric collection health
-    const lastMetricUpdate = Math.max(...Array.from(this.metrics.values()).map(m => m.lastUpdated));
+    const lastMetricUpdate = Math.max(
+      ...Array.from(this.metrics.values()).map(m => m.lastUpdated)
+    );
     if (now - lastMetricUpdate > this.config.metrics.collectionInterval * 2) {
       healthScore -= 0.2;
       issues.push('Metric collection delayed');
     }
 
     // Check active alerts
-    const criticalAlerts = Array.from(this.activeAlerts.values())
-      .filter(a => a.severity === 'critical' || a.severity === 'emergency');
+    const criticalAlerts = Array.from(this.activeAlerts.values()).filter(
+      a => a.severity === 'critical' || a.severity === 'emergency'
+    );
     if (criticalAlerts.length > 0) {
       healthScore -= Math.min(0.5, criticalAlerts.length * 0.1);
       issues.push(`${criticalAlerts.length} critical alerts active`);
     }
 
     // Check SLO violations
-    const violatedSLOs = Array.from(this.sloCalculators.values())
-      .filter(slo => slo.status === 'violated');
+    const violatedSLOs = Array.from(this.sloCalculators.values()).filter(
+      slo => slo.status === 'violated'
+    );
     if (violatedSLOs.length > 0) {
       healthScore -= Math.min(0.3, violatedSLOs.length * 0.1);
       issues.push(`${violatedSLOs.length} SLO violations`);
     }
 
     this.performanceMetrics.systemHealth = Math.max(0, healthScore);
-    
+
     this.emit('healthCheck', {
       score: this.performanceMetrics.systemHealth,
       issues,
@@ -895,25 +983,25 @@ class AdvancedMonitoringOrchestrator extends EventEmitter {
 
   getMetricValue(name, labels = '') {
     const metric = this.metrics.get(name);
-    return metric ? (metric.values.get(labels) || null) : null;
+    return metric ? metric.values.get(labels) || null : null;
   }
 
-  getMetricHistory(name, duration = 3600000) { // Default 1 hour
+  getMetricHistory(name, duration = 3600000) {
+    // Default 1 hour
     const history = this.metricHistory.get(name) || [];
     const cutoff = Date.now() - duration;
-    return history
-      .filter(h => h.timestamp >= cutoff)
-      .map(h => h.value);
+    return history.filter(h => h.timestamp >= cutoff).map(h => h.value);
   }
 
-  calculateMetricRate(name, duration = 60000) { // Default 1 minute
+  calculateMetricRate(name, duration = 60000) {
+    // Default 1 minute
     const history = this.getMetricHistory(name, duration);
     if (history.length < 2) return 0;
-    
+
     const latest = history[history.length - 1];
     const earliest = history[0];
     const timeDiff = duration / 1000; // Convert to seconds
-    
+
     return (latest - earliest) / timeDiff;
   }
 

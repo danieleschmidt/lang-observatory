@@ -29,8 +29,13 @@ class ExperimentalFramework extends EventEmitter {
       },
       analysis: {
         realTimeMetrics: true,
-        statisticalTests: ['t-test', 'chi-square', 'mann-whitney', 'kolmogorov-smirnov'],
-        confidenceIntervals: [0.90, 0.95, 0.99],
+        statisticalTests: [
+          't-test',
+          'chi-square',
+          'mann-whitney',
+          'kolmogorov-smirnov',
+        ],
+        confidenceIntervals: [0.9, 0.95, 0.99],
         effectSizeCalculation: true,
         bayesianAnalysis: true,
         ...config.analysis,
@@ -95,7 +100,9 @@ class ExperimentalFramework extends EventEmitter {
     this.startBackgroundAnalysis();
 
     this.initialized = true;
-    this.logger.info('Experimental Framework initialized for research-grade experimentation');
+    this.logger.info(
+      'Experimental Framework initialized for research-grade experimentation'
+    );
 
     return this;
   }
@@ -103,7 +110,7 @@ class ExperimentalFramework extends EventEmitter {
   async initializeStatisticalTools() {
     // T-test implementation
     this.statisticalTests.set('t-test', {
-      name: 'Student\'s t-test',
+      name: "Student's t-test",
       assumptions: ['normality', 'independence', 'equal_variance'],
       implementation: (groupA, groupB) => {
         const meanA = this.calculateMean(groupA);
@@ -114,8 +121,10 @@ class ExperimentalFramework extends EventEmitter {
         const nB = groupB.length;
 
         // Pooled standard deviation
-        const pooledStd = Math.sqrt(((nA - 1) * stdA * stdA + (nB - 1) * stdB * stdB) / (nA + nB - 2));
-        const standardError = pooledStd * Math.sqrt(1/nA + 1/nB);
+        const pooledStd = Math.sqrt(
+          ((nA - 1) * stdA * stdA + (nB - 1) * stdB * stdB) / (nA + nB - 2)
+        );
+        const standardError = pooledStd * Math.sqrt(1 / nA + 1 / nB);
         const tStatistic = (meanA - meanB) / standardError;
         const degreesOfFreedom = nA + nB - 2;
 
@@ -124,7 +133,10 @@ class ExperimentalFramework extends EventEmitter {
           degreesOfFreedom,
           pValue: this.calculateTTestPValue(tStatistic, degreesOfFreedom),
           effectSize: this.calculateCohenD(meanA, meanB, pooledStd),
-          confidenceInterval: this.calculateConfidenceInterval(meanA - meanB, standardError),
+          confidenceInterval: this.calculateConfidenceInterval(
+            meanA - meanB,
+            standardError
+          ),
         };
       },
     });
@@ -134,8 +146,10 @@ class ExperimentalFramework extends EventEmitter {
       name: 'Mann-Whitney U test',
       assumptions: ['independence'],
       implementation: (groupA, groupB) => {
-        const combined = [...groupA.map(v => ({ value: v, group: 'A' })), 
-                          ...groupB.map(v => ({ value: v, group: 'B' }))];
+        const combined = [
+          ...groupA.map(v => ({ value: v, group: 'A' })),
+          ...groupB.map(v => ({ value: v, group: 'B' })),
+        ];
         combined.sort((a, b) => a.value - b.value);
 
         // Assign ranks
@@ -144,16 +158,25 @@ class ExperimentalFramework extends EventEmitter {
           combined[i].rank = rank++;
         }
 
-        const rankSumA = combined.filter(item => item.group === 'A')
-                                .reduce((sum, item) => sum + item.rank, 0);
+        const rankSumA = combined
+          .filter(item => item.group === 'A')
+          .reduce((sum, item) => sum + item.rank, 0);
         const uA = rankSumA - (groupA.length * (groupA.length + 1)) / 2;
         const uB = groupA.length * groupB.length - uA;
         const u = Math.min(uA, uB);
 
         return {
           statistic: u,
-          pValue: this.calculateMannWhitneyPValue(u, groupA.length, groupB.length),
-          effectSize: this.calculateRankBiserialCorrelation(uA, groupA.length, groupB.length),
+          pValue: this.calculateMannWhitneyPValue(
+            u,
+            groupA.length,
+            groupB.length
+          ),
+          effectSize: this.calculateRankBiserialCorrelation(
+            uA,
+            groupA.length,
+            groupB.length
+          ),
         };
       },
     });
@@ -191,24 +214,66 @@ class ExperimentalFramework extends EventEmitter {
   async initializeAlgorithmComparison() {
     // Define standard benchmarks for different algorithm types
     this.benchmarkSuites = new Map([
-      ['llm-optimization', {
-        name: 'LLM Optimization Benchmark Suite',
-        metrics: ['latency', 'throughput', 'accuracy', 'cost', 'memory_usage'],
-        datasets: ['synthetic-conversations', 'real-user-queries', 'edge-cases'],
-        baselines: ['naive-approach', 'current-production', 'state-of-art'],
-      }],
-      ['quantum-planning', {
-        name: 'Quantum Task Planning Benchmark',
-        metrics: ['plan_quality', 'computation_time', 'resource_efficiency', 'scalability'],
-        datasets: ['small-tasks', 'medium-complexity', 'large-scale', 'real-world'],
-        baselines: ['classical-greedy', 'genetic-algorithm', 'simulated-annealing'],
-      }],
-      ['neuromorphic-processing', {
-        name: 'Neuromorphic Processing Benchmark',
-        metrics: ['processing_speed', 'energy_efficiency', 'pattern_recognition', 'adaptation'],
-        datasets: ['structured-data', 'unstructured-data', 'streaming-data'],
-        baselines: ['traditional-neural-nets', 'optimized-cpu', 'gpu-accelerated'],
-      }],
+      [
+        'llm-optimization',
+        {
+          name: 'LLM Optimization Benchmark Suite',
+          metrics: [
+            'latency',
+            'throughput',
+            'accuracy',
+            'cost',
+            'memory_usage',
+          ],
+          datasets: [
+            'synthetic-conversations',
+            'real-user-queries',
+            'edge-cases',
+          ],
+          baselines: ['naive-approach', 'current-production', 'state-of-art'],
+        },
+      ],
+      [
+        'quantum-planning',
+        {
+          name: 'Quantum Task Planning Benchmark',
+          metrics: [
+            'plan_quality',
+            'computation_time',
+            'resource_efficiency',
+            'scalability',
+          ],
+          datasets: [
+            'small-tasks',
+            'medium-complexity',
+            'large-scale',
+            'real-world',
+          ],
+          baselines: [
+            'classical-greedy',
+            'genetic-algorithm',
+            'simulated-annealing',
+          ],
+        },
+      ],
+      [
+        'neuromorphic-processing',
+        {
+          name: 'Neuromorphic Processing Benchmark',
+          metrics: [
+            'processing_speed',
+            'energy_efficiency',
+            'pattern_recognition',
+            'adaptation',
+          ],
+          datasets: ['structured-data', 'unstructured-data', 'streaming-data'],
+          baselines: [
+            'traditional-neural-nets',
+            'optimized-cpu',
+            'gpu-accelerated',
+          ],
+        },
+      ],
     ]);
 
     this.logger.info('Algorithm comparison infrastructure initialized');
@@ -222,7 +287,10 @@ class ExperimentalFramework extends EventEmitter {
       for (const baseline of config.baselines) {
         baselines.set(baseline, {
           name: baseline,
-          implementation: await this.createBaselineImplementation(suiteType, baseline),
+          implementation: await this.createBaselineImplementation(
+            suiteType,
+            baseline
+          ),
           benchmarkResults: new Map(),
           lastUpdated: Date.now(),
         });
@@ -239,43 +307,58 @@ class ExperimentalFramework extends EventEmitter {
     const implementations = {
       'llm-optimization': {
         'naive-approach': {
-          process: (input) => ({ result: input, processingTime: Math.random() * 1000 + 500 }),
+          process: input => ({
+            result: input,
+            processingTime: Math.random() * 1000 + 500,
+          }),
           metrics: () => ({ accuracy: 0.7, latency: 800, cost: 0.01 }),
         },
         'current-production': {
-          process: (input) => ({ result: input, processingTime: Math.random() * 500 + 200 }),
+          process: input => ({
+            result: input,
+            processingTime: Math.random() * 500 + 200,
+          }),
           metrics: () => ({ accuracy: 0.85, latency: 350, cost: 0.005 }),
         },
         'state-of-art': {
-          process: (input) => ({ result: input, processingTime: Math.random() * 200 + 100 }),
+          process: input => ({
+            result: input,
+            processingTime: Math.random() * 200 + 100,
+          }),
           metrics: () => ({ accuracy: 0.95, latency: 150, cost: 0.003 }),
         },
       },
       'quantum-planning': {
         'classical-greedy': {
-          process: (tasks) => ({ plan: tasks.map((t, i) => ({ ...t, order: i })), time: 50 }),
+          process: tasks => ({
+            plan: tasks.map((t, i) => ({ ...t, order: i })),
+            time: 50,
+          }),
           metrics: () => ({ quality: 0.6, time: 50, efficiency: 0.7 }),
         },
         'genetic-algorithm': {
-          process: (tasks) => ({ plan: tasks.reverse(), time: 200 }),
+          process: tasks => ({ plan: tasks.reverse(), time: 200 }),
           metrics: () => ({ quality: 0.8, time: 200, efficiency: 0.8 }),
         },
         'simulated-annealing': {
-          process: (tasks) => ({ plan: tasks.sort(() => Math.random() - 0.5), time: 150 }),
+          process: tasks => ({
+            plan: tasks.sort(() => Math.random() - 0.5),
+            time: 150,
+          }),
           metrics: () => ({ quality: 0.75, time: 150, efficiency: 0.75 }),
         },
       },
       'neuromorphic-processing': {
         'traditional-neural-nets': {
-          process: (data) => ({ output: data.map(d => d * 0.8), time: 100 }),
+          process: data => ({ output: data.map(d => d * 0.8), time: 100 }),
           metrics: () => ({ speed: 100, efficiency: 0.6, accuracy: 0.85 }),
         },
         'optimized-cpu': {
-          process: (data) => ({ output: data.map(d => d * 0.9), time: 80 }),
+          process: data => ({ output: data.map(d => d * 0.9), time: 80 }),
           metrics: () => ({ speed: 80, efficiency: 0.7, accuracy: 0.88 }),
         },
         'gpu-accelerated': {
-          process: (data) => ({ output: data.map(d => d * 0.95), time: 30 }),
+          process: data => ({ output: data.map(d => d * 0.95), time: 30 }),
           metrics: () => ({ speed: 30, efficiency: 0.9, accuracy: 0.92 }),
         },
       },
@@ -301,11 +384,11 @@ class ExperimentalFramework extends EventEmitter {
   setupPublicationWorkflow() {
     if (!this.config.publication.autoDocumentation) return;
 
-    this.on('experimentCompleted', (experiment) => {
+    this.on('experimentCompleted', experiment => {
       this.generateResearchDocumentation(experiment);
     });
 
-    this.on('significantFinding', (finding) => {
+    this.on('significantFinding', finding => {
       this.preparePeerReviewPackage(finding);
     });
 
@@ -340,7 +423,8 @@ class ExperimentalFramework extends EventEmitter {
       config: {
         duration: config.duration || this.config.experiments.defaultDuration,
         sampleSize: config.sampleSize || this.config.experiments.minSampleSize,
-        significanceLevel: config.significanceLevel || this.config.experiments.significanceLevel,
+        significanceLevel:
+          config.significanceLevel || this.config.experiments.significanceLevel,
         powerLevel: config.powerLevel || this.config.experiments.powerLevel,
         stratification: config.stratification || [],
         ...config,
@@ -372,7 +456,9 @@ class ExperimentalFramework extends EventEmitter {
     this.researchMetrics.totalExperiments++;
 
     this.emit('experimentCreated', experiment);
-    this.logger.info(`Experiment created: ${experimentId}`, { hypothesis: hypothesis.statement });
+    this.logger.info(`Experiment created: ${experimentId}`, {
+      hypothesis: hypothesis.statement,
+    });
 
     return experiment;
   }
@@ -405,7 +491,7 @@ class ExperimentalFramework extends EventEmitter {
 
     this.researchMetrics.activeExperiments++;
     this.emit('experimentStarted', experiment);
-    
+
     this.logger.info(`Experiment started: ${experimentId}`);
     return experiment;
   }
@@ -422,7 +508,9 @@ class ExperimentalFramework extends EventEmitter {
 
     const group = experiment.groups[groupName];
     if (!group) {
-      throw new Error(`Group ${groupName} not found in experiment ${experimentId}`);
+      throw new Error(
+        `Group ${groupName} not found in experiment ${experimentId}`
+      );
     }
 
     // Add data with metadata
@@ -448,7 +536,7 @@ class ExperimentalFramework extends EventEmitter {
   async performInterimAnalysis(experimentId) {
     const experiment = this.activeExperiments.get(experimentId);
     const groups = Object.values(experiment.groups);
-    
+
     if (groups.length < 2) return;
 
     const controlGroup = groups.find(g => g.name === 'control');
@@ -490,21 +578,32 @@ class ExperimentalFramework extends EventEmitter {
     const results = {};
 
     for (const metric of metrics) {
-      const controlValues = controlData.map(d => d[metric]).filter(v => v !== undefined);
-      const treatmentValues = treatmentData.map(d => d[metric]).filter(v => v !== undefined);
+      const controlValues = controlData
+        .map(d => d[metric])
+        .filter(v => v !== undefined);
+      const treatmentValues = treatmentData
+        .map(d => d[metric])
+        .filter(v => v !== undefined);
 
       if (controlValues.length === 0 || treatmentValues.length === 0) continue;
 
       // Choose appropriate statistical test
-      const testType = this.selectStatisticalTest(controlValues, treatmentValues, metric);
+      const testType = this.selectStatisticalTest(
+        controlValues,
+        treatmentValues,
+        metric
+      );
       const test = this.statisticalTests.get(testType);
-      
+
       if (test) {
         const testResult = test.implementation(controlValues, treatmentValues);
         results[metric] = {
           test: testType,
           ...testResult,
-          sampleSizes: { control: controlValues.length, treatment: treatmentValues.length },
+          sampleSizes: {
+            control: controlValues.length,
+            treatment: treatmentValues.length,
+          },
           descriptiveStats: {
             control: this.calculateDescriptiveStats(controlValues),
             treatment: this.calculateDescriptiveStats(treatmentValues),
@@ -518,8 +617,12 @@ class ExperimentalFramework extends EventEmitter {
 
   selectStatisticalTest(controlValues, treatmentValues, metric) {
     // Simplified test selection (in production, use more sophisticated selection)
-    const isNormal = this.testNormality(controlValues) && this.testNormality(treatmentValues);
-    const equalVariance = this.testEqualVariance(controlValues, treatmentValues);
+    const isNormal =
+      this.testNormality(controlValues) && this.testNormality(treatmentValues);
+    const equalVariance = this.testEqualVariance(
+      controlValues,
+      treatmentValues
+    );
 
     if (isNormal && equalVariance) {
       return 't-test';
@@ -528,12 +631,18 @@ class ExperimentalFramework extends EventEmitter {
     }
   }
 
-  async performAlgorithmComparison(algorithmType, newAlgorithm, benchmarkConfig = {}) {
+  async performAlgorithmComparison(
+    algorithmType,
+    newAlgorithm,
+    benchmarkConfig = {}
+  ) {
     const comparisonId = crypto.randomUUID();
     const baselines = this.algorithmBaselines.get(algorithmType);
-    
+
     if (!baselines) {
-      throw new Error(`No baselines found for algorithm type: ${algorithmType}`);
+      throw new Error(
+        `No baselines found for algorithm type: ${algorithmType}`
+      );
     }
 
     const benchmarkSuite = this.benchmarkSuites.get(algorithmType);
@@ -557,8 +666,10 @@ class ExperimentalFramework extends EventEmitter {
 
     // Run benchmarks against all baselines
     for (const [baselineName, baseline] of baselines) {
-      this.logger.info(`Running comparison: ${newAlgorithm.name} vs ${baselineName}`);
-      
+      this.logger.info(
+        `Running comparison: ${newAlgorithm.name} vs ${baselineName}`
+      );
+
       const comparison = await this.runBenchmarkComparison(
         newAlgorithm,
         baseline,
@@ -570,7 +681,9 @@ class ExperimentalFramework extends EventEmitter {
     }
 
     // Perform statistical analysis of results
-    results.analysis = this.analyzeAlgorithmPerformance(results.benchmarkResults);
+    results.analysis = this.analyzeAlgorithmPerformance(
+      results.benchmarkResults
+    );
 
     // Store results
     this.comparisonResults.set(comparisonId, results);
@@ -620,18 +733,32 @@ class ExperimentalFramework extends EventEmitter {
 
       // Collect metrics
       for (const metric of benchmarkSuite.metrics) {
-        datasetResults.newAlgorithm[metric] = this.extractMetric(newAlgResult, metric, newAlgTime);
-        datasetResults.baseline[metric] = this.extractMetric(baselineResult, metric, baselineTime);
+        datasetResults.newAlgorithm[metric] = this.extractMetric(
+          newAlgResult,
+          metric,
+          newAlgTime
+        );
+        datasetResults.baseline[metric] = this.extractMetric(
+          baselineResult,
+          metric,
+          baselineTime
+        );
       }
 
       results.datasets[dataset] = datasetResults;
     }
 
     // Aggregate results across datasets
-    results.metrics = this.aggregateBenchmarkMetrics(results.datasets, benchmarkSuite.metrics);
-    
+    results.metrics = this.aggregateBenchmarkMetrics(
+      results.datasets,
+      benchmarkSuite.metrics
+    );
+
     // Perform statistical comparison
-    results.statistical = this.performBenchmarkStatistics(results.datasets, benchmarkSuite.metrics);
+    results.statistical = this.performBenchmarkStatistics(
+      results.datasets,
+      benchmarkSuite.metrics
+    );
 
     return results;
   }
@@ -651,20 +778,23 @@ class ExperimentalFramework extends EventEmitter {
     for (const [baseline, results] of Object.entries(benchmarkResults)) {
       for (const [metric, stats] of Object.entries(results.statistical)) {
         totalComparisons++;
-        
-        if (stats.pValue < 0.05) { // Significant difference
+
+        if (stats.pValue < 0.05) {
+          // Significant difference
           const improvement = stats.effectSize > 0; // Assuming positive effect is improvement
-          
+
           if (improvement) {
             improvementCount++;
-            if (!analysis.improvements[baseline]) analysis.improvements[baseline] = [];
+            if (!analysis.improvements[baseline])
+              analysis.improvements[baseline] = [];
             analysis.improvements[baseline].push({
               metric,
               improvement: stats.effectSize,
               significance: stats.pValue,
             });
           } else {
-            if (!analysis.degradations[baseline]) analysis.degradations[baseline] = [];
+            if (!analysis.degradations[baseline])
+              analysis.degradations[baseline] = [];
             analysis.degradations[baseline].push({
               metric,
               degradation: Math.abs(stats.effectSize),
@@ -680,8 +810,12 @@ class ExperimentalFramework extends EventEmitter {
 
     // Generate recommendations
     if (analysis.significantImprovement) {
-      analysis.recommendations.push('Algorithm shows significant improvement over baselines');
-      analysis.recommendations.push('Consider deploying in production with gradual rollout');
+      analysis.recommendations.push(
+        'Algorithm shows significant improvement over baselines'
+      );
+      analysis.recommendations.push(
+        'Consider deploying in production with gradual rollout'
+      );
     } else {
       analysis.recommendations.push('Algorithm needs further optimization');
       analysis.recommendations.push('Focus on metrics showing degradation');
@@ -691,9 +825,10 @@ class ExperimentalFramework extends EventEmitter {
   }
 
   async reproduceExperiment(originalExperimentId, config = {}) {
-    const originalExperiment = this.experimentHistory.get(originalExperimentId) || 
-                               this.activeExperiments.get(originalExperimentId);
-    
+    const originalExperiment =
+      this.experimentHistory.get(originalExperimentId) ||
+      this.activeExperiments.get(originalExperimentId);
+
     if (!originalExperiment) {
       throw new Error(`Original experiment ${originalExperimentId} not found`);
     }
@@ -722,8 +857,11 @@ class ExperimentalFramework extends EventEmitter {
       group.results = [];
     });
 
-    this.activeExperiments.set(reproductionExperiment.id, reproductionExperiment);
-    
+    this.activeExperiments.set(
+      reproductionExperiment.id,
+      reproductionExperiment
+    );
+
     this.emit('reproductionStarted', {
       originalId: originalExperimentId,
       reproductionId: reproductionExperiment.id,
@@ -786,8 +924,8 @@ class ExperimentalFramework extends EventEmitter {
     if (absT > 3) return 0.001; // Very significant
     if (absT > 2.5) return 0.01;
     if (absT > 2) return 0.05;
-    if (absT > 1.5) return 0.10;
-    return 0.20;
+    if (absT > 1.5) return 0.1;
+    return 0.2;
   }
 
   calculateCohenD(meanA, meanB, pooledStd) {
@@ -807,11 +945,13 @@ class ExperimentalFramework extends EventEmitter {
     // Simplified normality test (in production, use Shapiro-Wilk or similar)
     const mean = this.calculateMean(values);
     const std = this.calculateStandardDeviation(values);
-    
+
     // Check if values roughly follow normal distribution
-    const within1Std = values.filter(v => Math.abs(v - mean) <= std).length / values.length;
-    const within2Std = values.filter(v => Math.abs(v - mean) <= 2 * std).length / values.length;
-    
+    const within1Std =
+      values.filter(v => Math.abs(v - mean) <= std).length / values.length;
+    const within2Std =
+      values.filter(v => Math.abs(v - mean) <= 2 * std).length / values.length;
+
     return within1Std >= 0.6 && within2Std >= 0.9; // Rough approximation
   }
 
@@ -823,9 +963,11 @@ class ExperimentalFramework extends EventEmitter {
   }
 
   shouldPerformInterimAnalysis(experiment) {
-    const totalResults = Object.values(experiment.groups)
-      .reduce((sum, group) => sum + group.results.length, 0);
-    
+    const totalResults = Object.values(experiment.groups).reduce(
+      (sum, group) => sum + group.results.length,
+      0
+    );
+
     return totalResults >= experiment.config.sampleSize * 0.5; // 50% of target sample size
   }
 
@@ -835,15 +977,19 @@ class ExperimentalFramework extends EventEmitter {
     if (!primaryMetric || !analysis[primaryMetric]) return false;
 
     const result = analysis[primaryMetric];
-    
+
     // Stop for overwhelming evidence (very low p-value)
     if (result.pValue < 0.001 && Math.abs(result.effectSize) > 0.8) {
       return true;
     }
 
     // Stop for futility (very high p-value with sufficient sample size)
-    const totalSample = result.sampleSizes.control + result.sampleSizes.treatment;
-    if (result.pValue > 0.8 && totalSample > experiment.config.sampleSize * 0.8) {
+    const totalSample =
+      result.sampleSizes.control + result.sampleSizes.treatment;
+    if (
+      result.pValue > 0.8 &&
+      totalSample > experiment.config.sampleSize * 0.8
+    ) {
       return true;
     }
 
@@ -852,11 +998,18 @@ class ExperimentalFramework extends EventEmitter {
 
   checkExperimentSignificance() {
     for (const [experimentId, experiment] of this.activeExperiments) {
-      if (experiment.status === 'running' && experiment.analysis.interim.length > 0) {
-        const latestAnalysis = experiment.analysis.interim[experiment.analysis.interim.length - 1];
-        
+      if (
+        experiment.status === 'running' &&
+        experiment.analysis.interim.length > 0
+      ) {
+        const latestAnalysis =
+          experiment.analysis.interim[experiment.analysis.interim.length - 1];
+
         if (latestAnalysis.significance) {
-          this.emit('significanceDetected', { experimentId, analysis: latestAnalysis });
+          this.emit('significanceDetected', {
+            experimentId,
+            analysis: latestAnalysis,
+          });
         }
       }
     }
@@ -917,9 +1070,16 @@ class ExperimentalFramework extends EventEmitter {
   updateBayesianAnalysis() {
     // Update Bayesian analysis for all active experiments
     for (const [experimentId, experiment] of this.activeExperiments) {
-      if (experiment.status === 'running' && experiment.analysis.interim.length > 0) {
-        const latestAnalysis = experiment.analysis.interim[experiment.analysis.interim.length - 1];
-        this.updateBayesianAnalysisForExperiment(experiment, latestAnalysis.results);
+      if (
+        experiment.status === 'running' &&
+        experiment.analysis.interim.length > 0
+      ) {
+        const latestAnalysis =
+          experiment.analysis.interim[experiment.analysis.interim.length - 1];
+        this.updateBayesianAnalysisForExperiment(
+          experiment,
+          latestAnalysis.results
+        );
       }
     }
   }
@@ -932,9 +1092,11 @@ class ExperimentalFramework extends EventEmitter {
     const result = analysisResults[primaryMetric];
     const likelihood = 1 - result.pValue; // Simplified likelihood
     const prior = experiment.analysis.bayesian.posteriorBelief;
-    
+
     // Bayesian update
-    const posterior = (likelihood * prior) / (likelihood * prior + (1 - likelihood) * (1 - prior));
+    const posterior =
+      (likelihood * prior) /
+      (likelihood * prior + (1 - likelihood) * (1 - prior));
     experiment.analysis.bayesian.posteriorBelief = posterior;
   }
 
@@ -950,15 +1112,20 @@ class ExperimentalFramework extends EventEmitter {
       timestamp: Date.now(),
     };
 
-    this.emit('documentationGenerated', { experimentId: experiment.id, documentation });
+    this.emit('documentationGenerated', {
+      experimentId: experiment.id,
+      documentation,
+    });
     return documentation;
   }
 
   generateAbstract(experiment) {
-    return `This study tested the hypothesis: "${experiment.hypothesis.statement}". ` +
-           `The experiment ran for ${(experiment.endTime - experiment.startTime) / (24 * 60 * 60 * 1000)} days ` +
-           `with ${Object.values(experiment.groups).reduce((sum, g) => sum + g.results.length, 0)} total participants. ` +
-           `Results ${experiment.analysis.final ? 'showed' : 'are pending final analysis'}.`;
+    return (
+      `This study tested the hypothesis: "${experiment.hypothesis.statement}". ` +
+      `The experiment ran for ${(experiment.endTime - experiment.startTime) / (24 * 60 * 60 * 1000)} days ` +
+      `with ${Object.values(experiment.groups).reduce((sum, g) => sum + g.results.length, 0)} total participants. ` +
+      `Results ${experiment.analysis.final ? 'showed' : 'are pending final analysis'}.`
+    );
   }
 
   getExperimentMetrics() {
