@@ -470,8 +470,8 @@ class QuantumI18nManager {
       es: n => (n === 1 ? 'one' : 'other'),
       fr: n => (n <= 1 ? 'one' : 'other'),
       de: n => (n === 1 ? 'one' : 'other'),
-      ja: n => 'other', // Japanese doesn't have plural forms
-      zh: n => 'other', // Chinese doesn't have plural forms
+      ja: () => 'other', // Japanese doesn't have plural forms
+      zh: () => 'other', // Chinese doesn't have plural forms
       pt: n => (n === 1 ? 'one' : 'other'),
       it: n => (n === 1 ? 'one' : 'other'),
       ru: n => {
@@ -480,7 +480,7 @@ class QuantumI18nManager {
           return 'few';
         return 'many';
       },
-      ko: n => 'other', // Korean doesn't have plural forms
+      ko: () => 'other', // Korean doesn't have plural forms
     };
 
     for (const [locale, rule] of Object.entries(rules)) {
@@ -588,7 +588,9 @@ class QuantumI18nManager {
    */
   interpolate(template, params) {
     return template.replace(/{(\w+)}/g, (match, key) => {
-      return Object.prototype.hasOwnProperty.call(params, key) ? params[key] : match;
+      return Object.prototype.hasOwnProperty.call(params, key)
+        ? params[key]
+        : match;
     });
   }
 

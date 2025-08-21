@@ -1,0 +1,320 @@
+# Production Helm Chart Values for Lang Observatory
+# Global configuration
+global:
+  environment: production
+  imageRegistry: ghcr.io
+  imagePullPolicy: Always
+  serviceAccount:
+    create: true
+    name: lang-observatory-sa
+
+# Application configuration
+app:
+  name: lang-observatory
+  version: "0.1.0"
+  replicaCount: 3
+  image:
+    repository: terragon-labs/lang-observatory
+    tag: "v0.1.0"
+
+  # Resource configuration
+  resources:
+    requests:
+      memory: "512Mi"
+      cpu: "250m"
+    limits:
+      memory: "1Gi"
+      cpu: "500m"
+
+  # Environment variables
+  env:
+    NODE_ENV: "production"
+    LOG_LEVEL: "info"
+    PORT: "3000"
+
+  # Health checks
+  probes:
+    liveness:
+      httpGet:
+        path: /api/health
+        port: 3000
+      initialDelaySeconds: 30
+      periodSeconds: 10
+      timeoutSeconds: 5
+      failureThreshold: 3
+    readiness:
+      httpGet:
+        path: /api/health/ready
+        port: 3000
+      initialDelaySeconds: 5
+      periodSeconds: 5
+      timeoutSeconds: 3
+      failureThreshold: 3
+    startup:
+      httpGet:
+        path: /api/health/startup
+        port: 3000
+      initialDelaySeconds: 10
+      periodSeconds: 10
+      timeoutSeconds: 5
+      failureThreshold: 30
+
+# Service configuration
+service:
+  type: ClusterIP
+  port: 80
+  targetPort: 3000
+  annotations: {}
+
+# Ingress configuration
+ingress:
+  enabled: true
+  className: "nginx"
+  annotations:
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    nginx.ingress.kubernetes.io/rate-limit: "100"
+    nginx.ingress.kubernetes.io/rate-limit-window: "1m"
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/proxy-body-size: "10m"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "300"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "300"
+  hosts:
+    - host: api.lang-observatory.com
+      paths:
+        - path: /
+          pathType: Prefix
+  tls:
+    - secretName: lang-observatory-tls
+      hosts:
+        - api.lang-observatory.com
+
+# Auto-scaling configuration
+autoscaling:
+  enabled: true
+  minReplicas: 3
+  maxReplicas: 20
+  targetCPUUtilizationPercentage: 70
+  targetMemoryUtilizationPercentage: 80
+  behavior:
+    scaleUp:
+      stabilizationWindowSeconds: 60
+      policies:
+        - type: Percent
+          value: 100
+          periodSeconds: 15
+        - type: Pods
+          value: 4
+          periodSeconds: 15
+      selectPolicy: Max
+    scaleDown:
+      stabilizationWindowSeconds: 300
+      policies:
+        - type: Percent
+          value: 10
+          periodSeconds: 60
+      selectPolicy: Min
+
+# Pod Disruption Budget
+podDisruptionBudget:
+  enabled: true
+  minAvailable: 2
+
+# Security configuration
+security:
+  podSecurityContext:
+    runAsNonRoot: true
+    runAsUser: 1000
+    fsGroup: 2000
+  securityContext:
+    allowPrivilegeEscalation: false
+    readOnlyRootFilesystem: true
+    capabilities:
+      drop:
+        - ALL
+  networkPolicy:
+    enabled: true
+
+# External dependencies configuration
+langfuse:
+  enabled: true
+  host: "https://langfuse.production.example.com"
+  publicKey: "" # Set via secrets
+  secretKey: "" # Set via secrets
+
+openlit:
+  enabled: true
+  endpoint: "https://openlit.production.example.com:4317"
+  apiKey: "" # Set via secrets
+
+prometheus:
+  enabled: true
+  endpoint: "http://prometheus.monitoring.svc.cluster.local:9090"
+  pushGateway: "http://prometheus-pushgateway.monitoring.svc.cluster.local:9091"
+
+grafana:
+  enabled: true
+  host: "https://grafana.production.example.com"
+  datasources:
+    - name: "Lang Observatory Prometheus"
+      url: "http://prometheus.monitoring.svc.cluster.local:9090"
+      type: "prometheus"
+    - name: "Lang Observatory Traces"
+      url: "https://langfuse.production.example.com"
+      type: "langfuse"
+
+# Database configuration
+database:
+  enabled: true
+  type: postgresql
+  host: "postgres.database.svc.cluster.local"
+  port: 5432
+  name: "langobservatory"
+  ssl: true
+  connectionPool:
+    min: 5
+    max: 20
+    idle: 10000
+
+# Cache configuration
+cache:
+  enabled: true
+  type: redis
+  host: "redis.cache.svc.cluster.local"
+  port: 6379
+  database: 0
+  ssl: false
+  cluster:
+    enabled: false
+
+# Monitoring and observability
+monitoring:
+  enabled: true
+  serviceMonitor:
+    enabled: true
+    labels:
+      release: prometheus
+  prometheusRule:
+    enabled: true
+    labels:
+      release: prometheus
+  dashboards:
+    enabled: true
+    labels:
+      grafana_dashboard: "1"
+
+# Feature flags for production
+features:
+  globalScaling: true
+  neuromorphicProcessing: true
+  quantumOptimization: true
+  complianceAutomation: true
+  multiRegionSupport: true
+  advancedSecurity: true
+  performanceOptimization: true
+  costOptimization: true
+  aiAssistance: true
+  experimentalFramework: false
+
+# Advanced configuration
+advanced:
+  # Multi-region configuration
+  multiRegion:
+    enabled: true
+    primary: "us-east-1"
+    regions:
+      - name: "us-east-1"
+        provider: "aws"
+        replicas: 3
+      - name: "eu-west-1"
+        provider: "aws"
+        replicas: 2
+      - name: "ap-southeast-1"
+        provider: "aws"
+        replicas: 2
+
+  # Performance optimization
+  performance:
+    caching:
+      enabled: true
+      strategy: "intelligent"
+      size: "2Gi"
+      ttl: "1h"
+    connectionPooling:
+      enabled: true
+      maxConnections: 20
+      timeout: "30s"
+    loadBalancing:
+      strategy: "least_connections"
+      healthChecks: true
+
+  # Security hardening
+  security:
+    encryption:
+      atRest: true
+      inTransit: true
+      algorithm: "AES-256-GCM"
+    authentication:
+      type: "JWT"
+      expiryTime: "24h"
+      refreshEnabled: true
+    rateLimiting:
+      enabled: true
+      requestsPerMinute: 1000
+      burstLimit: 1500
+    compliance:
+      gdpr: true
+      hipaa: false
+      sox: false
+      pci: false
+
+  # Chaos engineering
+  chaosEngineering:
+    enabled: false
+    experiments:
+      - name: "pod-failure"
+        schedule: "0 2 * * 1" # Monday 2 AM
+      - name: "network-latency"
+        schedule: "0 2 * * 3" # Wednesday 2 AM
+
+# Backup and disaster recovery
+backup:
+  enabled: true
+  schedule: "0 2 * * *" # Daily at 2 AM
+  retention: "30d"
+  destinations:
+    - type: "s3"
+      bucket: "lang-observatory-backups"
+      region: "us-east-1"
+
+# Cost optimization
+costOptimization:
+  enabled: true
+  rightsizing:
+    enabled: true
+    schedule: "0 6 * * 1" # Monday 6 AM
+  spotInstances:
+    enabled: false # Disabled for production stability
+  scheduling:
+    enabled: false # Production runs 24/7
+
+# Compliance and auditing
+compliance:
+  enabled: true
+  auditing:
+    enabled: true
+    retention: "7y"
+  dataRetention:
+    traces: "90d"
+    metrics: "1y"
+    logs: "30d"
+  encryption:
+    enabled: true
+    keyRotation: "90d"
+
+# Development and testing
+development:
+  enabled: false # Disabled in production
+  debugMode: false
+  profiling: false
+  hotReload: false

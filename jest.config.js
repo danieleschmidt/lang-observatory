@@ -23,7 +23,6 @@ module.exports = {
     },
   },
   setupFilesAfterEnv: ['<rootDir>/tests/setup.js'],
-  testTimeout: 30000,
   verbose: true,
   bail: false,
   maxWorkers: '50%',
@@ -31,15 +30,18 @@ module.exports = {
   forceExit: true,
   reporters: [
     'default',
-    ['jest-junit', {
-      outputDirectory: 'test-results',
-      outputName: 'junit.xml',
-      ancestorSeparator: ' › ',
-      uniqueOutputName: 'false',
-      suiteNameTemplate: '{filepath}',
-      classNameTemplate: '{classname}',
-      titleTemplate: '{title}'
-    }]
+    [
+      'jest-junit',
+      {
+        outputDirectory: 'test-results',
+        outputName: 'junit.xml',
+        ancestorSeparator: ' › ',
+        uniqueOutputName: 'false',
+        suiteNameTemplate: '{filepath}',
+        classNameTemplate: '{classname}',
+        titleTemplate: '{title}',
+      },
+    ],
   ],
   projects: [
     {
@@ -53,7 +55,6 @@ module.exports = {
           statements: 85,
         },
       },
-      testTimeout: 30000,
     },
     {
       displayName: 'integration',
@@ -66,17 +67,14 @@ module.exports = {
           statements: 70,
         },
       },
-      testTimeout: 30000,
     },
     {
       displayName: 'e2e',
       testMatch: ['<rootDir>/tests/e2e/**/*.test.js'],
-      testTimeout: 60000,
     },
     {
       displayName: 'performance',
       testMatch: ['<rootDir>/tests/performance/**/*.test.js'],
-      testTimeout: 120000,
     },
   ],
-}
+};
