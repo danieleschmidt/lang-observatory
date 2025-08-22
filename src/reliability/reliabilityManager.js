@@ -333,7 +333,7 @@ class ReliabilityManager extends EventEmitter {
 
   withTimeout(operation, timeoutMs) {
     return async () => {
-      return new Promise(async (resolve, reject) => {
+      return new Promise((resolve, reject) => {
         const timeoutId = setTimeout(() => {
           this.metrics.totalTimeouts++;
           const error = new Error(`Operation timed out after ${timeoutMs}ms`);
@@ -341,14 +341,18 @@ class ReliabilityManager extends EventEmitter {
           reject(error);
         }, timeoutMs);
 
-        try {
-          const result = await operation();
-          clearTimeout(timeoutId);
-          resolve(result);
-        } catch (error) {
-          clearTimeout(timeoutId);
-          reject(error);
-        }
+        const executeOperation = async () => {
+          try {
+            const result = await operation();
+            clearTimeout(timeoutId);
+            resolve(result);
+          } catch (error) {
+            clearTimeout(timeoutId);
+            reject(error);
+          }
+        };
+
+        executeOperation();
       });
     };
   }

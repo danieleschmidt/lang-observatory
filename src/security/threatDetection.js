@@ -95,9 +95,9 @@ class ThreatDetectionSystem extends EventEmitter {
     // Command Injection patterns
     this.addThreatPattern('command_injection', {
       patterns: [
-        /(\;|\||\&\&|\|\|)\s*(ls|cat|pwd|id|whoami|uname)/i,
+        /(;|\||&&|\|\|)\s*(ls|cat|pwd|id|whoami|uname)/i,
         /(\beval\b)|(\bexec\b)|(\bsystem\b)|(\bshell_exec\b)/i,
-        /(\$\()|(\`.*\`)/,
+        /(\$\()|(`.*`)/,
         /(\.\.\/)|(\.\.\\)/,
       ],
       severity: 'critical',
@@ -107,7 +107,7 @@ class ThreatDetectionSystem extends EventEmitter {
     // LDAP Injection patterns
     this.addThreatPattern('ldap_injection', {
       patterns: [
-        /(\*\))|(\(\|)|(\&\()/,
+        /(\*\))|(\(\|)|(&\()/,
         /(\)\()|(\|\()/,
         /(\bldap\b.*\bfilter\b)/i,
       ],
