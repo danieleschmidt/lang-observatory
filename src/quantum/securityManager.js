@@ -493,7 +493,7 @@ class QuantumSecurityManager {
 
   sanitizeString(str) {
     return String(str || '')
-      .replace(/[<>\"'&]/g, '')
+      .replace(/[<>"'&]/g, '')
       .substring(0, 100);
   }
 
