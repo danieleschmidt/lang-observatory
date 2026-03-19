@@ -1,9 +1,0 @@
-#!/usr/bin/env sh
-. "$(dirname -- "$0")/_/husky.sh"
-
-# Run lint-staged for staged files
-npx lint-staged
-
-# Run additional security checks
-echo "🔍 Running security checks..."
-npm run security:scan
